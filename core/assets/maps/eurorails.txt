@@ -1,0 +1,316 @@
+61 64
+o o o o o o o o o o o o o o o o o o o o o o o o o o o o o p p p o o o o o o o o o o o o p p p p p p p p p p p p p p p p o o o o
+o o o o o o o o o o o o o o o o o o o o o o o o o o o p m m m p o o o o o o o o o o o o o m m m m m p p m m m m m m p p o o o o
+o o o o o o o o o o o o o o o o o o o o o o o o o o o p m m m m m p o o o o o o o o o o o p m m m m p p p p p m m m m p p o o o
+o o o o o o o o o o o o o o o o o o o o o o o o o o o p m m m m p o o o o o o o o o o o m m p m m p o p m p p m m m p p p o o o
+o o o o o o o o o o o o o o o o o o o o o o o o o o p p p p m p p o o o o o o o o o o o p m m m p o o o p p o p p p p p p p o o
+o o o o o o o o o o o o o o o o o o o p o p p p p o p o p p p o o o o o o o o o o o o o o p p x o o o p p o o p p p p o p o o o
+o o o o o o o o o o o o o o o o o o o o p p p p p p o o p p m p o o o o o o o o o o o o o o o o o o o p p o o p p p p p p o o o
+o o o o o o o o o o o o o o o o o o p p p p p p p x x p m m m p o o o o o o o o o o o o o o o o o o o p p p p p p p p o o o o o
+o o o o o o o o o o o o o o o o o o o p p p p p p p o p p p p m o o o o o o o o o o o o o o o o x p o o p p m m p p o o o o o o
+o o o o o o o o o o o o o o o o o o p p p p p p o o o o p m m p o o o o o o o o o o o o o o p p p o o p p m m m p p o o o o o o
+o o o o o o o o o o o o o o o o o p p p m p p x o o o o o p m p x o o o o o o o o o o o o o p p p o o o p p m p m p o o o o o o
+o o o o o o o o o o o o o o o o m m p m p p m p o o o o o p m p o o o o o o o o o o o o o p p p p o o o p p p m p p o o o o o o
+o o o o o o o o o o o o o o o o o m m p p m m p o o p o p m m p p o o o o o o o o o o o o x p p p p o o p p p p p p o o o o o o
+o o o o o o o o o o o o o o o o o m p p p p o o o m m p x p m p o o o o o o o o o o o o o p p p p o p p p p p p p o o o o o o o
+o o o o o o o o o o o o o o o o o o o o o o o o o o m m p p m p p o o o o o o o o o o o o p p p p p p p p p p o p o o o o o o o
+o o o o o o o o o o o o o o o o o o o o o o o p p m m p p p p p o o o o o o o o o o o o o p p p p p p x p p o o o o o o o o o o
+o o o o o o o o o o o o o o o o o o o o o o o o p m m p p p p p o o o o o o o o o o o o o p p o p o p o o o o o o o o o o o o o
+o o o o o o o o o o o o o o o o o o o o o o o o p p p p p p p p p p o o o o o o o o o o p p p o p p o o o o o o o o o o o o o o
+o o o o o o o o o o o o o o o o o o o o o o o p p o p p m p p p p p p o o o o o o o p p o p p p p o o p x o o o o o o o o o o o
+o o o o o o o o o o o o o o o o o o o o o p p p p p p p p p p p p x o o o x o p p p p p p p p p p p p p o o o o p p p o o p p p
+o o o o o o o o o o o o o o o o o o o o o p o x p p p p p p p p p o o o o p p p p p p p p p p p p p p p p p p p p p m p p p p p
+o o o o o o o o o o o o o o o o o o o o o o o o o o p x p p p p o o o o p p p p p p p p p p p p p p p p p p p p p m p p p p p p
+o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o p p x o o o p p p p p p p p p p p p p p p p p p p p p p p p p p p p
+o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o x p p p p p p p p p p p p p p p p p p p p p p p p p p p p p p p
+o o o o o o o o o o o o o o o o o o o o o o o o o o x o o o o o p p p p p p p p p p p p p p p p p p p p p p p p p p p p p p p p
+o o o o o o o o o o o o o o o o o o o o p p p o o p p o x p p p p p p p p p p p p p p p p p m p p p p p p p p p p p p p p p p p
+o o o o o o o o o o o o o o o o o o o o p p p p o o p p p p p p p p p p p p p p p p m p p p m p p p p p p p p p p p p p p p p p
+o o o o o o o o o o o o o o o o o o o o p p m p p p p p p p p p p p p p p p m m p m m m p m p p p p p p p p p p p p p p p p p p
+o o o o o o o o o o o o o o o o o o o o o o p p m p p p m p p p p p p p p p m m p m m p p m m p p m p m m p p p p p p p p p m p
+o o o o o o o o o o o o o o o o o o o o o o p p p p p p p p p p p p p p p m p m p p p p p p m p p m m m m m p p p p p m p p p p
+o o o o o o o o o o o o o o o o o o o o o o o p p p p p p p p p p p p p p p p p p p p p p p p m p m p p p p m p p p p p m p p p
+o o o o o o o o o o o o o o o o o o o o o o o p p p p p p p p p p p p p p p p m m p p p p p p m m m p p p p m m p p m p p p p p
+o o o o o o o o o o o o o o o o o o o o o o o p p p p p p p p p p p p p p p p p p p p p p p p p m m m p p p p p m p p p m p p p
+o o o o o o o o o o o o o o o o o o o o o o o p p p p p p p p p p p p p p p m p m p p p p p p p m m m p m m m m m p p p p p p p
+o o o o o o o o o o o o o o o o o o o o o o o o p p p p p p p p p p p p p p m p p p m p p p p p p m m m m p p p m m m p p p p p
+o o o o o o o o p p o o o o o o o o o o o o o p p p p p p p p p p p p p p p p m m p p p p p p p p m m m p p p p p p m m m m m m
+o o o o o o o p p p p o o o o o o o o o o o o o p p p p p p p p p m p p p m p p p p p p p p p p p p m m m p p p p p m m m m m m
+o o o o o o p p p m p p p o o o o o o o o o p p p p p p p p p p m p p p m p p p p m m m m p p p p p p m p p p p p p p m m p p p
+o o o o o o p p p m m m p p o o o o o o o o p p p p p p m m p p p p p m m p p a m p m m m m m m m m m m p p p p p p p m m p p p
+o o o o o p p p m p m m p p p p o o o o o p p p p p p p m m m m p p m p p m a a a a a a m a a a m m p m p p p p p p m p p p p p
+o o o o o o p p m m m m m m m m p p o o o p p p p p p p m m p m p p p a a a a m p m a a m a a m m m m m m m p p p m p p p p p p
+o o o o o p m p p p p p p m m m m p p o p p p p p p p p p m m m p m p a m p p p p m m p m m m m m p m p p p p m m p p p p p p p
+o o o o p p p p p p p p p p p p p m m p m m m p p p p p m p m m p m a a p p p p p p m p m p p p m m m m m m p p o p p p p p p p
+o o o p p m p p p p p p p p p p m p p m a a a m p p p p m m p p p m a a p p p p p p p p p p p p m m p p p m p p p p p p p p p p
+o o o p m m p p p p p p p p p p m m m p p p m a p p p p m p p p m p m a a m p p p p p p p p p o p m m p p p p p p p p p p p p p
+o p p m m m p m m p p m p m p m m m p p p m a a p p p p p p p p m m p a a m p m m p p p p o o p m m m p p p p p p p p p p p p p
+o p p p p p p p m m m m m m m m m m m p p p m a a m p p o o o o p m m m p p o o p m m p p p o o p p m m p p p p p p p p p p p p
+o p p p p p p p p p m p p p p p p m p p p p m m m a m o o o o o p p p o o o o o p m m m p o o o o o m m p p p p p p p p p p p p
+o o p p p p m p p p p p p p p p p m m p p p p p p p m p o o o o o o o o o o o o o p p p m p o o o o p m m p p p p p p p p p p p
+o p p p p p m p p m p p p p p p m m p p p p p p p p p o o o o o o o o o o o o o o p p m m p o o o o p m m m m p p p p p p m p p
+o p p p p p p p m p m m p p p p p m p p p p p o o o o o o o o o o o o o o o o o o o p p p m p o o o o p m m m p m m m m m m m p
+p m p p p m p m p p p m p p p p p p p p p o o o o o o o o o o o o o o o o o o o p p m p p m p o o o o p p m m p m m m m p m m m
+o p p p p m m m m m m m p m m m p p p p o o o o o o o o o o o o o o o o o o o o o o p p p m m p o o o o p p m p m m m p m m m p
+o o o p p p p p p p m p m m p p p p p o o o o o o o o o o o o o o o o o o o o o o o p p p m p o o o o o o o p m m p m m m p m m
+o o o o p p p p p m p p p p m p m p p o o o o o o o o o o o o o o o o o o o o o o o o p p p m p o o o o o o o m m p m m p m m p
+o o o o p p p p m p p m p m m p m m o o o o o o o o o o o o o o o o o o o o o o o o o p p m m p o o o o o o o p m m p m m p m m
+o o o o p p m m m m m m m m m m p p o o o o o o o o o o o o o o o o o o o o o o o o o o o p p m p p m o o o o o o m p m p m m p
+o o o o p m m p m m m m m m m m o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o p m p p o o o o o o o m m m m m m m
+o o o o o o o o o o m m m m o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o p p m p p o o o o o m m m m m m m
+o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o p m p p o o o o o o m m m m m m m
+o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o o p p m p p o o o o m m m m m m m
+
+60
+ABERDEEN 1 2 33
+2
+Fish
+Oil
+
+GOTEBORG 1 9 51
+1
+Machinery
+
+PORTO 1 41 5
+2
+Fish
+Wine
+
+ANTWERPEN 2 24 36
+1
+Imports
+
+HAMBURG 2 20 46
+1
+Imports
+
+PRAHA 2 31 51
+1
+Beer
+
+ARHUS 1 12 48
+1
+Cheese
+
+HOLLAND 3 21 37
+2
+Cheese
+Flowers
+
+RUHR 3 25 40
+2
+Tourists
+Steel
+
+BARCELONA 2 49 24
+1
+Machinery
+
+KALININGRAD 1 19 62
+1
+Iron
+
+SARAJEVO 1 51 55
+2
+Wood
+Labor
+
+BELFAST 1 7 25
+1
+Potatoes
+
+KOBENHAVN 1 14 51
+1
+Cheese
+
+SEVILLA 1 54 5
+2
+Cork
+Oranges
+
+BEOGRAD 2 48 61
+3
+Copper
+Labor
+Oil
+
+KRAKOW 1 33 60
+1
+Coal
+
+STOCKHOLM 2 5 60
+2
+Wood
+Iron
+
+BERN 1 37 38
+2
+Cattle
+Cheese
+
+LEIPZIG 1 27 48
+1
+China
+
+STUTTGART 1 32 43
+1
+Cars
+
+BILBAO 1 41 17
+1
+Sheep
+
+LISBOA 2 46 2
+1
+Cork
+
+SZCZECIN 1 21 52
+1
+Potatoes
+
+BIRMINGHAM 2 16 29
+3
+China
+Iron
+Steel
+
+LODZ 2 27 59
+1
+Potatoes
+
+TORINO 2 42 37
+1
+Cars
+
+BORDEAUX 1 38 23
+1
+Wine
+
+LONDON 3 20 30
+1
+Tourists
+
+TOULOUSE 1 43 25
+1
+Wheat
+
+BREMEN 1 20 44
+1
+Machinery
+
+LUXEMBOURG 1 29 38
+1
+Steel
+
+VALENCIA 1 52 19
+1
+Oranges
+
+BRUXELLES 2 25 35
+1
+Chocolate
+
+LYON 1 39 32
+1
+Wheat
+
+WARSZAWA 2 26 62
+1
+Ham
+
+BUDAPEST 2 40 58
+1
+Bauxite
+
+MANCHESTER 2 13 29
+1
+Cars
+
+WIEN 3 37 53
+1
+Wine
+
+CARDIFF 1 17 25
+2
+Coal
+Hops
+
+MARSEILLE 2 46 32
+1
+Bauxite
+
+WROCLAW 1 29 55
+2
+Copper
+Coal
+
+CORK 1 12 19
+1
+Sheep
+
+MUNCHEN 2 36 46
+2
+Beer
+Cars
+
+ZAGREB 1 44 52
+1
+Labor
+
+DUBLIN 1 10 23
+1
+Beer
+
+NANTES 1 31 23
+2
+Machinery
+Cattle
+
+ZURICH 2 37 40
+1
+Chocolate
+
+FIRENZE 1 48 43
+1
+Marble
+
+NAPOLI 2 58 47
+1
+Tobacco
+
+FRANKFURT 1 29 42
+2
+Beer
+Wine
+
+NEWCASTLE 1 9 31
+1
+Oil
+
+GLASGOW 2 5 28
+1
+Sheep
+
+OSLO 1 2 51
+3
+Fish
+Wood
+Oil
+
+BERLIN 3 24 51
+0
+
+MADRID 3 48 13
+0
+
+MILANO 3 42 40
+0
+
+ROMA 2 54 44
+0
+
+PARIS 3 29 31
+0
+
+VENEZIA 1 44 45
+0
