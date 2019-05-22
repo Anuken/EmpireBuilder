@@ -9,7 +9,9 @@ import io.anuke.arc.graphics.g2d.TextureAtlas;
 import io.anuke.arc.input.KeyCode;
 import io.anuke.arc.scene.Scene;
 import io.anuke.arc.scene.Skin;
+import io.anuke.arc.scene.event.Touchable;
 import io.anuke.arc.scene.ui.layout.Unit;
+import io.anuke.arc.util.Log;
 
 /** Handles all overlaid UI for the game. */
 public class UI implements ApplicationListener{
@@ -26,8 +28,8 @@ public class UI implements ApplicationListener{
 
     @Override
     public void init(){
-        Core.scene.table().dragged((x, y) -> {
-            Core.camera.position.add(x, y);
+        Core.scene.table(t -> t.touchable(Touchable.enabled)).dragged((x, y) -> {
+            Core.camera.position.sub(x, y);
         });
     }
 
@@ -39,5 +41,11 @@ public class UI implements ApplicationListener{
 
         skin.add("default", generator.generateFont(param));
         skin.getFont("default").getData().markupEnabled = true;
+    }
+
+    @Override
+    public void update(){
+        Core.scene.act();
+        Core.scene.draw();
     }
 }

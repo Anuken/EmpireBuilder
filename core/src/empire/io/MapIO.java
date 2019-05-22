@@ -14,6 +14,7 @@ public class MapIO{
     private static final IntMap<Terrain> terrainMap = IntMap.of(
         'o', Terrain.water,
         'm', Terrain.mountain,
+        'a', Terrain.alpine,
         'p', Terrain.plain
     );
 

@@ -23,9 +23,7 @@ TextButtonStyle: {
 },
 ImageButtonStyle: {
 	default: {down: button-down, up: button },
-	dots: {down: button-down, up: button , imageUp: icon-dots, imageDown: icon-dots-down},
 	toggle: {checked: button-down, down: button-down, up: button }
-	close-window: {up: button, imageUp: icon-close, imageOver: icon-close-over, imageDown: icon-close-down, disabled: button }
 },
 ScrollPaneStyle: {
 	default: {background: blank, vScroll: scroll, vScrollKnob: scroll-knob-vertical }

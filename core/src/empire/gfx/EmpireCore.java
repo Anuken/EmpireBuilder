@@ -8,7 +8,7 @@ import io.anuke.arc.Core;
 /** Main class for graphical renderer. Initializes state and its renderers.*/
 public class EmpireCore extends ApplicationCore{
     /** Size of each hex tile in pixels. */
-    public static final int tilesize = 10;
+    public static final int tilesize = 60;
 
     public static UI ui;
     public static Renderer renderer;

@@ -32,6 +32,6 @@ public class World{
 
     /** A type of terrain for a tile.*/
     public enum Terrain{
-        water, plain, mountain
+        water, plain, mountain, alpine
     }
 }
