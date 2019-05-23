@@ -3,6 +3,8 @@ package empire.game;
 import empire.game.World.Tile;
 import io.anuke.arc.collection.Array;
 import io.anuke.arc.collection.ObjectMap;
+import io.anuke.arc.collection.ObjectSet;
+import io.anuke.arc.collection.Queue;
 import io.anuke.arc.function.BiConsumer;
 import io.anuke.arc.graphics.Color;
 
@@ -11,7 +13,9 @@ public class Player{
     /** Total money in millions of ECU.*/
     public int money = 50;
     /** Money spent this turn (on rails)*/
-    public int moneySpentTurn;
+    public int moneySpent;
+    /** How much the player has moved this turn.*/
+    public int moved;
     /** The current locomotive type.*/
     public Loco loco = Loco.freight;
     /** The position on the board of this player.*/
@@ -25,11 +29,60 @@ public class Player{
     /** This player's demand cards. Always of length 3, never with null elements.*/
     public final DemandCard[] demandCards;
 
+    /** A set of closed tiles. Temp usage only.*/
+    private static final ObjectSet<Tile> closedSet = new ObjectSet<>();
+    private static final Queue<Tile> queue = new Queue<>();
+
     /** Creates a player at a position.*/
     public Player(Tile position, Color color, DemandCard[] cards){
         this.position = position;
         this.color = color;
         this.demandCards = cards;
+    }
+
+    /** Returns how long it would take this player to move to this tile.
+     * Returns -1 if impossible.*/
+    public int distanceTo(Tile other){
+        if(!hasTrack(other)){
+            return -1;
+        }
+
+        //already there
+        if(other == position){
+            return 0;
+        }
+
+        closedSet.clear();
+        queue.clear();
+
+        other.searchDst = 0;
+
+        //perform BFS
+        queue.addFirst(other);
+        closedSet.add(other);
+        while(!queue.isEmpty()){
+            Tile tile = queue.removeLast();
+            for(Tile child : tracks.get(tile)){
+                //if found, return its search distance
+                if(child == position){
+                    return tile.searchDst + 1;
+                }
+
+                if(!closedSet.contains(child)){
+                    child.searchDst = tile.searchDst + 1;
+                    queue.addFirst(child);
+                    closedSet.add(child);
+                }
+            }
+        }
+
+        closedSet.clear();
+        return -1;
+    }
+
+    /** Whether this player's track goes through this tile.*/
+    public boolean hasTrack(Tile tile){
+        return tracks.containsKey(tile);
     }
 
     /** Iterates through each unique track that this player has.

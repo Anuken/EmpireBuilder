@@ -31,7 +31,8 @@ public class State{
     /** Switches turns to the next player.
      * Increments total turn if needed.*/
     public void nextPlayer(){
-        currentPlayer().moneySpentTurn = 0;
+        currentPlayer().moneySpent = 0;
+        currentPlayer().moved = 0;
 
         currentPlayer ++;
         if(currentPlayer >= players.size){
@@ -42,33 +43,39 @@ public class State{
 
     public void placeTrack(Player player, Tile from, Tile to){
         player.tracks.getOr(from, Array::new).add(to);
+        player.tracks.getOr(to, Array::new).add(from);
 
         int cost = getTrackCost(from, to);
         player.money -= cost;
-        player.moneySpentTurn += cost;
+        player.moneySpent += cost;
     }
 
     public Player currentPlayer(){
         return players.get(currentPlayer);
     }
 
-    public boolean canPlaceTrack(Tile from, Tile to){
+    public boolean canPlaceTrack(Player player, Tile from, Tile to){
         //can't place track into itself
         if(from == to) return false;
+
+        //player needs to be there to place tracks there
+        if(player.position != from && !player.tracks.containsKey(from) && !player.tracks.containsKey(to)){
+            return false;
+        }
 
         //this basically looks through all adjacent points; if from is not adjacent to 'to', return false
         if(!Structs.contains(from.getAdjacent(), p -> world.tileOpt(from.x + p.x, from.y + p.y) == to)){
             return false;
         }
         //make sure these tiles are passable
-        if(!isPassable(from) || !isPassable(to)){
+        if(!isPassable(player, from) || !isPassable(player, to)){
             return false;
         }
 
         //make sure that this track is not used by a player
-        for(Player player : players){
-            if((player.tracks.containsKey(from) && player.tracks.get(from).contains(to))
-                || (player.tracks.containsKey(to) && player.tracks.get(to).contains(from))){
+        for(Player other : players){
+            if((other.tracks.containsKey(from) && other.tracks.get(from).contains(to))
+                || (other.tracks.containsKey(to) && other.tracks.get(to).contains(from))){
                 return false;
             }
         }
@@ -97,12 +104,12 @@ public class State{
     }
 
     /** Returns whether a tile is passable, e.g. whether a rail can go through it.*/
-    public boolean isPassable(Tile tile){
+    public boolean isPassable(Player player, Tile tile){
         if(!canPlaceOn(tile.type)){
             return false;
         }
-        //large cities cannot be tracked into
-        if(tile.city != null && tile.city.size == CitySize.major){
+        //large cities cannot be tracked into, but they can be tracked out of, if the player starts there
+        if(player.position != tile && tile.city != null && tile.city.size == CitySize.major){
             return false;
         }
         //TODO add limits for other cities:

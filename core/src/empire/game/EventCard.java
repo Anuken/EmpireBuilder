@@ -1,5 +1,5 @@
 package empire.game;
 
-public class Event{
+public class EventCard{
     //TODO implement
 }

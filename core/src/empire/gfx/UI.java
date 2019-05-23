@@ -11,8 +11,7 @@ import io.anuke.arc.scene.ui.Label;
 import io.anuke.arc.scene.ui.layout.Unit;
 import io.anuke.arc.util.Align;
 
-import static empire.gfx.EmpireCore.renderer;
-import static empire.gfx.EmpireCore.state;
+import static empire.gfx.EmpireCore.*;
 
 /** Handles all overlaid UI for the game. */
 public class UI implements ApplicationListener{
@@ -58,12 +57,22 @@ public class UI implements ApplicationListener{
         }});
 
         Core.scene.table(main -> {
-            main.top().left().table(t -> {
+            main.top().left().table("button-over", t -> {
+                t.margin(10f);
                 t.defaults().left();
                 t.label(() -> "Turn [coral]" + state.turn + "[] | Player [coral]" + (state.currentPlayer + 1));
                 t.row();
-                t.label(() -> "Money: [coral]" + state.players.get(state.currentPlayer).money);
+                t.label(() -> "Money: [coral]" + state.currentPlayer().money);
+                t.row();
+                t.label(() -> "Money used: [coral]" + state.currentPlayer().moneySpent + "/20");
+                t.row();
+                t.label(() -> "Moves: [coral]" + state.currentPlayer().moved + "/" + state.currentPlayer().loco.speed);
             });
+            main.row();
+            main.addButton("End Turn", () -> {
+                state.nextPlayer();
+                control.placeLoc = null;
+            }).fillX().height(50);
         });
     }
 
@@ -71,5 +80,10 @@ public class UI implements ApplicationListener{
     public void update(){
         Core.scene.act();
         Core.scene.draw();
+    }
+
+    @Override
+    public void resize(int width, int height){
+        Core.scene.resize(width, height);
     }
 }

@@ -1,7 +1,10 @@
 package empire.gfx;
 
 import empire.game.Player;
-import empire.game.World.*;
+import empire.game.World.City;
+import empire.game.World.CitySize;
+import empire.game.World.Terrain;
+import empire.game.World.Tile;
 import empire.gfx.gen.MapImageGenerator;
 import io.anuke.arc.ApplicationListener;
 import io.anuke.arc.Core;
@@ -14,12 +17,14 @@ import io.anuke.arc.math.Mathf;
 import io.anuke.arc.math.geom.Vector2;
 import io.anuke.arc.scene.event.Touchable;
 import io.anuke.arc.util.Structs;
+import io.anuke.arc.util.Time;
 import io.anuke.arc.util.Tmp;
 
 import static empire.gfx.EmpireCore.*;
 
 /** Renders the game world, handles user input interactions if needed. */
 public class Renderer implements ApplicationListener{
+    private boolean doLerp = true;
     private float zoom = 1f;
     private Texture mapTexture;
 
@@ -66,6 +71,11 @@ public class Renderer implements ApplicationListener{
         return Tmp.v1.set(x * tilesize + (y%2)*tilesize/2f, y*tilesize);
     }
 
+    /** {@link #toWorld(int, int)} for tiles.*/
+    Vector2 toWorld(Tile tile){
+        return toWorld(tile.x, tile.y);
+    }
+
     @Override
     public void update(){
         Core.graphics.clear(Color.ROYAL);
@@ -73,6 +83,24 @@ public class Renderer implements ApplicationListener{
         //update zoom based on input
         zoom += Core.input.axis(KeyCode.SCROLL)* 0.03f;
         zoom = Mathf.clamp(zoom, 0.2f, 20f);
+
+        float speed = 30f * Time.delta();
+
+        Vector2 movement = Tmp.v1.setZero();
+        if(Core.input.keyDown(KeyCode.W)) movement.y += speed;
+        if(Core.input.keyDown(KeyCode.A)) movement.x -= speed;
+        if(Core.input.keyDown(KeyCode.S)) movement.y -= speed;
+        if(Core.input.keyDown(KeyCode.D)) movement.x += speed;
+
+        if(!movement.isZero()){
+            doLerp = false;
+            Core.camera.position.add(movement.limit(speed));
+        }
+
+        if(doLerp){
+            Vector2 v = toWorld(state.currentPlayer().position);
+            Core.camera.position.lerpDelta(v, 0.1f);
+        }
 
         //update camera info
         Core.camera.resize(Core.graphics.getWidth() / zoom, Core.graphics.getHeight() / zoom);
@@ -89,14 +117,14 @@ public class Renderer implements ApplicationListener{
     /** Draws player input on the boad.*/
     void drawControl(){
         //draw selected tile for debugging purposes
-        if(control.currentPlaceLoc != null){
-            Vector2 world = toWorld(control.currentPlaceLoc.x, control.currentPlaceLoc.y);
+        if(control.placeLoc != null){
+            Vector2 world = toWorld(control.placeLoc.x, control.placeLoc.y);
 
             Lines.stroke(4f, Color.PURPLE);
             Lines.square(world.x, world.y, tilesize/2f);
 
             Tile other = tileMouse();
-            if(state.canPlaceTrack(control.currentPlaceLoc, other)){
+            if(state.canPlaceTrack(state.currentPlayer(), control.placeLoc, other)){
                 Draw.color(Color.YELLOW);
                 toWorld(other.x, other.y);
                 Lines.square(world.x, world.y, tilesize/2f);
@@ -109,14 +137,15 @@ public class Renderer implements ApplicationListener{
         Draw.color(Color.WHITE);
         for(Player player : state.players){
             Vector2 world = toWorld(player.position.x, player.position.y);
-            Draw.rect("icon-home", world.x, world.y, tilesize, tilesize);
+            Draw.color(player.color);
+            Draw.rect("icon-trash", world.x, world.y, tilesize, tilesize);
         }
     }
 
     /** Draws all player rails by color.*/
     void drawRails(){
         for(Player player : state.players){
-            Lines.stroke(2f, player.color);
+            Lines.stroke(4f, player.color);
             player.eachTrack((from, to) -> {
                 Vector2 vec = toWorld(from.x, from.y);
                 float fx = vec.x, fy = vec.y;

@@ -78,6 +78,8 @@ public class World{
         public Port port;
         /** Whether this tile is adjacent to a river.*/
         public boolean river;
+        /** Temporary search distance.*/
+        public int searchDst;
 
         public Tile(Terrain type, int x, int y){
             this.type = type;
@@ -93,16 +95,6 @@ public class World{
     /** A type of terrain for a tile.*/
     public enum Terrain{
         water, plain, mountain, alpine, port
-    }
-
-    /** A single track to connect two tiles.*/
-    public static class Track{
-        public final Tile from, to;
-
-        public Track(Tile from, Tile to){
-            this.from = from;
-            this.to = to;
-        }
     }
 
     /** Represents a port, from one location to another.*/
