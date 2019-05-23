@@ -8,6 +8,8 @@ public class State{
     public final Array<Player> players = new Array<>();
     /** The current world state.*/
     public World world;
-    /** The global turn.*/
+    /** The global turn, in terms of completed whole turns.*/
     public int turn;
+    /** The index of the player whose turn it is right now.*/
+    public int currentPlayer;
 }

@@ -34,8 +34,12 @@ public class World{
     public static class Tile{
         public final Terrain type;
         public final int x, y;
-        /** The city on this tile, may be null.*/
+        /** The city on this tile. May be null.*/
         public City city;
+        /** The port at this city's location. May be null.*/
+        public Port port;
+        /** Whether this tile is adjacent to a river.*/
+        public boolean river;
 
         public Tile(Terrain type, int x, int y){
             this.type = type;
@@ -54,6 +58,24 @@ public class World{
         public final Tile from, to;
 
         public Track(Tile from, Tile to){
+            this.from = from;
+            this.to = to;
+        }
+    }
+
+    /** Represents a port, from one location to another.*/
+    public static class Port{
+        /** The port names.*/
+        public final String fromName, toName;
+        /** The cost to travel this port in millions.*/
+        public final int cost;
+        /** The tiles this port connects.*/
+        public final Tile from, to;
+
+        public Port(String fromName, String toName, int cost, Tile from, Tile to){
+            this.fromName = fromName;
+            this.toName = toName;
+            this.cost = cost;
             this.from = from;
             this.to = to;
         }

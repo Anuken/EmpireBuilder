@@ -5,8 +5,6 @@ import io.anuke.arc.ApplicationListener;
 import io.anuke.arc.Core;
 import io.anuke.arc.freetype.FreeTypeFontGenerator;
 import io.anuke.arc.freetype.FreeTypeFontGenerator.FreeTypeFontParameter;
-import io.anuke.arc.graphics.g2d.SpriteBatch;
-import io.anuke.arc.graphics.g2d.TextureAtlas;
 import io.anuke.arc.scene.Scene;
 import io.anuke.arc.scene.Skin;
 import io.anuke.arc.scene.ui.Label;
@@ -14,16 +12,16 @@ import io.anuke.arc.scene.ui.layout.Unit;
 import io.anuke.arc.util.Align;
 
 import static empire.gfx.EmpireCore.renderer;
+import static empire.gfx.EmpireCore.state;
 
 /** Handles all overlaid UI for the game. */
 public class UI implements ApplicationListener{
 
     public UI(){
-        Skin skin = new Skin(Core.atlas = new TextureAtlas("ui/uiskin.atlas"));
+        Skin skin = new Skin(Core.atlas);
         generateFonts(skin);
         skin.load(Core.files.internal("ui/uiskin.json"));
 
-        Core.batch = new SpriteBatch();
         Core.scene = new Scene(skin);
         Core.input.addProcessor(Core.scene);
     }
@@ -58,6 +56,15 @@ public class UI implements ApplicationListener{
                 setPosition(Core.input.mouseX(), Core.input.mouseY(), Align.topRight);
             });
         }});
+
+        Core.scene.table(main -> {
+            main.top().left().table(t -> {
+                t.defaults().left();
+                t.label(() -> "Turn [coral]" + state.turn + "[] | Player [coral]" + (state.currentPlayer + 1));
+                t.row();
+                t.label(() -> "Money: [coral]" + state.players.get(state.currentPlayer).money);
+            });
+        });
     }
 
     @Override
