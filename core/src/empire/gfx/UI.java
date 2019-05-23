@@ -11,6 +11,8 @@ import io.anuke.arc.scene.ui.Label;
 import io.anuke.arc.scene.ui.layout.Unit;
 import io.anuke.arc.util.Align;
 
+import java.util.Arrays;
+
 import static empire.gfx.EmpireCore.*;
 
 /** Handles all overlaid UI for the game. */
@@ -67,6 +69,11 @@ public class UI implements ApplicationListener{
                 t.label(() -> "Money used: [coral]" + state.currentPlayer().moneySpent + "/20");
                 t.row();
                 t.label(() -> "Moves: [coral]" + state.currentPlayer().moved + "/" + state.currentPlayer().loco.speed);
+                t.row();
+                t.label(() -> "Cards:\n[coral]" + Arrays.toString(state.currentPlayer().demandCards)
+                        .replace(", ", "\n")
+                        .replace("[", "")
+                        .replace("]", ""));
             });
             main.row();
             main.addButton("End Turn", () -> {

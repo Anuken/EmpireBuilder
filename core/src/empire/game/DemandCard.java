@@ -2,6 +2,8 @@ package empire.game;
 
 import empire.game.World.City;
 
+import java.util.Arrays;
+
 /** Represents a demand card in the game.*/
 public class DemandCard{
     /** The 3 demands of this card.*/
@@ -9,6 +11,11 @@ public class DemandCard{
 
     public DemandCard(Demand[] demands){
         this.demands = demands;
+    }
+
+    @Override
+    public String toString(){
+        return Arrays.toString(demands);
     }
 
     public static class Demand{
@@ -20,6 +27,11 @@ public class DemandCard{
             this.city = city;
             this.cost = cost;
             this.good = good;
+        }
+
+        @Override
+        public String toString(){
+            return good + " to " + city.name + " at " + cost + "e";
         }
     }
 }

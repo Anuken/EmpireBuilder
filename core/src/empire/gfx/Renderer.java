@@ -99,7 +99,7 @@ public class Renderer implements ApplicationListener{
 
         if(doLerp){
             Vector2 v = toWorld(state.currentPlayer().position);
-            Core.camera.position.lerpDelta(v, 0.1f);
+            Core.camera.position.lerpDelta(v, 0.09f);
         }
 
         //update camera info
@@ -124,7 +124,7 @@ public class Renderer implements ApplicationListener{
             Lines.square(world.x, world.y, tilesize/2f);
 
             Tile other = tileMouse();
-            if(state.canPlaceTrack(state.currentPlayer(), control.placeLoc, other)){
+            if(other != null && state.canPlaceTrack(state.currentPlayer(), control.placeLoc, other)){
                 Draw.color(Color.YELLOW);
                 toWorld(other.x, other.y);
                 Lines.square(world.x, world.y, tilesize/2f);

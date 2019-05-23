@@ -35,7 +35,7 @@ public class Control implements ApplicationListener{
         if(Core.input.keyTap(KeyCode.MOUSE_LEFT)){
             Tile tile = renderer.tileMouse();
             Player player = state.currentPlayer();
-            if(player.hasTrack(tile)){
+            if(tile != null && player.hasTrack(tile)){
                 //TODO movement animation
                 int cost = player.distanceTo(tile);
                 if(cost + player.moved <= player.loco.speed){

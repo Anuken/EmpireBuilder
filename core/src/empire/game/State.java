@@ -91,7 +91,7 @@ public class State{
                     to.city.size == CitySize.medium ? 3 : 0
                     ) :
             Structs.contains(to.getAdjacent(), p -> {
-                Tile other = world.tile(to.x + p.x, to.y + p.y);
+                Tile other = world.tileOpt(to.x + p.x, to.y + p.y);
                 return other != null && other.city != null && other.city.size == CitySize.major;
             }) ? 5 :
             to.port != null ? to.port.cost :
