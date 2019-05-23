@@ -49,7 +49,7 @@ public class MapIO{
         int citynum = scan.nextInt();
 
         for(int i = 0; i < citynum; i++){
-            String name = scan.next();
+            String name = scan.next().toLowerCase();
             int size = scan.nextInt();
             int y = height - 1 - scan.nextInt();
             int x = scan.nextInt();

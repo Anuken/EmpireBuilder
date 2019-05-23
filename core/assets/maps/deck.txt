@@ -1,29 +1,120 @@
-7
-
-LISBOA Ham 63
-BRUXELLES Wheat 13
-KOBENHAVN Marble 39
-
-BERLIN Fish 27
-ANTWERPEN Oil 20
-LEIPZIG Labor 16
-
-RUHR Cork 44
-BARCELONA Fish 22
-BIRMINGHAM Machinery 17
-
-MILANO Wood 17
-LODZ Wine 10
-BEOGRAD Wheat 32
-
-BERLIN Wood 22
-FRANKFURT Cattle 10
-DUBLIN Marble 44
-
-MADRID Tobacco 41
-MARSEILLE Flowers 23
-BILBAO Cheese 24
-
-VENEZIA Cattle 12
-SARAJEVO Beer 18
-BIRMINGHAM Copper 29
+001 Berlin      Cattle    17 Lyon        Copper    26 Budapest    Machinery 22
+002 Berlin      Imports   06 Hamburg     Bauxite   21 Kaliningrad Machinery 21
+003 Berlin      Marble    24 Luxembourg  Wheat     10 Bilbao      Wine      08
+004 Berlin      Oranges   42 Luxembourg  Chocolate 07 Lodz        Labor     16
+005 Berlin      Fish      27 Antwerpen   Oil       20 Leipzig     Labor     16
+006 Berlin      Tobacco   32 Bruxelles   Copper    19 Marseille   Chocolate 16
+007 Berlin      Labor     16 Bern        Potatoes  21 Zurich      Cork      42
+008 Berlin      Cheese    10 Birmingham  Tobacco   44 Bremen      Ham       19
+009 Berlin      Wood      22 Frankfurt   Cattle    10 Dublin      Marble    44
+010 Berlin      Sheep     27 Manchester  Beer      09 Arhus       Wheat     27
+011 Berlin      Steel     08 Glasgow     Bauxite   39 Antwerpen   Wine      10
+012 Berlin      Oil       23 Stuttgart   China     08 Newcastle   Labor     40
+013 Berlin      Machinery 07 Porto       Oil       50 Kobenhavn   Coal      21
+014 Berlin      Chocolate 13 Cork        Wood      45 Bordeaux    Copper    36
+015 Holland     Cork      43 Firenze     Fish      44 Manchester  Labor     36
+016 Holland     Wine      07 Marseille   Fish      29 Goteborg    Steel     24
+017 Holland     Wheat     15 Zurich      Hops      24 Glasgow     Cattle    30
+018 Holland     Bauxite   22 Venezia     Tourists  19 Lisboa      Oranges   09
+019 Holland     Copper    17 Torino      Imports   20 Kaliningrad Sheep     40
+020 Holland     Potatoes  12 Sarajevo    Imports   30 Toulouse    Flowers   21
+021 Holland     Ham       21 Munchen     Iron      26 Cardiff     Cheese    15
+022 Holland     Oranges   33 Roma        Cheese    19 Newcastle   Beer      14
+023 Holland     Cars      10 Zagreb      Beer      11 Zurich      Tourists  12
+024 Holland     Coal      16 Napoli      Oranges   39 Oslo        Bauxite   42
+025 London      Wood      37 Beograd     Beer      17 Marseille   Coal      29
+026 London      Flowers   08 Krakow      Chocolate 22 Munchen     Hops      29
+027 London      Beer      12 Budapest    Imports   25 Aberdeen    Machinery 25
+028 London      Labor     31 Birmingham  Coal      05 Roma        Wheat     20
+029 London      Copper    25 Wroclaw     Cars      14 Napoli      Flowers   35
+030 London      Bauxite   25 Leipzig     Potatoes  07 Belfast     Tobacco   59
+031 London      Tobacco   40 Szczecin    Cheese    12 Beograd     Cars      19
+032 London      Fish      16 Stuttgart   Oil       27 Dublin      Copper    36
+033 London      Ham       30 Zurich      Bauxite   16 Budapest    Steel     22
+034 London      Marble    31 Hamburg     Ham       17 Praha       Oil       17
+035 London      Cattle    16 Stockholm   Wheat     46 Cork        Cork      62
+036 London      Wine      16 Lyon        Machinery 12 Lodz        Flowers   21
+037 Madrid      Tourists  35 Leipzig     Oil       22 Warszawa    Hops      36
+038 Madrid      Iron      39 Bruxelles   Beer      10 Porto       Cars      35
+039 Madrid      China     39 Birmingham  Cheese    12 Hamburg     Labor     22
+040 Madrid      Oil       46 Bremen      Bauxite   22 Stockholm   Tourists  33
+041 Madrid      Cheese    30 Manchester  Chocolate 16 Sevilla     Iron      51
+042 Madrid      Wheat     15 Arhus       Coal      17 Antwerpen   Tobacco   34
+043 Madrid      Wine      10 Glasgow     Oranges   50 Valencia    Steel     31
+044 Madrid      Machinery 11 Aberdeen    Labor     48 Bruxelles   Potatoes  17
+045 Madrid      Cars      28 Kobenhavn   Tourists  18 Birmingham  Bauxite   29
+046 Madrid      Coal      37 Barcelona   Imports   24 Manchester  Wine      20
+047 Madrid      Tobacco   41 Marseille   Flowers   23 Bilbao      Cheese    24
+048 Madrid      Sheep     08 Goteborg    Cattle    35 Munchen     Tobacco   22
+049 Madrid      Marble    34 Zurich      Tobacco   22 Toulouse    Imports   18
+050 Madrid      Cattle    21 Torino      Bauxite   11 Lisboa      Steel     42
+051 Milano      Beer      09 Oslo        Sheep     35 Barcelona   Iron      31
+052 Milano      China     17 Munchen     Wood      18 Bordeaux    Potatoes  34
+053 Milano      Cork      41 Cardiff     Fish      20 Marseille   Steel     16
+054 Milano      Flowers   19 Bremen      Iron      17 Nantes      Wood      39
+055 Milano      Hops      29 Napoli      China     30 Zurich      Oil       25
+056 Milano      Iron      28 Newcastle   Cattle    26 Torino      Beer      12
+057 Milano      Steel     13 Zagreb      Oranges   38 Lyon        Cars      09
+058 Milano      Tourists  16 Budapest    Sheep     44 Glasgow     Marble    46
+059 Milano      Machinery 20 Aberdeen    Steel     17 Roma        Tourists  28
+060 Milano      Oil       20 Birmingham  Flowers   12 Luxembourg  Wood      29
+061 Milano      Wood      17 Lodz        Wine      10 Beograd     Wheat     32
+062 Milano      Imports   17 Belfast     Machinery 30 Budapest    Wood      12
+063 Milano      Potatoes  24 Warszawa    Marble    31 Bern        Oil       28
+064 Milano      Chocolate 05 Dublin      Coal      12 Praha       Flowers   15
+065 Paris       Iron      13 Hamburg     Cars      10 Frankfurt   Cork      46
+066 Paris       Hops      13 Stockholm   Copper    36 Napoli      Chocolate 21
+067 Paris       Ham       27 Cork        Cheese    24 Lodz        Oranges   52
+068 Paris       Chocolate 04 Antwerpen   China     14 Stuttgart   Flowers   11
+069 Paris       Potatoes  20 Bruxelles   Fish      28 Warszawa    Imports   17
+070 Paris       Marble    21 Porto       Wood      54 Hamburg     Beer      09
+071 Paris       Cheese    08 Birmingham  Coal      05 Firenze     Potatoes  27
+072 Paris       Sheep     19 Manchester  Bauxite   31 Stockholm   Cheese    15
+073 Paris       Tourists  10 Stockholm   Marble    55 Antwerpen   Cattle    11
+074 Paris       Fish      28 Glasgow     Imports   24 Venezia     Wheat     16
+075 Paris       Wheat     07 Valencia    China     38 Bruxelles   Marble    24
+076 Paris       Labor     25 Lisboa      Machinery 23 Sarajevo    Sheep     44
+077 Ruhr        Cork      44 Barcelona   Fish      22 Birmingham  Machinery 17
+078 Ruhr        Coal      14 Bilbao      Oil       39 Arhus       Flowers   15
+079 Ruhr        Copper    14 Marseille   Beer      20 Zagreb      Steel     21
+080 Ruhr        Iron      13 Sevilla     Ham       66 Glasgow     Hops      17
+081 Ruhr        Labor     20 Toulouse    Hops      26 Lisboa      Cattle    30
+082 Ruhr        Oranges   33 Torino      Wine      17 Krakow      Copper    07
+083 Ruhr        China     07 Goteborg    Iron      11 Barcelona   Copper    41
+084 Ruhr        Bauxite   19 Bordeaux    Cork      24 Marseille   Ham       37
+085 Ruhr        Cars      09 Roma        Iron      40 Wroclaw     Chocolate 20
+086 Ruhr        Wood      27 Nantes      Coal      17 Luxembourg  Copper    19
+087 Wien        Cork      53 Napoli      Wine      25 Szczecin    Oil       26
+088 Wien        Sheep     38 Beograd     Potatoes  20 Torino      Iron      28
+089 Wien        Oranges   42 Lyon        Labor     23 Munchen     Cattle    10
+090 Wien        Hops      34 Budapest    China     16 Kaliningrad Chocolate 27
+091 Wien        Imports   19 Cork        Tourists  17 Roma        Coal      29
+092 Wien        Wheat     21 Sevilla     Tourists  48 Napoli      Sheep     39
+093 Wien        Flowers   18 Lodz        Cattle    24 Leipzig     Cheese    11
+094 Wien        Steel     15 Warszawa    Oranges   53 Beograd     Machinery 28
+095 Wien        Beer      05 Bern        Ham       28 Budapest    Wheat     28
+096 Wien        Tourists  15 Hamburg     Tobacco   35 Bremen      Cars      10
+097 Wien        China     09 Frankfurt   Hops      21 Praha       Fish      36
+098 Wien        Cars      07 Stockholm   Cattle    44 Arhus       Machinery 10
+099 Wien        Marble    16 Antwerpen   Labor     26 Lodz        Coal      06
+100 Wien        Oil       11 Stuttgart   Iron      22 Warszawa    Cars      20
+101 Lisboa      Ham       63 Bruxelles   Wheat     13 Kobenhavn   Marble    39
+102 Porto       Flowers   39 Birmingham  Fish      17 Hamburg     Steel     07
+103 Barcelona   Potatoes  40 Firenze     Wheat     17 Stockholm   Chocolate 38
+104 Valencia    Potatoes  46 Manchester  Oil       05 Goteborg    Wine      27
+105 Sevilla     Wood      58 Belfast     Flowers   25 Antwerpen   Sheep     24
+106 Zurich      Fish      38 Venezia     Flowers   23 Bruxelles   Wine      10
+107 Valencia    Tourists  35 Lisboa      Sheep     17 Oslo        Potatoes  28
+108 Venezia     Cattle    12 Sarajevo    Beer      18 Birmingham  Copper    29
+109 Munchen     Oranges   36 Barcelona   Wine      11 Cardiff     Labor     38
+110 Bilbao      Wood      44 Oslo        Imports   24 Manchester  Fish      13
+111 Roma        Cork      48 Zagreb      China     16 Torino      Hops      29
+112 Kobenhavn   Ham       26 Kaliningrad China     17 Newcastle   Bauxite   35
+113 Toulouse    Cork      26 Torino      Fish      36 Lisboa      Tourists  44
+114 Beograd     Cork      62 Krakow      Cars      15 Barcelona   Tourists  29
+115 Sarajevo    Wine      12 Munchen     Cheese    09 Aberdeen    Ham       47
+116 Wroclaw     Imports   12 Roma        Cars      13 Warszawa    Cheese    22
+117 Praha       Labor     11 Bordeaux    Chocolate 17 Hamburg     Wood      25
+118 Nantes      Oranges   22 Napoli      Ham       37 Belfast     Steel     15
+119 Lodz        Machinery 17 Szczecin    Tobacco   36 Glasgow     Iron      13
+120 Warszawa    Coal      07 Beograd     Wine      12 Dublin      Hops      12

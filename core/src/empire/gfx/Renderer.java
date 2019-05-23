@@ -16,8 +16,7 @@ import io.anuke.arc.scene.event.Touchable;
 import io.anuke.arc.util.Structs;
 import io.anuke.arc.util.Tmp;
 
-import static empire.gfx.EmpireCore.state;
-import static empire.gfx.EmpireCore.tilesize;
+import static empire.gfx.EmpireCore.*;
 
 /** Renders the game world, handles user input interactions if needed. */
 public class Renderer implements ApplicationListener{
@@ -38,6 +37,10 @@ public class Renderer implements ApplicationListener{
         Core.scene.table(t -> t.touchable(Touchable.enabled)).dragged((x, y) -> {
             Core.camera.position.sub(x / zoom, y / zoom);
         });
+    }
+
+    public Tile tileMouse(){
+        return tileWorld(Core.input.mouseWorld().x, Core.input.mouseWorld().y);
     }
 
     /** Returns the tile at world coordinates, or null if this is out of bounds.*/
@@ -78,18 +81,27 @@ public class Renderer implements ApplicationListener{
         drawWorld();
         drawPlayers();
         drawRails();
-
-        Tile on = tileWorld(Core.input.mouseWorld().x, Core.input.mouseWorld().y);
-        //draw selected tile for debugging purposes
-        if(on != null){
-            Vector2 world = toWorld(on.x, on.y);
-
-            Lines.stroke(4f);
-            Draw.color(Color.PURPLE);
-            Lines.square(world.x, world.y, tilesize/2f);
-        }
+        drawControl();
 
         Draw.flush();
+    }
+
+    /** Draws player input on the boad.*/
+    void drawControl(){
+        //draw selected tile for debugging purposes
+        if(control.currentPlaceLoc != null){
+            Vector2 world = toWorld(control.currentPlaceLoc.x, control.currentPlaceLoc.y);
+
+            Lines.stroke(4f, Color.PURPLE);
+            Lines.square(world.x, world.y, tilesize/2f);
+
+            Tile other = tileMouse();
+            if(state.canPlaceTrack(control.currentPlaceLoc, other)){
+                Draw.color(Color.YELLOW);
+                toWorld(other.x, other.y);
+                Lines.square(world.x, world.y, tilesize/2f);
+            }
+        }
     }
 
     /** Draws all player icons on the board.*/
@@ -105,13 +117,12 @@ public class Renderer implements ApplicationListener{
     void drawRails(){
         for(Player player : state.players){
             Lines.stroke(2f, player.color);
-            for(Track track : player.tracks){
-                Vector2 vec = toWorld(track.from.x, track.from.y);
+            player.eachTrack((from, to) -> {
+                Vector2 vec = toWorld(from.x, from.y);
                 float fx = vec.x, fy = vec.y;
-                toWorld(track.to.x, track.to.y);
-
+                toWorld(to.x, to.y);
                 Lines.line(fx, fy, vec.x, vec.y);
-            }
+            });
         }
     }
 

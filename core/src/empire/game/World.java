@@ -1,32 +1,70 @@
 package empire.game;
 
 import io.anuke.arc.collection.Array;
+import io.anuke.arc.collection.ObjectMap;
+import io.anuke.arc.math.geom.Point2;
+import io.anuke.arc.util.Structs;
 
 /** Holds information about the game's world, such as tiles and their costs.*/
 public class World{
+    /** Adjacent points for a tile.*/
+    public static final Point2[] adjacencyEven = {
+        new Point2(1, 0),
+        new Point2(0, 1),
+        new Point2(-1, 1),
+        new Point2(-1, 0),
+        new Point2(-1, -1),
+        new Point2(0, -1),
+    };
+
+    public static final Point2[] adjacencyOdd = {
+        new Point2(1, 0),
+        new Point2(1, 1),
+        new Point2(0, 1),
+        new Point2(-1, 0),
+        new Point2(0, -1),
+        new Point2(1, -1),
+    };
+
     private final Tile[][] tiles;
-    private final Array<City> cities;
+    private final ObjectMap<String, City> cities;
 
     /** Width and height of the world, in tiles.*/
     public final int width, height;
 
     public World(Tile[][] tiles, Array<City> cities){
         this.tiles = tiles;
-        this.cities = cities;
+        this.cities = new ObjectMap<>();
         width = tiles.length;
         height = tiles[0].length;
 
+        //put cities into main map
+        cities.each(c -> this.cities.put(c.name, c));
         //put each city into a tile so it's easy to access
         cities.each(c -> tiles[c.x][c.y].city = c);
     }
 
-    /** Returns the cities in this world.*/
-    public Array<City> cities(){
-        return cities;
+    /** Returns a city by name.*/
+    public City getCity(String name){
+        return cities.get(name);
     }
 
-    /** Returns a tile at a location.*/
+    /** Returns the cities in this world.*/
+    public Iterable<City> cities(){
+        return cities.values();
+    }
+
+    /** Returns a tile at a location. Never returns null.
+     * Throws an exception when out of bounds.*/
     public Tile tile(int x, int y){
+        return tiles[x][y];
+    }
+
+    /** Returns a tile at a location. May return null if out of bounds.*/
+    public Tile tileOpt(int x, int y){
+        if(!Structs.inBounds(x, y, width, height)){
+            return null;
+        }
         return tiles[x][y];
     }
 
@@ -45,6 +83,10 @@ public class World{
             this.type = type;
             this.x = x;
             this.y = y;
+        }
+
+        public Point2[] getAdjacent(){
+            return y % 2 == 0 ? adjacencyEven : adjacencyOdd;
         }
     }
 

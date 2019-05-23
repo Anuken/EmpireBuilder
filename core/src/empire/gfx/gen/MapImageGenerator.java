@@ -19,6 +19,8 @@ import io.anuke.arc.util.ScreenUtils;
 import io.anuke.arc.util.Time;
 
 public class MapImageGenerator{
+    /** Size of a single tile in pixels.*/
+    private static final int gsize = 8;
     /** Base color of the terrain types, indexed by ordinal.*/
     private static final Color[] terrainColor = {
         Color.ROYAL,
@@ -27,9 +29,6 @@ public class MapImageGenerator{
         Color.WHITE,
         Color.FOREST
     };
-
-    /** Size of a single tile in pixels.*/
-    private static final int gsize = 8;
     /** Special transition colors. All should be 4-tuples: src, dest, replace, radius.*/
     private static final int[][] transitions = {
         transition(Terrain.plain, Terrain.water, Color.valueOf("6d8ceb"), 6),
@@ -38,6 +37,7 @@ public class MapImageGenerator{
         transition(Terrain.alpine, Terrain.plain, Color.LIGHT_GRAY, 2)
     };
 
+    /** Utility function that simply returns a transition for a specific terrain type combination.*/
     private static int[] transition(Terrain from, Terrain to, Color dest, int radius){
         return new int[]{terrainColor[from.ordinal()].rgba(), terrainColor[to.ordinal()].rgba(), dest.rgba(), radius};
     }
@@ -82,6 +82,7 @@ public class MapImageGenerator{
         return out;
     }
 
+    /** Applies all terrain transitions to an input pixmap.*/
     static Pixmap applyTransitions(Pixmap in){
         for(int[] arr : transitions){
             Pixmap out = Pixmaps.copy(in);
