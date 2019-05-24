@@ -44,6 +44,26 @@ public class World{
         cities.each(c -> tiles[c.x][c.y].city = c);
     }
 
+    public City getMajorCity(Tile tile){
+        if(tile.city != null && tile.city.size == CitySize.major){
+            return tile.city;
+        }else{
+            Point2 out = Structs.find(tile.getAdjacent(), p -> {
+                Tile other = tileOpt(tile.x + p.x, tile.y + p.y);
+                return other != null && other.city != null && other.city.size == CitySize.major;
+            });
+            if(out != null){
+                return tile(tile.x + out.x, tile.y + out.y).city;
+            }
+        }
+        return null;
+    }
+
+    /** Returns the unique index of a tile.*/
+    public int index(Tile tile){
+        return tile.x + tile.y * width;
+    }
+
     /** Returns a city by name.*/
     public City getCity(String name){
         return cities.get(name);

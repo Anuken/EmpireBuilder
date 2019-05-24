@@ -3,9 +3,7 @@ package empire.gfx;
 import empire.game.Player;
 import empire.game.World.City;
 import empire.game.World.CitySize;
-import empire.game.World.Terrain;
 import empire.game.World.Tile;
-import empire.gfx.gen.MapImageGenerator;
 import io.anuke.arc.ApplicationListener;
 import io.anuke.arc.Core;
 import io.anuke.arc.graphics.Camera;
@@ -16,7 +14,6 @@ import io.anuke.arc.input.KeyCode;
 import io.anuke.arc.math.Mathf;
 import io.anuke.arc.math.geom.Vector2;
 import io.anuke.arc.scene.event.Touchable;
-import io.anuke.arc.util.Structs;
 import io.anuke.arc.util.Time;
 import io.anuke.arc.util.Tmp;
 
@@ -26,6 +23,7 @@ import static empire.gfx.EmpireCore.*;
 public class Renderer implements ApplicationListener{
     private boolean doLerp = true;
     private float zoom = 1f;
+    private Color clearColor = Color.valueOf("5d81e1");
     private Texture mapTexture;
 
     public Renderer(){
@@ -34,7 +32,7 @@ public class Renderer implements ApplicationListener{
         Core.camera.position.set(state.world.width * tilesize/2f, state.world.height*tilesize/2f);
         Core.atlas = new TextureAtlas("ui/uiskin.atlas");
 
-        mapTexture = MapImageGenerator.generateTerrain(state.world);
+        //mapTexture = MapImageGenerator.generateTerrain(state.world);
     }
 
     @Override
@@ -44,41 +42,9 @@ public class Renderer implements ApplicationListener{
         });
     }
 
-    public Tile tileMouse(){
-        return tileWorld(Core.input.mouseWorld().x, Core.input.mouseWorld().y);
-    }
-
-    /** Returns the tile at world coordinates, or null if this is out of bounds.*/
-    public Tile tileWorld(float x, float y){
-        x += tilesize/2f;
-        y += tilesize/2f;
-        int tx = (int)(x/tilesize);
-        int ty = (int)(y/tilesize);
-        if(ty % 2 == 1){ //translate to match hex coords
-            tx = (int)((x - tilesize/2f)/tilesize);
-        }
-
-        //return null if it is out of bounds
-        if(!Structs.inBounds(tx, ty, state.world.width, state.world.height)){
-            return null;
-        }
-
-        return state.world.tile(tx, ty);
-    }
-
-    /** Converts map coordinates to world coordinates.*/
-    Vector2 toWorld(int x, int y){
-        return Tmp.v1.set(x * tilesize + (y%2)*tilesize/2f, y*tilesize);
-    }
-
-    /** {@link #toWorld(int, int)} for tiles.*/
-    Vector2 toWorld(Tile tile){
-        return toWorld(tile.x, tile.y);
-    }
-
     @Override
     public void update(){
-        Core.graphics.clear(Color.ROYAL);
+        Core.graphics.clear(clearColor);
 
         //update zoom based on input
         zoom += Core.input.axis(KeyCode.SCROLL)* 0.03f;
@@ -98,7 +64,7 @@ public class Renderer implements ApplicationListener{
         }
 
         if(doLerp){
-            Vector2 v = toWorld(state.currentPlayer().position);
+            Vector2 v = control.toWorld(state.currentPlayer().position);
             Core.camera.position.lerpDelta(v, 0.09f);
         }
 
@@ -114,19 +80,19 @@ public class Renderer implements ApplicationListener{
         Draw.flush();
     }
 
-    /** Draws player input on the boad.*/
+    /** Draws player input on the board.*/
     void drawControl(){
         //draw selected tile for debugging purposes
         if(control.placeLoc != null){
-            Vector2 world = toWorld(control.placeLoc.x, control.placeLoc.y);
+            Vector2 world = control.toWorld(control.placeLoc.x, control.placeLoc.y);
 
             Lines.stroke(4f, Color.PURPLE);
             Lines.square(world.x, world.y, tilesize/2f);
 
-            Tile other = tileMouse();
+            Tile other = control.tileMouse();
             if(other != null && state.canPlaceTrack(state.currentPlayer(), control.placeLoc, other)){
                 Draw.color(Color.YELLOW);
-                toWorld(other.x, other.y);
+                control.toWorld(other.x, other.y);
                 Lines.square(world.x, world.y, tilesize/2f);
             }
         }
@@ -136,7 +102,7 @@ public class Renderer implements ApplicationListener{
     void drawPlayers(){
         Draw.color(Color.WHITE);
         for(Player player : state.players){
-            Vector2 world = toWorld(player.position.x, player.position.y);
+            Vector2 world = control.toWorld(player.position.x, player.position.y);
             Draw.color(player.color);
             Draw.rect("icon-trash", world.x, world.y, tilesize, tilesize);
         }
@@ -144,15 +110,36 @@ public class Renderer implements ApplicationListener{
 
     /** Draws all player rails by color.*/
     void drawRails(){
+        TextureRegion track = Core.atlas.find("track");
         for(Player player : state.players){
-            Lines.stroke(4f, player.color);
-            player.eachTrack((from, to) -> {
-                Vector2 vec = toWorld(from.x, from.y);
-                float fx = vec.x, fy = vec.y;
-                toWorld(to.x, to.y);
-                Lines.line(fx, fy, vec.x, vec.y);
-            });
+            Lines.stroke(track.getHeight() * tilesize/16f);
+            for(int i = 0; i < 2; i++){
+                int fi = i;
+                if(i == 0){
+                    Draw.color(0f, 0f, 0f, 0.5f);
+                }else{
+                    Draw.color(player.color);
+                }
+                player.eachTrack((from, to) -> {
+                    if(state.world.index(from) < state.world.index(to)){
+                        return;
+                    }
+                    Vector2 vec = control.toWorld(from.x, from.y);
+                    float fx = vec.x, fy = vec.y;
+                    control.toWorld(to.x, to.y);
+
+                    if(fi == 0){
+                        drawTrack(fx, fy - 3, vec.x, vec.y - 3);
+                    }else{
+                        drawTrack(fx, fy, vec.x, vec.y);
+                    }
+                });
+            }
         }
+    }
+
+    void drawTrack(float fromX, float fromY, float toX, float toY){
+        Lines.line(Core.atlas.find("track"), fromX, fromY, toX, toY, CapStyle.none, 0f);
     }
 
     /** Draws the tiles of the world.*/
@@ -160,32 +147,35 @@ public class Renderer implements ApplicationListener{
         //draw background map image
         Draw.color();
         float mw = state.world.width * tilesize, mh = state.world.height * tilesize;
-        Draw.rect(Draw.wrap(mapTexture), mw/2, mh/2 - tilesize/2f, mw, mh);
+        //Draw.rect(Draw.wrap(mapTexture), mw/2, mh/2 - tilesize/2f, mw, mh);
 
         //draw tiles
         for(int x = 0; x < state.world.width; x++){
             for(int y = 0; y < state.world.height; y++){
                 Tile tile = state.world.tile(x, y);
-                Vector2 world = toWorld(x, y);
+                Vector2 world = control.toWorld(x, y);
                 float tx = world.x, ty = world.y;
+
+                Draw.color();
+                Draw.rect(Core.atlas.find("terrain-" + tile.type.name(), Core.atlas.find("terrain-plain")), tx, ty, tilesize, tilesize);
 
                 if(tile.river){
                     Draw.color(Color.ROYAL);
                     Lines.stroke(8f);
                     Lines.spikes(tx, ty, 1, 14, 4, 45);
                 }
-                Draw.color(Color.BLACK);
-                if(tile.type == Terrain.plain){
-                    Fill.square(tx, ty, 4);
-                }else if(tile.type == Terrain.mountain){
-                    Fill.poly(tx, ty, 3, 9, 90);
-                }else if(tile.type == Terrain.alpine){
-                    Lines.stroke(2f);
-                    Lines.poly(tx, ty, 3, 9, 0);
-                }
+            }
+        }
 
+        //TODO cache ports for better performance
+        //draw ports
+        for(int x = 0; x < state.world.width; x++){
+            for(int y = 0; y < state.world.height; y++){
+                Tile tile = state.world.tile(x, y);
+                Vector2 world = control.toWorld(x, y);
+                float tx = world.x, ty = world.y;
                 if(tile.port != null && tile.port.from == tile){
-                    Vector2 to = toWorld(tile.port.to.x, tile.port.to.y);
+                    Vector2 to = control.toWorld(tile.port.to.x, tile.port.to.y);
                     Lines.stroke(3f, Color.NAVY);
                     Lines.line(tx, ty, to.x, to.y);
                 }
@@ -194,7 +184,7 @@ public class Renderer implements ApplicationListener{
 
         //draw cities
         for(City city : state.world.cities()){
-            Vector2 world = toWorld(city.x, city.y);
+            Vector2 world = control.toWorld(city.x, city.y);
             float tx = world.x, ty = world.y;
 
             Lines.stroke(4f, Color.CORAL);

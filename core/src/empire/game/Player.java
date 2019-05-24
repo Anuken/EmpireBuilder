@@ -40,9 +40,20 @@ public class Player{
         this.demandCards = cards;
     }
 
+    /** Returns whether this player can hold more cargo.*/
+    public boolean hasCargoSpace(){
+        return cargo.size < loco.loads;
+    }
+
+    public void addCargo(String good){
+        cargo.add(good);
+    }
+
     /** Returns how long it would take this player to move to this tile.
      * Returns -1 if impossible.*/
     public int distanceTo(Tile other){
+        //TODO distance when in a major city?
+
         if(!hasTrack(other)){
             return -1;
         }

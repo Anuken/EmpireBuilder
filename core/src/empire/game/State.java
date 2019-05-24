@@ -18,6 +18,8 @@ public class State{
     public int currentPlayer;
     /** The demand cards of this state.*/
     public Array<DemandCard> demandCards;
+    /** Cost to upgrade a loco.*/
+    public final int locoCost = 20;
 
     /** Grabs 3 demand cards from the top of the deck and returns them.*/
     public DemandCard[] grabCards(){
@@ -26,6 +28,16 @@ public class State{
             out[i] = demandCards.pop();
         }
         return out;
+    }
+
+    /** Discards this player's demand cards and replaces them with new ones.*/
+    public void discardCards(Player player){
+        for(int i = 2; i >= 0; i--){
+            demandCards.insert(0, player.demandCards[i]);
+        }
+        for(int i = 0; i < 3; i++){
+            player.demandCards[i] = demandCards.pop();
+        }
     }
 
     /** Switches turns to the next player.

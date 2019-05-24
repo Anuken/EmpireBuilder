@@ -30,8 +30,8 @@ public class EmpireCore extends ApplicationCore{
         City startCity = state.world.getCity("berlin");
         City otherCity = state.world.getCity("leipzig");
 
-        state.players.add(new Player(state.world.tile(startCity.x, startCity.y), Color.RED, state.grabCards()));
-        state.players.add(new Player(state.world.tile(otherCity.x, otherCity.y), Color.GREEN, state.grabCards()));
+        state.players.add(new Player(state.world.tile(startCity.x, startCity.y), Color.PINK, state.grabCards()));
+        state.players.add(new Player(state.world.tile(otherCity.x, otherCity.y), Color.GOLD, state.grabCards()));
 
         add(control = new Control());
         add(renderer = new Renderer());

@@ -4,7 +4,9 @@ import empire.game.World;
 import empire.game.World.*;
 import io.anuke.arc.collection.Array;
 import io.anuke.arc.collection.IntMap;
+import io.anuke.arc.collection.ObjectSet;
 import io.anuke.arc.files.FileHandle;
+import io.anuke.arc.util.Log;
 
 import java.util.Scanner;
 
@@ -20,6 +22,8 @@ public class MapIO{
     );
 
     public static World loadTiles(FileHandle file){
+        ObjectSet<String> allgoods = new ObjectSet<>();
+
         Scanner scan = new Scanner(file.read(1024));
         expect(scan, "#TILES");
 
@@ -61,6 +65,7 @@ public class MapIO{
                 goods.add(scan.next().toLowerCase());
             }
             cities.add(new City(name, x, y, CitySize.values()[size-1], goods));
+            allgoods.addAll(goods);
         }
 
         expect(scan, "#PORTS");
@@ -110,6 +115,9 @@ public class MapIO{
         }
 
         scan.close();
+
+        //todo make icons for these and remove debugging statement
+        Log.info("Total goods: {0}\n{1}", allgoods.size, allgoods);
 
         return new World(tiles, cities);
     }
