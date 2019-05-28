@@ -185,15 +185,21 @@ public class Renderer implements ApplicationListener{
             }
 
             if(state.player().hasGoodDelivery(city)){
-                float scale = tilesize / 16f;
-                float size = scale * 10f;
-                Draw.color(Color.DARK_GRAY);
-                Draw.rect("icon-export", tx + scale*10f, ty + scale*10f - scale, size, size);
-                Draw.color();
-                Draw.rect("icon-export", tx + scale*10f, ty + scale*10f, size, size);
+                icon("icon-export", tx, ty, 10f, 10f);
+            }
+
+            if(state.player().hasGoodDemand(city)){
+                icon("icon-open", tx, ty, -10f, 10f);
             }
         }
     }
 
-
+    private void icon(String name, float x, float y, float offsetx, float offsety){
+        float scale = tilesize / 16f;
+        float size = scale * Core.atlas.find(name).getWidth();
+        Draw.color(Color.DARK_GRAY);
+        Draw.rect(name, x + offsetx*scale, y + offsety*scale - scale, size, size);
+        Draw.color();
+        Draw.rect(name, x + offsetx*scale, y + offsety*scale, size, size);
+    }
 }

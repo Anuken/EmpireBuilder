@@ -123,7 +123,7 @@ public class UI implements ApplicationListener{
                 t.label(() -> "[orange]" + (state.player().loco.speed - state.player().moved) + "[] moves left");
                 t.row();
                 t.label(() -> state.player().cargo.isEmpty() ? "[gray]<Empty>" :
-                        "[lightgray]- " + state.player().cargo.toString("\n- "));
+                        "[purple]+ " + state.player().cargo.toString("\n- "));
             }).minWidth(width);
             main.row();
             main.addImageTextButton("Demands...", "icon-file", 8*3, () -> {
