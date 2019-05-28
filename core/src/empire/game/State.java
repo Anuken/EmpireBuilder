@@ -41,12 +41,14 @@ public class State{
     }
 
     public void sellGood(Player player, City city, String good){
-        Demand[] demands = Structs.find(player.demandCards, f -> Structs.contains(f.demands, res -> res.city == city && res.good.equals(good))).demands;
-        if(demands != null){
-            Demand demand = Structs.find(demands, res -> res.city == city && res.good.equals(good));
+        DemandCard card = Structs.find(player.demandCards, f -> Structs.contains(f.demands, res -> res.city == city && res.good.equals(good)));
+        if(card != null){
+            Demand demand = Structs.find(card.demands, res -> res.city == city && res.good.equals(good));
             player.money += demand.cost;
             player.cargo.remove(good);
-            discardCards(player);
+            int idx = Structs.indexOf(player.demandCards, card);
+            player.demandCards[idx] = demandCards.pop();
+            demandCards.insert(0, card);
         }else{
             throw new IllegalArgumentException("Incorrect usage. No matching city/good combination found.");
         }

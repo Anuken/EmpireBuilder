@@ -100,6 +100,10 @@ public class World{
         return tiles[x][y];
     }
 
+    public void connectionsOf(Tile tile){
+
+    }
+
     /** A single tile on the board.*/
     public static class Tile{
         public final Terrain type;
