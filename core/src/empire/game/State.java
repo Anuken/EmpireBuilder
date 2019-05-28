@@ -101,6 +101,15 @@ public class State{
         return players.get(currentPlayer);
     }
 
+    public boolean canBeginTrack(Player player, Tile tile){
+        return world.getMajorCity(tile) != null ||
+                player.position == tile ||
+                player.tracks.containsKey(tile) ||
+                (tile.type == Terrain.port &&
+                        (player.tracks.containsKey(tile.port.from) ||
+                        player.tracks.containsKey(tile.port.to)));
+    }
+
     public boolean canPlaceTrack(Player player, Tile from, Tile to){
         //can't place track into itself
         if(from == to) return false;
@@ -178,7 +187,7 @@ public class State{
 
     /** Returns whether a rail can be placed on this terrain.*/
     public boolean canPlaceOn(Terrain terrain){
-        return terrain == Terrain.alpine || terrain == Terrain.mountain || terrain == Terrain.plain;
+        return terrain != Terrain.water;
     }
 
     /** Returns how long it would take this player to move to this tile.

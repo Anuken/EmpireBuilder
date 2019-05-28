@@ -37,9 +37,7 @@ public class Control implements ApplicationListener{
                 }
             }else{
                 Player player = state.player();
-                if(tile != null && (state.world.getMajorCity(tile) != null ||
-                                    player.position == tile ||
-                                    player.tracks.containsKey(tile))){
+                if(tile != null && state.canBeginTrack(player, tile)){
                     placeLoc = tile;
                 }
             }
