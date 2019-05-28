@@ -117,10 +117,6 @@ public class UI implements ApplicationListener{
                 t.row();
                 t.label(() -> state.player().cargo.isEmpty() ? "[gray]<Empty>" :
                         "[lightgray]- " + state.player().cargo.toString("\n- "));
-                //t.row();
-                //t.label(() -> "Money used: [coral]" + state.currentPlayer().moneySpent + "/20");
-                //t.row();
-                //t.label(() -> "Moves: [coral]" + state.currentPlayer().moved + "/" + state.currentPlayer().loco.speed);
                 /*t.row();
                 t.label(() -> "Cards:\n[coral]" + Arrays.toString(state.currentPlayer().demandCards)
                         .replace(", ", "\n")

@@ -2,21 +2,19 @@ package empire.io;
 
 import empire.game.World;
 import empire.game.World.*;
-import io.anuke.arc.collection.Array;
-import io.anuke.arc.collection.IntMap;
-import io.anuke.arc.collection.ObjectSet;
+import io.anuke.arc.collection.*;
 import io.anuke.arc.files.FileHandle;
 import io.anuke.arc.function.Supplier;
+import io.anuke.arc.math.EarClippingTriangulator;
 import io.anuke.arc.math.Mathf;
-import io.anuke.arc.math.geom.Geometry;
-import io.anuke.arc.math.geom.Point2;
-import io.anuke.arc.math.geom.Vector2;
+import io.anuke.arc.math.geom.*;
 import io.anuke.arc.util.Log;
 
 import java.util.Scanner;
 
 /** Loads maps from text files.*/
 public class MapIO{
+    private static final ConvexHull hull = new ConvexHull();
     /** Maps character to terrain type. */
     private static final IntMap<Terrain> terrainMap = IntMap.of(
         'o', Terrain.water,
@@ -94,12 +92,11 @@ public class MapIO{
         Supplier<Array<Point2>> parseRivers = () -> {
             Array<Point2> rivers = new Array<>();
             String next;
-            while((next = scan.nextLine()).contains("|")){
+            while(scan.hasNextLine() && (next = scan.nextLine()).contains("|")){
                 String[] split = next.split(" ");
                 int y = height - 1 - Integer.parseInt(split[0]);
                 for(int i = 2; i < split.length; i++){
                     int x = Integer.parseInt(split[i]);
-                    tiles[x][y].river = true;
                     rivers.add(new Point2(x, y));
                 }
             }
@@ -125,18 +122,7 @@ public class MapIO{
 
             if(left.isEmpty() || right.isEmpty()) continue;
 
-            //set up tiles with rivers crossing them
-            for(Point2 p : left){
-                Tile tile = tiles[p.x][p.y];
-                for(Point2 adj : tile.getAdjacent()){
-                    if(right.contains(test -> test.equals(p.x + adj.x, p.y + adj.y))){
-                        if(tile.riverTiles == null){
-                            tile.riverTiles = new Array<>();
-                            tile.riverTiles.add(tiles[p.x + adj.x][p.y + adj.y]);
-                        }
-                    }
-                }
-            }
+            linkWaterTiles(tiles, left, right);
 
             //create smoothed river polyline
             Array<Vector2> mv = (left.size > right.size ? left : right).map(p -> new Vector2(p.x, p.y));
@@ -196,12 +182,94 @@ public class MapIO{
 
         //TODO read lakes and inlets
 
+        //read lakes
+        Array<Lake> lakes = new Array<>();
+        next = scan.next();
+
+        while(!next.equals("#INLETS")){
+            if(!next.equals("l")){
+                throw new IllegalArgumentException("Expecting l.");
+            }
+            scan.nextLine();
+            Array<Point2> left = parseRivers.get();
+            Array<Point2> right = parseRivers.get();
+
+            linkWaterTiles(tiles, left, right);
+            lakes.add(makeLake(left, right));
+            next = scan.next();
+        }
+
+        //read inlets
+
+        while(scan.hasNext()){
+            expect(scan, "l");
+            scan.nextLine();
+            Array<Point2> left = parseRivers.get();
+            Array<Point2> right = parseRivers.get();
+
+            linkWaterTiles(tiles, left, right);
+            lakes.add(makeLake(left, right));
+        }
+
         scan.close();
 
         //todo make icons for these and remove debugging statement
         Log.info("Total goods: {0}\n{1}", allgoods.size, allgoods);
 
-        return new World(tiles, cities, rivers);
+        return new World(tiles, cities, rivers, lakes);
+    }
+
+    /** Adds the appropriate water tile costs.*/
+    private static void linkWaterTiles(Tile[][] tiles, Array<Point2> left, Array<Point2> right){
+        for(Point2 p : left){
+            Tile tile = tiles[p.x][p.y];
+            for(Point2 adj : tile.getAdjacent()){
+                if(right.contains(test -> test.equals(p.x + adj.x, p.y + adj.y))){
+                    if(tile.riverTiles == null){
+                        tile.riverTiles = new Array<>();
+                        tile.riverTiles.add(tiles[p.x + adj.x][p.y + adj.y]);
+                    }
+                }
+            }
+        }
+    }
+
+    /** Creates a lake from some points.*/
+    private static Lake makeLake(Array<Point2> left, Array<Point2> right){
+        FloatArray points = new FloatArray();
+        left.each(p -> points.add(p.x, p.y));
+        right.each(p -> points.add(p.x, p.y));
+
+        int smoothIterations = 3;
+        //compute convex hull of points
+        FloatArray polygon = hull.computePolygon(points, false);
+        Array<Vector2> out = polygon.toVector2Array();
+
+        //smooth it out across several iterations
+        for(int s = 0; s < smoothIterations; s++){
+            Array<Vector2> smoothed = new Array<>();
+
+            for(int i = 0; i < out.size; i++){
+                smoothed.add(out.get(i).cpy());
+                if(i < out.size - 1){
+                    smoothed.add(out.get(i).cpy().lerp(out.get(i + 1), 0.5f));
+                }
+            }
+
+            for(int i = 0; i < out.size; i++){
+                Vector2 lastv = smoothed.get(Mathf.mod(i * 2 - 1, smoothed.size-1));
+                Vector2 nextv = smoothed.get(Mathf.mod(i * 2 + 1, smoothed.size-1));
+                smoothed.get(i*2).set(lastv).lerp(nextv, 0.5f);
+            }
+
+            out = smoothed;
+        }
+
+        //compute polygon indices
+        polygon = Geometry.vectorsToFloats(out);
+        short[] indices = new EarClippingTriangulator().computeTriangles(polygon).toArray();
+
+        return new Lake(polygon.toVector2Array(), indices);
     }
 
     /** Utility function to make sure sections of a text file are the correct input.*/

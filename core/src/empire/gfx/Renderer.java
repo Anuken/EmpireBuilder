@@ -4,7 +4,7 @@ import empire.game.Player;
 import empire.game.World.City;
 import empire.game.World.CitySize;
 import empire.game.World.Tile;
-import empire.gfx.gen.RiverRenderer;
+import empire.gfx.gen.WaterRenderer;
 import io.anuke.arc.ApplicationListener;
 import io.anuke.arc.Core;
 import io.anuke.arc.graphics.Camera;
@@ -32,7 +32,7 @@ public class Renderer implements ApplicationListener{
         Core.camera.position.set(state.world.width * tilesize/2f, state.world.height*tilesize/2f);
         Core.atlas = new TextureAtlas("ui/uiskin.atlas");
 
-        riverTexture = RiverRenderer.renderRivers(state.world);
+        riverTexture = WaterRenderer.createWaterTexture(state.world);
     }
 
     @Override
@@ -66,8 +66,8 @@ public class Renderer implements ApplicationListener{
         Draw.proj(Core.camera.projection());
 
         drawWorld();
-        drawPlayers();
         drawRails();
+        drawPlayers();
         drawControl();
 
         Draw.flush();

@@ -29,15 +29,19 @@ public class World{
 
     private final Tile[][] tiles;
     private final ObjectMap<String, City> cities;
-    private final Array<River> rivers;
 
+    /** All the rivers of the map.*/
+    public final Array<River> rivers;
+    /** All the lakes of the map, as polygons.*/
+    public final Array<Lake> lakes;
     /** Width and height of the world, in tiles.*/
     public final int width, height;
 
-    public World(Tile[][] tiles, Array<City> cities, Array<River> rivers){
+    public World(Tile[][] tiles, Array<City> cities, Array<River> rivers, Array<Lake> lakes){
         this.tiles = tiles;
         this.cities = new ObjectMap<>();
         this.rivers = rivers;
+        this.lakes = lakes;
         width = tiles.length;
         height = tiles[0].length;
 
@@ -77,11 +81,6 @@ public class World{
         return cities.get(name);
     }
 
-    /** Returns an array of all rivers.*/
-    public Array<River> rivers(){
-        return rivers;
-    }
-
     /** Returns the cities in this world.*/
     public Iterable<City> cities(){
         return cities.values();
@@ -109,8 +108,6 @@ public class World{
         public City city;
         /** The port at this city's location. May be null.*/
         public Port port;
-        /** Whether this tile is adjacent to a river.*/
-        public boolean river;
         /** Temporary search distance.*/
         public int searchDst;
         /** List of tiles that require crossing a river to get to from this tile.*/
@@ -179,6 +176,17 @@ public class World{
         public River(String name, Array<Vector2> points){
             this.points = points;
             this.name = name;
+        }
+    }
+
+    /** Represents a lake on the map as a polygon.*/
+    public static class Lake{
+        public final Array<Vector2> points;
+        public final short[] indices;
+
+        public Lake(Array<Vector2> points, short[] indices){
+            this.points = points;
+            this.indices = indices;
         }
     }
 
