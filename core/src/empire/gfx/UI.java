@@ -66,36 +66,36 @@ public class UI implements ApplicationListener{
             Collapser actions = new Collapser(t -> {
                 t.defaults().width(160f).height(60f);
                 t.addButton("Upgrade", () -> {
-                    if(state.currentPlayer().loco != Loco.freight){
+                    if(state.player().loco != Loco.freight){
                         showFade("Upgrade Purchased!");
-                        state.purchaseLoco(state.currentPlayer(), Loco.superFreight);
+                        state.purchaseLoco(state.player(), Loco.superFreight);
                     }else{
                         showDialog("Upgrade", b -> {
                             b.cont.defaults().size(180f, 50f);
                             b.cont.addButton("Fast Freight", () -> {
                                 showFade("Upgrade Purchased!");
-                                state.purchaseLoco(state.currentPlayer(), Loco.fastFreight);
+                                state.purchaseLoco(state.player(), Loco.fastFreight);
                                 b.hide();
                             });
                             b.cont.row();
                             b.cont.addButton("Heavy Freight", () -> {
                                 showFade("Upgrade Purchased!");
-                                state.purchaseLoco(state.currentPlayer(), Loco.heavyFreight);
+                                state.purchaseLoco(state.player(), Loco.heavyFreight);
                                 b.hide();
                             });
                         });
                     }
                     arr[0].toggle();
-                }).disabled(b -> state.currentPlayer().money < state.locoCost).update(b -> {
+                }).disabled(b -> state.player().money < state.locoCost).update(b -> {
                     String baseText = "Upgrade";
-                    if(state.currentPlayer().money < state.locoCost){
+                    if(state.player().money < state.locoCost){
                         baseText = "Upgrade\n[scarlet]20 ECU required";
                     }
                     b.setText(baseText);
                 });
                 t.row();
                 t.addButton("Discard Cards", () -> {
-                    state.discardCards(state.currentPlayer());
+                    state.discardCards(state.player());
                     arr[0].toggle();
                 });
             }, true);
@@ -105,16 +105,18 @@ public class UI implements ApplicationListener{
             main.top().left().table("dialogDim", t -> {
                 t.margin(10f);
                 t.defaults().left();
-                t.label(() -> "Player " + (state.currentPlayer + 1)).update(l -> l.setColor(state.currentPlayer().color));
+                t.label(() -> "Player " + (state.currentPlayer + 1)).update(l -> l.setColor(state.player().color));
                 t.row();
-                t.addImage("white").fillX().height(3f).pad(3).update(l -> l.setColor(state.currentPlayer().color));
+                t.addImage("white").fillX().height(3f).pad(3).update(l -> l.setColor(state.player().color));
                 t.row();
-                t.label(() -> "[lime]" + state.currentPlayer().loco + "[lightgray] loco");
+                t.label(() -> "[lime]" + state.player().loco + "[lightgray] loco");
                 t.row();
-                t.label(() -> "[coral]" + state.currentPlayer().money + "[] ECU");
+                t.label(() -> "[coral]" + state.player().money + "[] ECU | [lime]" + (state.maxRailSpend - state.player().moneySpent) + "[] this turn");
                 t.row();
-                t.label(() -> state.currentPlayer().cargo.isEmpty() ? "[gray]<Empty>" :
-                        "[lightgray]- " + state.currentPlayer().cargo.toString("\n- "));
+                t.label(() -> "[orange]" + (state.player().loco.speed - state.player().moved) + "[] moves left");
+                t.row();
+                t.label(() -> state.player().cargo.isEmpty() ? "[gray]<Empty>" :
+                        "[lightgray]- " + state.player().cargo.toString("\n- "));
                 //t.row();
                 //t.label(() -> "Money used: [coral]" + state.currentPlayer().moneySpent + "/20");
                 //t.row();
@@ -152,7 +154,7 @@ public class UI implements ApplicationListener{
 
             //automatically update city that's hovered over
             main.update(() -> {
-                if(lastPlayer[0] != state.currentPlayer() || lastPosition[0] != state.currentPlayer().position){
+                if(lastPlayer[0] != state.player() || lastPosition[0] != state.player().position){
                     table.clearChildren();
                     selectedCity[0] = null;
                 }
@@ -161,7 +163,7 @@ public class UI implements ApplicationListener{
                 City city = on == null ? null : on.city;
 
                 if(city == null){
-                    city = state.currentPlayer().position.city;
+                    city = state.player().position.city;
                 }
 
                 if(city != selectedCity[0]){
@@ -169,7 +171,7 @@ public class UI implements ApplicationListener{
                     table.defaults().left();
                     table.margin(10f);
 
-                    boolean atCity = state.currentPlayer().position.city == city;
+                    boolean atCity = state.player().position.city == city;
 
                     //build UI to display it
                     if(city != null){
@@ -180,9 +182,9 @@ public class UI implements ApplicationListener{
                         for(String good : city.goods){
                             if(atCity){
                                 table.addImageTextButton(Strings.capitalize(good), "icon-export", 10*2, () -> {
-                                    state.currentPlayer().addCargo(good);
+                                    state.player().addCargo(good);
                                     showFade(Strings.capitalize(good) + " obtained.");
-                                }).colspan(2).left().fillX().disabled(b -> !state.currentPlayer().hasCargoSpace()).width(190f).height(45f);
+                                }).colspan(2).left().fillX().disabled(b -> !state.player().hasCargoSpace()).width(190f).height(45f);
                             }else{
                                 table.addImage("icon-file").size(8*3).padRight(3).right();
                                 table.add(Strings.capitalize(good)).color(Color.LIGHT_GRAY);
@@ -198,8 +200,8 @@ public class UI implements ApplicationListener{
                 }
 
                 selectedCity[0] = city;
-                lastPlayer[0] = state.currentPlayer();
-                lastPosition[0] = state.currentPlayer().position;
+                lastPlayer[0] = state.player();
+                lastPosition[0] = state.player().position;
             });
         });
 

@@ -16,30 +16,46 @@ public class Control implements ApplicationListener{
     public Tile placeLoc = null;
 
     @Override
+    public void init(){
+        //Core.scene.table(t -> t.touchable(Touchable.enabled)).dragged((x, y) -> {
+        //    Core.camera.position.sub(x / renderer.zoom, y / renderer.zoom);
+        //});
+    }
+
+    @Override
     public void update(){
 
-        if(Core.input.keyTap(KeyCode.SPACE)){
+        if(Core.input.keyDown(KeyCode.MOUSE_LEFT)){
             Tile tile = tileMouse();
             if(placeLoc != null){
-                if(state.canPlaceTrack(state.currentPlayer(), placeLoc, tile)){
-                    state.placeTrack(state.currentPlayer(), placeLoc, tile);
-                    placeLoc = tile;
+                if(state.canPlaceTrack(state.player(), placeLoc, tile)){
+                    int cost = state.getTrackCost(placeLoc, tile);
+                    if(state.canSpendRail(state.player(), cost)){
+                        state.placeTrack(state.player(), placeLoc, tile);
+                        placeLoc = tile;
+                    }
                 }
             }else{
-                Player player = state.currentPlayer();
-                if(tile != null && (player.position == tile || player.tracks.containsKey(tile))){
+                Player player = state.player();
+                if(tile != null && (state.world.getMajorCity(tile) != null ||
+                                    player.position == tile ||
+                                    player.tracks.containsKey(tile))){
                     placeLoc = tile;
                 }
             }
         }
 
-        if(Core.input.keyTap(KeyCode.MOUSE_LEFT)){
+        if(Core.input.keyRelease(KeyCode.MOUSE_LEFT)){
+            placeLoc = null;
+        }
+
+        if(Core.input.keyTap(KeyCode.SPACE)){
             Tile tile = tileMouse();
-            Player player = state.currentPlayer();
-            if(tile != null && player.hasTrack(tile)){
+            Player player = state.player();
+            if(tile != null){
                 //TODO movement animation
-                int cost = player.distanceTo(tile);
-                if(cost + player.moved <= player.loco.speed){
+                int cost = state.distanceTo(player, tile);
+                if(cost != -1 && cost + player.moved <= player.loco.speed){
                     player.position = tile;
                     player.moved += cost;
                 }

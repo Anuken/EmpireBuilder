@@ -62,6 +62,11 @@ public class World{
         return null;
     }
 
+    /** Returns whether a tile is adjacent to another tile.*/
+    public boolean isAdjacent(Tile from, Tile to){
+        return Structs.contains(from.getAdjacent(), p -> tileOpt(from.x + p.x, from.y + p.y) == to);
+    }
+
     /** Returns the unique index of a tile.*/
     public int index(Tile tile){
         return tile.x + tile.y * width;

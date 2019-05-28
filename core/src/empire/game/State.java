@@ -4,6 +4,8 @@ import empire.game.World.CitySize;
 import empire.game.World.Terrain;
 import empire.game.World.Tile;
 import io.anuke.arc.collection.Array;
+import io.anuke.arc.collection.ObjectSet;
+import io.anuke.arc.collection.Queue;
 import io.anuke.arc.util.Structs;
 
 /** Holds the state of the entire game. */
@@ -20,6 +22,12 @@ public class State{
     public Array<DemandCard> demandCards;
     /** Cost to upgrade a loco.*/
     public final int locoCost = 20;
+    /** Max amount of money to spend on rails per turn.*/
+    public final int maxRailSpend = 20;
+
+    /** A set of closed tiles. Temp usage only.*/
+    private static final ObjectSet<Tile> closedSet = new ObjectSet<>();
+    private static final Queue<Tile> queue = new Queue<>();
 
     /** Grabs 3 demand cards from the top of the deck and returns them.*/
     public DemandCard[] grabCards(){
@@ -40,6 +48,11 @@ public class State{
         }
     }
 
+    /** @return whether this player can place this rail at the specified price.*/
+    public boolean canSpendRail(Player player, int amount){
+        return player.moneySpent + amount <= maxRailSpend && player.money - amount >= 0;
+    }
+
     /** Simulates a player purchasing a loco.*/
     public void purchaseLoco(Player player, Loco loco){
         player.loco = loco;
@@ -49,8 +62,8 @@ public class State{
     /** Switches turns to the next player.
      * Increments total turn if needed.*/
     public void nextPlayer(){
-        currentPlayer().moneySpent = 0;
-        currentPlayer().moved = 0;
+        player().moneySpent = 0;
+        player().moved = 0;
 
         currentPlayer ++;
         if(currentPlayer >= players.size){
@@ -68,7 +81,7 @@ public class State{
         player.moneySpent += cost;
     }
 
-    public Player currentPlayer(){
+    public Player player(){
         return players.get(currentPlayer);
     }
 
@@ -77,16 +90,23 @@ public class State{
         if(from == to) return false;
 
         //player needs to be there to place tracks there
-        if(player.position != from && !player.tracks.containsKey(from) && !player.tracks.containsKey(to)){
+        if(player.position != from && !player.tracks.containsKey(from) && !player.tracks.containsKey(to)
+          && world.getMajorCity(from) == null){ //make sure to check for major cities too; track can be placed from any major city
             return false;
         }
 
         //this basically looks through all adjacent points; if from is not adjacent to 'to', return false
-        if(!Structs.contains(from.getAdjacent(), p -> world.tileOpt(from.x + p.x, from.y + p.y) == to)){
+        if(!world.isAdjacent(from, to)){
             return false;
         }
+
         //make sure these tiles are passable
         if(!isPassable(player, from) || !isPassable(player, to)){
+            return false;
+        }
+
+        //make sure they're not both in major cities, that's illegal
+        if(world.getMajorCity(from) == world.getMajorCity(to) && world.getMajorCity(from) != null){
             return false;
         }
 
@@ -143,6 +163,55 @@ public class State{
     /** Returns whether a rail can be placed on this terrain.*/
     public boolean canPlaceOn(Terrain terrain){
         return terrain == Terrain.alpine || terrain == Terrain.mountain || terrain == Terrain.plain;
+    }
+
+    /** Returns how long it would take this player to move to this tile.
+     * Returns -1 if impossible.*/
+    public int distanceTo(Player player, Tile other){
+
+        if(world.getMajorCity(player.position) == world.getMajorCity(other) && world.getMajorCity(other) != null){
+            if(world.isAdjacent(player.position, other)){ //adjacent means dist = 1
+                return 1;
+            }else{
+                return 2; //if not adjacent, the only alternative is 2
+            }
+        }
+
+        if(!player.hasTrack(other)){
+            return -1;
+        }
+
+        //already there
+        if(other == player.position){
+            return 0;
+        }
+
+        closedSet.clear();
+        queue.clear();
+
+        other.searchDst = 0;
+
+        //perform BFS
+        queue.addFirst(other);
+        closedSet.add(other);
+        while(!queue.isEmpty()){
+            Tile tile = queue.removeLast();
+            for(Tile child : player.tracks.get(tile)){
+                //if found, return its search distance
+                if(child == player.position){
+                    return tile.searchDst + 1;
+                }
+
+                if(!closedSet.contains(child)){
+                    child.searchDst = tile.searchDst + 1;
+                    queue.addFirst(child);
+                    closedSet.add(child);
+                }
+            }
+        }
+
+        closedSet.clear();
+        return -1;
     }
 
     /** A reason for preventing the player from placing a track at a location.

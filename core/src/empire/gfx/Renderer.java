@@ -14,7 +14,6 @@ import io.anuke.arc.graphics.g2d.*;
 import io.anuke.arc.input.KeyCode;
 import io.anuke.arc.math.Mathf;
 import io.anuke.arc.math.geom.Vector2;
-import io.anuke.arc.scene.event.Touchable;
 import io.anuke.arc.util.Time;
 import io.anuke.arc.util.Tmp;
 
@@ -34,13 +33,6 @@ public class Renderer implements ApplicationListener{
         Core.atlas = new TextureAtlas("ui/uiskin.atlas");
 
         riverTexture = RiverRenderer.renderRivers(state.world);
-    }
-
-    @Override
-    public void init(){
-        Core.scene.table(t -> t.touchable(Touchable.enabled)).dragged((x, y) -> {
-            Core.camera.position.sub(x / zoom, y / zoom);
-        });
     }
 
     @Override
@@ -65,7 +57,7 @@ public class Renderer implements ApplicationListener{
         }
 
         if(doLerp){
-            Vector2 v = control.toWorld(state.currentPlayer().position);
+            Vector2 v = control.toWorld(state.player().position);
             Core.camera.position.lerpDelta(v, 0.09f);
         }
 
@@ -91,7 +83,7 @@ public class Renderer implements ApplicationListener{
             Lines.square(world.x, world.y, tilesize/2f);
 
             Tile other = control.tileMouse();
-            if(other != null && state.canPlaceTrack(state.currentPlayer(), control.placeLoc, other)){
+            if(other != null && state.canPlaceTrack(state.player(), control.placeLoc, other)){
                 Draw.color(Color.YELLOW);
                 control.toWorld(other.x, other.y);
                 Lines.square(world.x, world.y, tilesize/2f);

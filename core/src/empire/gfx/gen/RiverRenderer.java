@@ -11,14 +11,11 @@ import io.anuke.arc.graphics.g2d.Draw;
 import io.anuke.arc.graphics.g2d.Lines;
 import io.anuke.arc.graphics.glutils.FrameBuffer;
 import io.anuke.arc.math.geom.Vector2;
-import io.anuke.arc.util.Log;
-import io.anuke.arc.util.Time;
 
 public class RiverRenderer{
     private static final int gsize = 16;
 
     public static Texture renderRivers(World world){
-        Time.mark();
 
         //create a framebuffer to draw to, resize the projection matrix accordingly
         FrameBuffer buffer = new FrameBuffer(world.width * gsize, world.height * gsize);
@@ -50,7 +47,6 @@ public class RiverRenderer{
         Draw.flush();
         buffer.end();
         buffer.getTexture().setFilter(TextureFilter.Nearest, TextureFilter.Nearest);
-        Log.info("Time to generate image: {0}s", (Time.elapsed()/1000));
         return buffer.getTexture();
     }
 }
