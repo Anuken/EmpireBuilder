@@ -1,5 +1,7 @@
 package empire.gfx;
 
+import empire.game.DemandCard;
+import empire.game.DemandCard.Demand;
 import empire.game.Loco;
 import empire.game.Player;
 import empire.game.World.City;
@@ -14,6 +16,7 @@ import io.anuke.arc.function.Consumer;
 import io.anuke.arc.graphics.Color;
 import io.anuke.arc.graphics.g2d.BitmapFont;
 import io.anuke.arc.math.Interpolation;
+import io.anuke.arc.math.Mathf;
 import io.anuke.arc.scene.Scene;
 import io.anuke.arc.scene.Skin;
 import io.anuke.arc.scene.actions.Actions;
@@ -22,6 +25,8 @@ import io.anuke.arc.scene.ui.Label;
 import io.anuke.arc.scene.ui.layout.Table;
 import io.anuke.arc.scene.ui.layout.Unit;
 import io.anuke.arc.util.Strings;
+import io.anuke.arc.util.Structs;
+import io.anuke.arc.util.Time;
 
 import static empire.gfx.EmpireCore.control;
 import static empire.gfx.EmpireCore.state;
@@ -62,9 +67,10 @@ public class UI implements ApplicationListener{
 
         //display player info
         Core.scene.table(main -> {
+            float width = 250f;
             Collapser[] arr = {null};
             Collapser actions = new Collapser(t -> {
-                t.defaults().width(160f).height(60f);
+                t.defaults().width(width).height(60f);
                 t.addButton("Upgrade", () -> {
                     if(state.player().loco != Loco.freight){
                         showFade("Upgrade Purchased!");
@@ -96,6 +102,7 @@ public class UI implements ApplicationListener{
                 t.row();
                 t.addButton("Discard Cards", () -> {
                     state.discardCards(state.player());
+                    state.nextPlayer();
                     arr[0].toggle();
                 });
             }, true);
@@ -117,12 +124,27 @@ public class UI implements ApplicationListener{
                 t.row();
                 t.label(() -> state.player().cargo.isEmpty() ? "[gray]<Empty>" :
                         "[lightgray]- " + state.player().cargo.toString("\n- "));
-                /*t.row();
-                t.label(() -> "Cards:\n[coral]" + Arrays.toString(state.currentPlayer().demandCards)
-                        .replace(", ", "\n")
-                        .replace("[", "")
-                        .replace("]", ""));*/
-            }).minWidth(160f);
+            }).minWidth(width);
+            main.row();
+            main.addImageTextButton("Demands...", "icon-file", 8*3, () -> {
+                showDialog("Demand Cards", d -> {
+                    d.cont.left();
+                    for(DemandCard card : state.player().demandCards){
+                        d.cont.left();
+                        for(Demand m : card.demands){
+                            d.cont.add(Strings.format(
+                                "[yellow]{0}[] to[lime] {1} ",
+                                Strings.capitalize(m.good), Strings.capitalize(m.city.name))).left();
+                            d.cont.add("[coral]"+m.cost+"[] ECU").left();
+                            d.cont.row();
+
+                        }
+                        d.cont.row();
+                        d.cont.addImage("white").height(3).color(Color.ROYAL).growX().pad(10f).colspan(2);
+                        d.cont.row();
+                    }
+                });
+            }).fillX().height(50);
             main.row();
             main.addImageTextButton("Action...", "icon-down", 16*2, actions::toggle).fillX().height(50);
             main.row();
@@ -160,6 +182,9 @@ public class UI implements ApplicationListener{
 
                 if(city == null){
                     city = state.player().position.city;
+                    if(city == null){
+                        city = state.world.getMajorCity(state.player().position);
+                    }
                 }
 
                 if(city != selectedCity[0]){
@@ -167,7 +192,7 @@ public class UI implements ApplicationListener{
                     table.defaults().left();
                     table.margin(10f);
 
-                    boolean atCity = state.player().position.city == city;
+                    boolean atCity = state.player().position.city == city || state.world.getMajorCity(state.player().position) == city;
 
                     //build UI to display it
                     if(city != null){
@@ -175,7 +200,9 @@ public class UI implements ApplicationListener{
                         table.add(Strings.capitalize(city.name)).color(Color.CORAL);
 
                         table.row();
+                        table.left();
                         for(String good : city.goods){
+
                             if(atCity){
                                 table.addImageTextButton(Strings.capitalize(good), "icon-export", 10*2, () -> {
                                     state.player().addCargo(good);
@@ -186,6 +213,32 @@ public class UI implements ApplicationListener{
                                 table.add(Strings.capitalize(good)).color(Color.LIGHT_GRAY);
                             }
                             table.row();
+                        }
+
+                        City fcity = city;
+                        if(Structs.contains(state.player().demandCards, card -> Structs.contains(card.demands, d -> d.city == fcity))){
+                            table.addImage("white").color(Color.ROYAL).growX().pad(10f).colspan(2);
+                            table.row();
+
+                            state.player().eachGoodByCity(city, d -> {
+                                boolean has = state.player().cargo.contains(d.good);
+                                if(has && atCity){
+                                    table.addImageTextButton(Strings.capitalize(d.good) + "[] for[coral] " + d.cost + "[] ECU",
+                                            "icon-project-open", 14*2, () -> {
+                                        state.sellGood(state.player(), d.city, d.good);
+                                        lastPlayer[0] = null; //trigger a refresh next frame
+                                    }).colspan(2).left().fillX().width(190f).height(45f);
+
+                                }else{
+                                    table.addImage(has ? "icon-project-open" : "icon-minus").size(has ? 14*2 : 8 * 3).padRight(3).right().update(i -> {
+                                        if(has){
+                                            i.getColor().set(Color.WHITE).lerp(Color.GOLD, Mathf.absin(Time.time(), 4f, 1f));
+                                        }
+                                    });
+                                    table.add("[lightgray]" + Strings.capitalize(d.good) + "[] for[coral] " + d.cost + "[] ECU");
+                                }
+                                table.row();
+                            });
                         }
 
                         if(atCity){
@@ -216,6 +269,7 @@ public class UI implements ApplicationListener{
     public void update(){
         Core.scene.act();
         Core.scene.draw();
+        Time.update();
     }
 
     @Override
@@ -234,7 +288,7 @@ public class UI implements ApplicationListener{
     public void showDialog(String title, Consumer<Dialog> cons){
         Dialog dialog = new Dialog(title,"dialog");
         cons.accept(dialog);
-        dialog.buttons.addButton("Cancel", dialog::hide).size(180f, 50f);
+        dialog.buttons.addButton("Close", dialog::hide).size(180f, 50f);
         dialog.show();
     }
 }

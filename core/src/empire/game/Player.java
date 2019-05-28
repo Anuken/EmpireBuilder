@@ -1,10 +1,14 @@
 package empire.game;
 
+import empire.game.DemandCard.Demand;
+import empire.game.World.City;
 import empire.game.World.Tile;
 import io.anuke.arc.collection.Array;
 import io.anuke.arc.collection.ObjectMap;
 import io.anuke.arc.function.BiConsumer;
+import io.anuke.arc.function.Consumer;
 import io.anuke.arc.graphics.Color;
+import io.anuke.arc.util.Structs;
 
 /** The state of a single player in the game. */
 public class Player{
@@ -32,6 +36,22 @@ public class Player{
         this.position = position;
         this.color = color;
         this.demandCards = cards;
+    }
+
+    /** Iterates through each good demanded in a city.*/
+    public void eachGoodByCity(City city, Consumer<Demand> cons){
+        for(DemandCard card : demandCards){
+            for(Demand d : card.demands){
+                if(d.city == city){
+                    cons.accept(d);
+                }
+            }
+        }
+    }
+
+    /** Returns whether this player has a card that matches this city and good.*/
+    public boolean canDeliverGood(City city, String good){
+        return Structs.contains(demandCards, card -> Structs.contains(card.demands, d -> d.city == city && d.good.equals(good)));
     }
 
     /** Returns whether this player can hold more cargo.*/

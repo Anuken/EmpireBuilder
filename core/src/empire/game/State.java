@@ -1,5 +1,7 @@
 package empire.game;
 
+import empire.game.DemandCard.Demand;
+import empire.game.World.City;
 import empire.game.World.CitySize;
 import empire.game.World.Terrain;
 import empire.game.World.Tile;
@@ -36,6 +38,18 @@ public class State{
             out[i] = demandCards.pop();
         }
         return out;
+    }
+
+    public void sellGood(Player player, City city, String good){
+        Demand[] demands = Structs.find(player.demandCards, f -> Structs.contains(f.demands, res -> res.city == city && res.good.equals(good))).demands;
+        if(demands != null){
+            Demand demand = Structs.find(demands, res -> res.city == city && res.good.equals(good));
+            player.money += demand.cost;
+            player.cargo.remove(good);
+            discardCards(player);
+        }else{
+            throw new IllegalArgumentException("Incorrect usage. No matching city/good combination found.");
+        }
     }
 
     /** Discards this player's demand cards and replaces them with new ones.*/
