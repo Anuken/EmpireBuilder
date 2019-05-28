@@ -49,6 +49,10 @@ public class Player{
         }
     }
 
+    public boolean hasGoodDelivery(City city){
+        return Structs.contains(demandCards, card -> Structs.contains(card.demands, d -> d.city == city ));
+    }
+
     /** Returns whether this player has a card that matches this city and good.*/
     public boolean canDeliverGood(City city, String good){
         return Structs.contains(demandCards, card -> Structs.contains(card.demands, d -> d.city == city && d.good.equals(good)));

@@ -153,11 +153,11 @@ public class State{
             to.type == Terrain.mountain ? 2 :
             to.type == Terrain.alpine ? 5 : 0;
 
+        //TODO custom cost for inlets and lakes
         if(from.riverTiles != null && from.riverTiles.contains(to)){
             baseCost += 2;
         }
 
-        //TODO factor in costs for inlets, lakes and rivers
         return baseCost;
     }
 
@@ -184,19 +184,6 @@ public class State{
     /** Returns how long it would take this player to move to this tile.
      * Returns -1 if impossible.*/
     public int distanceTo(Player player, Tile other){
-
-        if(world.getMajorCity(player.position) == world.getMajorCity(other) && world.getMajorCity(other) != null){
-            if(world.isAdjacent(player.position, other)){ //adjacent means dist = 1
-                return 1;
-            }else{
-                return 2; //if not adjacent, the only alternative is 2
-            }
-        }
-
-        if(!player.hasTrack(other)){
-            return -1;
-        }
-
         //already there
         if(other == player.position){
             return 0;
@@ -212,18 +199,18 @@ public class State{
         closedSet.add(other);
         while(!queue.isEmpty()){
             Tile tile = queue.removeLast();
-            for(Tile child : player.tracks.get(tile)){
-                //if found, return its search distance
-                if(child == player.position){
-                    return tile.searchDst + 1;
-                }
+            if(tile == player.position){
+                return tile.searchDst + 1;
+            }
 
+            //iterate through /connections/ of each tile
+            world.connectionsOf(player, tile, child -> {
                 if(!closedSet.contains(child)){
                     child.searchDst = tile.searchDst + 1;
                     queue.addFirst(child);
                     closedSet.add(child);
                 }
-            }
+            });
         }
 
         closedSet.clear();

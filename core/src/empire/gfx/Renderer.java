@@ -137,10 +137,7 @@ public class Renderer implements ApplicationListener{
 
     /** Draws the tiles of the world.*/
     void drawWorld(){
-        //draw background map image
         Draw.color();
-        float mw = state.world.width * tilesize, mh = state.world.height * tilesize;
-        //Draw.rect(Draw.wrap(mapTexture), mw/2, mh/2 - tilesize/2f, mw, mh);
 
         //draw tiles
         for(int x = 0; x < state.world.width; x++){
@@ -185,6 +182,15 @@ public class Renderer implements ApplicationListener{
                 Lines.square(tx, ty, tilesize/2f);
             }else{
                 Lines.poly(tx, ty, 6, tilesize);
+            }
+
+            if(state.player().hasGoodDelivery(city)){
+                float scale = tilesize / 16f;
+                float size = scale * 10f;
+                Draw.color(Color.DARK_GRAY);
+                Draw.rect("icon-export", tx + scale*10f, ty + scale*10f - scale, size, size);
+                Draw.color();
+                Draw.rect("icon-export", tx + scale*10f, ty + scale*10f, size, size);
             }
         }
     }

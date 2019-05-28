@@ -2,6 +2,7 @@ package empire.game;
 
 import io.anuke.arc.collection.Array;
 import io.anuke.arc.collection.ObjectMap;
+import io.anuke.arc.function.Consumer;
 import io.anuke.arc.math.geom.Point2;
 import io.anuke.arc.math.geom.Vector2;
 import io.anuke.arc.util.Structs;
@@ -100,8 +101,39 @@ public class World{
         return tiles[x][y];
     }
 
-    public void connectionsOf(Tile tile){
+    /** Iterates through the connections of a tile, taking into account ports.
+     * Also takes into account tracks of this player.*/
+    public void connectionsOf(Player player, Tile tile, Consumer<Tile> adjacent){
+        //water has no connections
+        if(tile.type == Terrain.water){
+            return;
+        }
 
+        City city = getMajorCity(tile);
+
+        for(Point2 point : tile.getAdjacent()){
+            Tile other = tileOpt(tile.x + point.x, tile.y + point.y);
+            if(other != null){
+                //case 1: same major city
+                if(city != null && getMajorCity(other) == city){
+                    adjacent.accept(other);
+                    //case 2: tracks between these two points
+                }else if(player.tracks.containsKey(tile) && player.tracks.get(tile).contains(other)){
+                    adjacent.accept(other);
+                }else{
+                    //TODO check all other player, maybe they have a track here
+                }
+            }
+        }
+
+        //ports work both ways like rails
+        if(tile.port != null && (tile.port.from == tile)){
+            adjacent.accept(tile.port.to);
+        }
+
+        if(tile.port != null && (tile.port.to == tile)){
+            adjacent.accept(tile.port.from);
+        }
     }
 
     /** A single tile on the board.*/
