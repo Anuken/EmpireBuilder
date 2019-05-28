@@ -2,13 +2,15 @@ package empire.io;
 
 import empire.game.World;
 import empire.game.World.*;
-import empire.gfx.Renderer;
 import io.anuke.arc.collection.Array;
 import io.anuke.arc.collection.IntMap;
 import io.anuke.arc.collection.ObjectSet;
 import io.anuke.arc.files.FileHandle;
 import io.anuke.arc.function.Supplier;
-import io.anuke.arc.math.geom.*;
+import io.anuke.arc.math.Mathf;
+import io.anuke.arc.math.geom.Geometry;
+import io.anuke.arc.math.geom.Point2;
+import io.anuke.arc.math.geom.Vector2;
 import io.anuke.arc.util.Log;
 
 import java.util.Scanner;
@@ -104,6 +106,8 @@ public class MapIO{
             return rivers;
         };
 
+        Array<River> rivers = new Array<>();
+
         String next = scan.next();
         while(!next.equals("#LAKES")){ //'next' is the river name right now
             String name = next;
@@ -121,13 +125,30 @@ public class MapIO{
 
             if(left.isEmpty() || right.isEmpty()) continue;
 
+            //set up tiles with rivers crossing them
+            for(Point2 p : left){
+                Tile tile = tiles[p.x][p.y];
+                for(Point2 adj : tile.getAdjacent()){
+                    if(right.contains(test -> test.equals(p.x + adj.x, p.y + adj.y))){
+                        if(tile.riverTiles == null){
+                            tile.riverTiles = new Array<>();
+                            tile.riverTiles.add(tiles[p.x + adj.x][p.y + adj.y]);
+                        }
+                    }
+                }
+            }
 
-            int max = Math.max(left.size, right.size);
+            //create smoothed river polyline
             Array<Vector2> mv = (left.size > right.size ? left : right).map(p -> new Vector2(p.x, p.y));
             Array<Vector2> ov = (left.size <= right.size ? left : right).map(p -> new Vector2(p.x, p.y));
             Array<Vector2> out = new Array<>();
             for(Vector2 v : mv){
                 Vector2 closest = Geometry.findClosest(v.x, v.y, ov);
+                out.add(closest.cpy().add(v).scl(0.5f));
+            }
+
+            for(Vector2 v : ov){
+                Vector2 closest = Geometry.findClosest(v.x, v.y, mv);
                 out.add(closest.cpy().add(v).scl(0.5f));
             }
             Array<Vector2> copy = new Array<>(out);
@@ -148,22 +169,39 @@ public class MapIO{
                 copy.remove(start);
             }
 
-            /*
-            for(int i = 0; i < max; i++){
-                float fract = (float)i/max;
-                Point2 l = left.get(Math.min((int)(fract * left.size), left.size - 1));
-                Point2 r = right.get(Math.min((int)(fract * right.size), right.size - 1));
-                out.add(new Vector2().add(l.x, l.y).add(r.x, r.y).scl(0.5f));
-            }*/
-            Renderer.lines.add(out);
+            int smoothIterations = 3;
+
+            //smooth the polylines in several iterations
+            for(int s = 0; s < smoothIterations; s++){
+                Array<Vector2> smoothed = new Array<>();
+
+                for(int i = 0; i < out.size; i++){
+                    smoothed.add(out.get(i).cpy());
+                    if(i < out.size - 1){
+                        smoothed.add(out.get(i).cpy().lerp(out.get(i + 1), 0.5f));
+                    }
+                }
+
+                for(int i = 0; i < out.size; i++){
+                    Vector2 lastv = smoothed.get(Mathf.clamp(i * 2 - 1, 0, smoothed.size-1));
+                    Vector2 nextv = smoothed.get(Mathf.clamp(i * 2 + 1, 0, smoothed.size-1));
+                    smoothed.get(i*2).set(lastv).lerp(nextv, 0.5f);
+                }
+
+                out = smoothed;
+            }
+
+            rivers.add(new River(name, out));
         }
+
+        //TODO read lakes and inlets
 
         scan.close();
 
         //todo make icons for these and remove debugging statement
         Log.info("Total goods: {0}\n{1}", allgoods.size, allgoods);
 
-        return new World(tiles, cities);
+        return new World(tiles, cities, rivers);
     }
 
     /** Utility function to make sure sections of a text file are the correct input.*/

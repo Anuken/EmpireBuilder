@@ -3,6 +3,7 @@ package empire.game;
 import io.anuke.arc.collection.Array;
 import io.anuke.arc.collection.ObjectMap;
 import io.anuke.arc.math.geom.Point2;
+import io.anuke.arc.math.geom.Vector2;
 import io.anuke.arc.util.Structs;
 
 /** Holds information about the game's world, such as tiles and their costs.*/
@@ -28,13 +29,15 @@ public class World{
 
     private final Tile[][] tiles;
     private final ObjectMap<String, City> cities;
+    private final Array<River> rivers;
 
     /** Width and height of the world, in tiles.*/
     public final int width, height;
 
-    public World(Tile[][] tiles, Array<City> cities){
+    public World(Tile[][] tiles, Array<City> cities, Array<River> rivers){
         this.tiles = tiles;
         this.cities = new ObjectMap<>();
+        this.rivers = rivers;
         width = tiles.length;
         height = tiles[0].length;
 
@@ -69,6 +72,11 @@ public class World{
         return cities.get(name);
     }
 
+    /** Returns an array of all rivers.*/
+    public Array<River> rivers(){
+        return rivers;
+    }
+
     /** Returns the cities in this world.*/
     public Iterable<City> cities(){
         return cities.values();
@@ -100,6 +108,8 @@ public class World{
         public boolean river;
         /** Temporary search distance.*/
         public int searchDst;
+        /** List of tiles that require crossing a river to get to from this tile.*/
+        public Array<Tile> riverTiles;
 
         public Tile(Terrain type, int x, int y){
             this.type = type;
@@ -151,6 +161,19 @@ public class World{
             this.y = y;
             this.size = size;
             this.goods = goods;
+        }
+    }
+
+    /** Represents a river on the map.*/
+    public static class River{
+        /** Smooth oints that the river passes through in tile coordinates.*/
+        public final Array<Vector2> points;
+        /** River name.*/
+        public final String name;
+
+        public River(String name, Array<Vector2> points){
+            this.points = points;
+            this.name = name;
         }
     }
 

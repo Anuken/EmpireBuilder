@@ -1,18 +1,22 @@
 package empire.gfx;
 
 import empire.game.Player;
-import empire.game.World.*;
+import empire.game.World.City;
+import empire.game.World.CitySize;
+import empire.game.World.Tile;
+import empire.gfx.gen.RiverRenderer;
 import io.anuke.arc.ApplicationListener;
 import io.anuke.arc.Core;
-import io.anuke.arc.collection.Array;
 import io.anuke.arc.graphics.Camera;
 import io.anuke.arc.graphics.Color;
+import io.anuke.arc.graphics.Texture;
 import io.anuke.arc.graphics.g2d.*;
 import io.anuke.arc.input.KeyCode;
 import io.anuke.arc.math.Mathf;
 import io.anuke.arc.math.geom.Vector2;
 import io.anuke.arc.scene.event.Touchable;
-import io.anuke.arc.util.*;
+import io.anuke.arc.util.Time;
+import io.anuke.arc.util.Tmp;
 
 import static empire.gfx.EmpireCore.*;
 
@@ -21,15 +25,15 @@ public class Renderer implements ApplicationListener{
     private boolean doLerp = true;
     private float zoom = 1f;
     private Color clearColor = Color.valueOf("5d81e1");
-
-    //for testing purposes only!
-    public static Array<Array<Vector2>> lines = new Array<>();
+    private Texture riverTexture;
 
     public Renderer(){
         Core.batch = new SpriteBatch();
         Core.camera = new Camera();
         Core.camera.position.set(state.world.width * tilesize/2f, state.world.height*tilesize/2f);
         Core.atlas = new TextureAtlas("ui/uiskin.atlas");
+
+        riverTexture = RiverRenderer.renderRivers(state.world);
     }
 
     @Override
@@ -155,12 +159,6 @@ public class Renderer implements ApplicationListener{
 
                 Draw.color();
                 Draw.rect(Core.atlas.find("terrain-" + tile.type.name(), Core.atlas.find("terrain-plain")), tx, ty, tilesize, tilesize);
-
-                if(tile.river){
-                    Draw.color(Color.ROYAL);
-                    Lines.stroke(8f);
-                    Lines.spikes(tx, ty, 1, 14, 4, 45);
-                }
             }
         }
 
@@ -179,17 +177,9 @@ public class Renderer implements ApplicationListener{
             }
         }
 
-        //TODO remove
-        for(Array<Vector2> line : lines){
-            Lines.stroke(5f, Color.ROYAL);
-            Vector2[] last = {null};
-            line.each(v -> {
-                if(last[0] != null){
-                    Lines.line(last[0].x * tilesize, last[0].y * tilesize, v.x*tilesize, v.y*tilesize);
-                }
-                last[0] = v;
-            });
-        }
+        Draw.color();
+        float rwidth = state.world.width * tilesize, rheight = state.world.height * tilesize;
+        Draw.rect(Draw.wrap(riverTexture), rwidth/2f, rheight/2f, rwidth, -rheight);
 
         //draw cities
         for(City city : state.world.cities()){

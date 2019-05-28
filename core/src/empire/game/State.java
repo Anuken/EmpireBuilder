@@ -117,6 +117,10 @@ public class State{
             to.type == Terrain.mountain ? 2 :
             to.type == Terrain.alpine ? 5 : 0;
 
+        if(from.riverTiles != null && from.riverTiles.contains(to)){
+            baseCost += 2;
+        }
+
         //TODO factor in costs for inlets, lakes and rivers
         return baseCost;
     }

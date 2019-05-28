@@ -20,7 +20,7 @@ import io.anuke.arc.util.Time;
 
 public class MapImageGenerator{
     /** Size of a single tile in pixels.*/
-    private static final int gsize = 8;
+    private static final int gsize = 16;
     /** Base color of the terrain types, indexed by ordinal.*/
     private static final Color[] terrainColor = {
         Color.ROYAL,
