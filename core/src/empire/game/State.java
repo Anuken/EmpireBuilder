@@ -40,6 +40,12 @@ public class State{
         }
     }
 
+    /** Simulates a player purchasing a loco.*/
+    public void purchaseLoco(Player player, Loco loco){
+        player.loco = loco;
+        player.money -= locoCost;
+    }
+
     /** Switches turns to the next player.
      * Increments total turn if needed.*/
     public void nextPlayer(){

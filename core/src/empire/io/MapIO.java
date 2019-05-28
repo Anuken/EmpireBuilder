@@ -2,10 +2,13 @@ package empire.io;
 
 import empire.game.World;
 import empire.game.World.*;
+import empire.gfx.Renderer;
 import io.anuke.arc.collection.Array;
 import io.anuke.arc.collection.IntMap;
 import io.anuke.arc.collection.ObjectSet;
 import io.anuke.arc.files.FileHandle;
+import io.anuke.arc.function.Supplier;
+import io.anuke.arc.math.geom.*;
 import io.anuke.arc.util.Log;
 
 import java.util.Scanner;
@@ -86,7 +89,8 @@ public class MapIO{
             to.port = port;
         }
 
-        Runnable parseRivers = () -> {
+        Supplier<Array<Point2>> parseRivers = () -> {
+            Array<Point2> rivers = new Array<>();
             String next;
             while((next = scan.nextLine()).contains("|")){
                 String[] split = next.split(" ");
@@ -94,8 +98,10 @@ public class MapIO{
                 for(int i = 2; i < split.length; i++){
                     int x = Integer.parseInt(split[i]);
                     tiles[x][y].river = true;
+                    rivers.add(new Point2(x, y));
                 }
             }
+            return rivers;
         };
 
         String next = scan.next();
@@ -104,14 +110,52 @@ public class MapIO{
             //parse l-side
             expect(scan, "l");
             scan.nextLine();
-            parseRivers.run();
+            Array<Point2> left = parseRivers.get();
 
             //parse r-side
             expect(scan, "r");
             scan.nextLine();
 
-            parseRivers.run();
+            Array<Point2> right = parseRivers.get();
             next = scan.next();
+
+            if(left.isEmpty() || right.isEmpty()) continue;
+
+
+            int max = Math.max(left.size, right.size);
+            Array<Vector2> mv = (left.size > right.size ? left : right).map(p -> new Vector2(p.x, p.y));
+            Array<Vector2> ov = (left.size <= right.size ? left : right).map(p -> new Vector2(p.x, p.y));
+            Array<Vector2> out = new Array<>();
+            for(Vector2 v : mv){
+                Vector2 closest = Geometry.findClosest(v.x, v.y, ov);
+                out.add(closest.cpy().add(v).scl(0.5f));
+            }
+            Array<Vector2> copy = new Array<>(out);
+            Vector2 edge = out.first();
+            out.remove(edge);
+            Vector2 nextEdge;
+            while((nextEdge = Geometry.findClosest(edge.x, edge.y, out)) != null){
+                edge = nextEdge;
+                out.remove(edge);
+            }
+
+            out.clear();
+            Vector2 start = edge;
+            out.add(start);
+            copy.remove(start);
+            while((start = Geometry.findClosest(start.x, start.y, copy)) != null){
+                out.add(start);
+                copy.remove(start);
+            }
+
+            /*
+            for(int i = 0; i < max; i++){
+                float fract = (float)i/max;
+                Point2 l = left.get(Math.min((int)(fract * left.size), left.size - 1));
+                Point2 r = right.get(Math.min((int)(fract * right.size), right.size - 1));
+                out.add(new Vector2().add(l.x, l.y).add(r.x, r.y).scl(0.5f));
+            }*/
+            Renderer.lines.add(out);
         }
 
         scan.close();

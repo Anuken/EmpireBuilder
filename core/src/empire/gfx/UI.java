@@ -5,16 +5,20 @@ import empire.game.Player;
 import empire.game.World.City;
 import empire.game.World.Tile;
 import empire.gfx.ui.Collapser;
-import empire.gfx.ui.SelectDialog;
 import io.anuke.arc.ApplicationListener;
 import io.anuke.arc.Core;
 import io.anuke.arc.freetype.FreeTypeFontGenerator;
 import io.anuke.arc.freetype.FreeTypeFontGenerator.FreeTypeFontParameter;
 import io.anuke.arc.freetype.FreeTypeFontGenerator.Hinting;
+import io.anuke.arc.function.Consumer;
 import io.anuke.arc.graphics.Color;
 import io.anuke.arc.graphics.g2d.BitmapFont;
+import io.anuke.arc.math.Interpolation;
 import io.anuke.arc.scene.Scene;
 import io.anuke.arc.scene.Skin;
+import io.anuke.arc.scene.actions.Actions;
+import io.anuke.arc.scene.ui.Dialog;
+import io.anuke.arc.scene.ui.Label;
 import io.anuke.arc.scene.ui.layout.Table;
 import io.anuke.arc.scene.ui.layout.Unit;
 import io.anuke.arc.util.Strings;
@@ -63,13 +67,21 @@ public class UI implements ApplicationListener{
                 t.defaults().width(160f).height(60f);
                 t.addButton("Upgrade", () -> {
                     if(state.currentPlayer().loco != Loco.freight){
-                        state.currentPlayer().loco = Loco.superFreight;
+                        showFade("Upgrade Purchased!");
+                        state.purchaseLoco(state.currentPlayer(), Loco.superFreight);
                     }else{
-                        SelectDialog.show(b -> {
+                        showDialog("Upgrade", b -> {
                             b.cont.defaults().size(180f, 50f);
                             b.cont.addButton("Fast Freight", () -> {
-                                state.currentPlayer().loco = Loco.fastFreight;
-                                //TODO implement everything else
+                                showFade("Upgrade Purchased!");
+                                state.purchaseLoco(state.currentPlayer(), Loco.fastFreight);
+                                b.hide();
+                            });
+                            b.cont.row();
+                            b.cont.addButton("Heavy Freight", () -> {
+                                showFade("Upgrade Purchased!");
+                                state.purchaseLoco(state.currentPlayer(), Loco.heavyFreight);
+                                b.hide();
                             });
                         });
                     }
@@ -96,6 +108,8 @@ public class UI implements ApplicationListener{
                 t.label(() -> "Player " + (state.currentPlayer + 1)).update(l -> l.setColor(state.currentPlayer().color));
                 t.row();
                 t.addImage("white").fillX().height(3f).pad(3).update(l -> l.setColor(state.currentPlayer().color));
+                t.row();
+                t.label(() -> "[lime]" + state.currentPlayer().loco + "[lightgray] loco");
                 t.row();
                 t.label(() -> "[coral]" + state.currentPlayer().money + "[] ECU");
                 t.row();
@@ -165,9 +179,10 @@ public class UI implements ApplicationListener{
                         table.row();
                         for(String good : city.goods){
                             if(atCity){
-                                table.addImageTextButton(Strings.capitalize(good), "icon-export", 10*2, () -> state.currentPlayer().addCargo(good))
-                                        .colspan(2).left().fillX().disabled(b -> !state.currentPlayer().hasCargoSpace())
-                                        .width(190f).height(45f);
+                                table.addImageTextButton(Strings.capitalize(good), "icon-export", 10*2, () -> {
+                                    state.currentPlayer().addCargo(good);
+                                    showFade(Strings.capitalize(good) + " obtained.");
+                                }).colspan(2).left().fillX().disabled(b -> !state.currentPlayer().hasCargoSpace()).width(190f).height(45f);
                             }else{
                                 table.addImage("icon-file").size(8*3).padRight(3).right();
                                 table.add(Strings.capitalize(good)).color(Color.LIGHT_GRAY);
@@ -187,6 +202,16 @@ public class UI implements ApplicationListener{
                 lastPosition[0] = state.currentPlayer().position;
             });
         });
+
+        Core.scene.add(new Label(""){{
+            update(() -> {
+                Tile tile = control.tileMouse();
+                if(tile != null){
+                    setText((state.world.height - 1 - tile.y) + ", " + tile.x);
+                }
+                setPosition(Core.input.mouseX(), Core.input.mouseY());
+            });
+        }});
     }
 
     @Override
@@ -198,5 +223,20 @@ public class UI implements ApplicationListener{
     @Override
     public void resize(int width, int height){
         Core.scene.resize(width, height);
+    }
+
+    public void showFade(String text){
+        Label label = new Label(text);
+        Core.scene.table(t -> {
+            t.add(label);
+            t.actions(Actions.fadeOut(20f, Interpolation.swingOut), Actions.remove());
+        });
+    }
+
+    public void showDialog(String title, Consumer<Dialog> cons){
+        Dialog dialog = new Dialog(title,"dialog");
+        cons.accept(dialog);
+        dialog.buttons.addButton("Cancel", dialog::hide).size(180f, 50f);
+        dialog.show();
     }
 }

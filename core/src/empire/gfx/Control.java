@@ -8,7 +8,8 @@ import io.anuke.arc.input.KeyCode;
 import io.anuke.arc.math.geom.Vector2;
 import io.anuke.arc.util.Tmp;
 
-import static empire.gfx.EmpireCore.*;
+import static empire.gfx.EmpireCore.state;
+import static empire.gfx.EmpireCore.tilesize;
 
 /** Handles user input.*/
 public class Control implements ApplicationListener{
@@ -48,6 +49,10 @@ public class Control implements ApplicationListener{
         if(Core.input.keyTap(KeyCode.ESCAPE)){
             Core.app.exit();
         }
+    }
+
+    public Tile tileMouseMid(){
+        return tileWorld(Core.input.mouseWorld().x - tilesize/2f, Core.input.mouseWorld().y - tilesize/2f);
     }
 
     //todo move to control
