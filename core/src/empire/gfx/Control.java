@@ -88,12 +88,12 @@ public class Control implements ApplicationListener{
     }
 
     /** Converts map coordinates to world coordinates.*/
-    Vector2 toWorld(int x, int y){
+    public Vector2 toWorld(int x, int y){
         return Tmp.v1.set(x * tilesize + (y%2)*tilesize/2f, y*tilesize);
     }
 
     /** {@link #toWorld(int, int)} for tiles.*/
-    Vector2 toWorld(Tile tile){
+    public Vector2 toWorld(Tile tile){
         return toWorld(tile.x, tile.y);
     }
 }

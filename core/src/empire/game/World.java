@@ -67,6 +67,14 @@ public class World{
         return null;
     }
 
+    /** Returns any city on a tile, even if it is part of a major city.*/
+    public City getCity(Tile tile){
+        if(tile.city != null){
+            return tile.city;
+        }
+        return getMajorCity(tile);
+    }
+
     /** Returns whether a tile is adjacent to another tile.*/
     public boolean isAdjacent(Tile from, Tile to){
         return Structs.contains(from.getAdjacent(), p -> tileOpt(from.x + p.x, from.y + p.y) == to);

@@ -3,6 +3,7 @@ package empire.gfx.gen;
 import empire.game.World;
 import empire.game.World.Lake;
 import empire.game.World.River;
+import empire.game.World.Tile;
 import io.anuke.arc.Core;
 import io.anuke.arc.graphics.Color;
 import io.anuke.arc.graphics.Texture;
@@ -14,6 +15,9 @@ import io.anuke.arc.graphics.g2d.Lines;
 import io.anuke.arc.graphics.glutils.FrameBuffer;
 import io.anuke.arc.math.geom.Geometry;
 import io.anuke.arc.math.geom.Vector2;
+
+import static empire.gfx.EmpireCore.control;
+import static empire.gfx.EmpireCore.state;
 
 public class WaterRenderer{
     private static final int gsize = 16;
@@ -75,6 +79,22 @@ public class WaterRenderer{
             }
         }
 
+        //TODO cache ports for better performance
+        //draw ports
+        for(int x = 0; x < state.world.width; x++){
+            for(int y = 0; y < state.world.height; y++){
+                Tile tile = state.world.tile(x, y);
+                Vector2 vec = control.toWorld(x, y);
+                float tx = vec.x, ty = vec.y;
+                if(tile.port != null && tile.port.from == tile){
+                    Vector2 to = control.toWorld(tile.port.to.x, tile.port.to.y);
+                    Lines.stroke(3f, Color.DARK_GRAY);
+                    Lines.dashLine(tx, ty, to.x, to.y, (int)(to.dst(tx, ty) / 4));
+                    Fill.circle(tx, ty, 3f);
+                    Fill.circle(to.x, to.y, 3f);
+                }
+            }
+        }
 
         //flush results, end buffer
         Draw.flush();

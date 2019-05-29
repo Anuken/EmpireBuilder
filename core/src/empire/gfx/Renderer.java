@@ -19,7 +19,7 @@ import static empire.gfx.EmpireCore.*;
 /** Renders the game world, handles user input interactions if needed. */
 public class Renderer implements ApplicationListener{
     private boolean doLerp = true;
-    private float zoom = 1f;
+    private float zoom = 4f;
     private Color clearColor = Color.valueOf("5d81e1");
     private Texture riverTexture;
 
@@ -40,7 +40,7 @@ public class Renderer implements ApplicationListener{
         zoom += Core.input.axis(KeyCode.SCROLL)* 0.03f;
         zoom = Mathf.clamp(zoom, 0.2f, 20f);
 
-        float speed = 30f * Time.delta();
+        float speed = 15f * Time.delta();
 
         Vector2 movement = Tmp.v1.setZero();
         if(Core.input.keyDown(KeyCode.W)) movement.y += speed;
@@ -148,21 +148,6 @@ public class Renderer implements ApplicationListener{
             }
         }
 
-        //TODO cache ports for better performance
-        //draw ports
-        for(int x = 0; x < state.world.width; x++){
-            for(int y = 0; y < state.world.height; y++){
-                Tile tile = state.world.tile(x, y);
-                Vector2 world = control.toWorld(x, y);
-                float tx = world.x, ty = world.y;
-                if(tile.port != null && tile.port.from == tile){
-                    Vector2 to = control.toWorld(tile.port.to.x, tile.port.to.y);
-                    Lines.stroke(3f, Color.NAVY);
-                    Lines.line(tx, ty, to.x, to.y);
-                }
-            }
-        }
-
         Draw.color();
         float rwidth = state.world.width * tilesize, rheight = state.world.height * tilesize;
         Draw.rect(Draw.wrap(riverTexture), rwidth/2f, rheight/2f, rwidth, -rheight);
@@ -184,6 +169,17 @@ public class Renderer implements ApplicationListener{
             if(state.player().hasGoodDemand(city)){
                 icon("icon-open", tx, ty, -10f, 10f);
             }
+        }
+
+        Tile selected = control.tileMouse();
+
+        if(selected != null && state.world.getCity(selected) != null){
+            City city = state.world.getCity(selected);
+            Vector2 world = control.toWorld(city.x, city.y);
+            Draw.color(Color.CORAL.cpy().mul(0.6f));
+            Draw.rect("city-" + city.size.name() + "-select", world.x, world.y);
+            Draw.color(Color.CORAL);
+            Draw.rect("city-" + city.size.name() + "-select", world.x, world.y + 1);
         }
     }
 

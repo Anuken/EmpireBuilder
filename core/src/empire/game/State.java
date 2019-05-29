@@ -115,8 +115,12 @@ public class State{
         if(from == to) return false;
 
         //player needs to be there to place tracks there
-        if(player.position != from && !player.tracks.containsKey(from) && !player.tracks.containsKey(to)
-          && world.getMajorCity(from) == null){ //make sure to check for major cities too; track can be placed from any major city
+        if(player.position != from
+            && !player.tracks.containsKey(from) //check existing track connections
+            && !player.tracks.containsKey(to)
+            && !(player.position.port != null && //check port
+                (player.position.port.from == from || player.position.port.to == from))
+            && world.getMajorCity(from) == null){ //make sure to check for major cities too; track can be placed from any major city
             return false;
         }
 

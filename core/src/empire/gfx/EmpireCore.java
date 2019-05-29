@@ -12,7 +12,7 @@ import io.anuke.arc.graphics.Color;
 /** Main class for graphical renderer. Initializes state and its renderers.*/
 public class EmpireCore extends ApplicationCore{
     /** Size of each hex tile in pixels. */
-    public static final int tilesize = 60;
+    public static final int tilesize = 16;
 
     public static Control control;
     public static UI ui;

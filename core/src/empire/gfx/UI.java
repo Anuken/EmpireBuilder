@@ -178,7 +178,7 @@ public class UI implements ApplicationListener{
                 }
 
                 Tile on = control.tileMouse();
-                City city = on == null ? null : on.city;
+                City city = on == null ? null : state.world.getCity(on);
 
                 if(city == null){
                     city = state.player().position.city;
