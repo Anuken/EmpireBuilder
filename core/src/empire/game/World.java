@@ -111,7 +111,7 @@ public class World{
 
     /** Iterates through the connections of a tile, taking into account ports.
      * Also takes into account tracks of this player.*/
-    public void connectionsOf(Player player, Tile tile, Consumer<Tile> adjacent){
+    public void connectionsOf(State state, Player player, Tile tile, Consumer<Tile> adjacent){
         //water has no connections
         if(tile.type == Terrain.water){
             return;
@@ -129,7 +129,13 @@ public class World{
                 }else if(player.tracks.containsKey(tile) && player.tracks.get(tile).contains(other)){
                     adjacent.accept(other);
                 }else{
-                    //TODO check all other player, maybe they have a track here
+                    //TODO this is laughably inefficient
+                    for(Player otherplayer : state.players){
+                        if(otherplayer.tracks.containsKey(tile) && otherplayer.tracks.get(tile).contains(other)){
+                            adjacent.accept(other);
+                            break;
+                        }
+                    }
                 }
             }
         }
@@ -152,8 +158,8 @@ public class World{
         public City city;
         /** The port at this city's location. May be null.*/
         public Port port;
-        /** Temporary search distance.*/
-        public int searchDst;
+        /** Temporary search parent.*/
+        public Tile searchParent;
         /** List of tiles that require crossing a river to get to from this tile.*/
         public Array<Tile> riverTiles;
 
@@ -165,6 +171,11 @@ public class World{
 
         public Point2[] getAdjacent(){
             return y % 2 == 0 ? adjacencyEven : adjacencyOdd;
+        }
+
+        @Override
+        public String toString(){
+            return x + "," + y + ",t=" + type;
         }
     }
 

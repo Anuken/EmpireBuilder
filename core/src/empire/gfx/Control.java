@@ -60,7 +60,6 @@ public class Control implements ApplicationListener{
                         int cost = state.getTrackCost(placeLoc, tile);
                         if(state.canSpendRail(state.player(), cost)){
                             state.placeTrack(state.player(), placeLoc, tile);
-                            state.player().money -= cost;
                         }
                     }
                     placeLoc = tile;
@@ -74,11 +73,7 @@ public class Control implements ApplicationListener{
             Player player = state.player();
             if(tile != null){
                 //TODO movement animation + sequence of tiles moved on
-                int cost = state.distanceTo(player, tile);
-                if(cost != -1 && cost + player.moved <= player.loco.speed){
-                    player.position = tile;
-                    player.moved += cost;
-                }
+                Array<Tile> path = state.movePlayer(player, tile);
             }
         }
 

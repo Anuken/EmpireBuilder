@@ -8,6 +8,7 @@ import empire.game.World.Tile;
 import io.anuke.arc.collection.Array;
 import io.anuke.arc.collection.ObjectSet;
 import io.anuke.arc.collection.Queue;
+import io.anuke.arc.util.Log;
 import io.anuke.arc.util.Structs;
 
 /** Holds the state of the entire game. */
@@ -34,6 +35,7 @@ public class State{
     /** A set of closed tiles. Temp usage only.*/
     private static final ObjectSet<Tile> closedSet = new ObjectSet<>();
     private static final Queue<Tile> queue = new Queue<>();
+    private static final Array<Tile> moveArray = new Array<>();
 
     /** Grabs 3 demand cards from the top of the deck and returns them.*/
     public DemandCard[] grabCards(){
@@ -98,8 +100,10 @@ public class State{
     /** Switches turns to the next player.
      * Increments total turn if needed.*/
     public void nextPlayer(){
+        //reset turn-specific data
         player().moneySpent = 0;
         player().moved = 0;
+        player().movedPlayers.clear();
 
         currentPlayer ++;
         if(currentPlayer >= players.size){
@@ -108,6 +112,7 @@ public class State{
         }
     }
 
+    /** Places a single track for a player and updates money for the player.*/
     public void placeTrack(Player player, Tile from, Tile to){
         player.tracks.getOr(from, Array::new).add(to);
         player.tracks.getOr(to, Array::new).add(from);
@@ -214,32 +219,95 @@ public class State{
         return terrain != Terrain.water;
     }
 
-    /** Returns how long it would take this player to move to this tile.
-     * Returns -1 if impossible.*/
-    public int distanceTo(Player player, Tile other){
-        //already there
+    public Array<Tile> movePlayer(Player player, Tile other){
+        Array<Tile> moves = calculateMovement(player, other);
+        if(moves.isEmpty()){
+            return null;
+        }
+
+        //find a port in the path if one exists and stop if that is the case
+        int used = moves.size;
+        boolean endTurn = false;
+        for(int i = 1; i < moves.size; i++){
+            //find an instance of a port move
+            if(moves.get(i).port == moves.get(i - 1).port && moves.get(i).port != null){
+                used = i + 1;
+                endTurn = true;
+                break;
+            }
+        }
+
+        //find set of other tracks this player moved on
+        ObjectSet<Player> otherMoves = new ObjectSet<>();
+        for(int i = 0; i < moves.size - 1; i++){
+            Tile from = moves.get(i);
+            Tile to = moves.get(i + 1);
+            if(!player.hasTrack(from, to)){
+                for(Player op : players){
+                    if(op.hasTrack(from, to)){
+                        otherMoves.add(op);
+                        break;
+                    }
+                }
+            }
+        }
+
+        //remove already moved players so as not to offset calculations
+        for(Player already : player.movedPlayers){
+            otherMoves.remove(already);
+        }
+
+        //truncate moves
+        if(endTurn){
+            moves.truncate(used);
+        }
+
+        //TODO moving on other player's tracks cost?
+        if(moves.size + player.moved <= player.loco.speed &&
+            player.money - otherMoves.size*4 >= 0){
+            player.position = moves.peek();
+            player.moved += (moves.size - 1);
+            player.money -= otherMoves.size*4;
+            player.movedPlayers.addAll(otherMoves);
+            if(endTurn){
+                //go to the next player if there's a port in the way
+                nextPlayer();
+            }
+            return moves;
+        }
+        return null;
+    }
+
+    /** Attempts to calculate in-between movement tiles for a player from a start point
+     * to a destination. Returns an empty array if impossible. */
+    public Array<Tile> calculateMovement(Player player, Tile other){
+        moveArray.clear();
+
+        //already there.
         if(other == player.position){
-            return 0;
+            return moveArray;
         }
 
         closedSet.clear();
         queue.clear();
 
-        other.searchDst = 0;
+        other.searchParent = null;
 
+        Tile result = null;
         //perform BFS
         queue.addFirst(other);
         closedSet.add(other);
         while(!queue.isEmpty()){
             Tile tile = queue.removeLast();
             if(tile == player.position){
-                return tile.searchDst + 1;
+                result = tile;
+                break;
             }
 
             //iterate through /connections/ of each tile
-            world.connectionsOf(player, tile, child -> {
+            world.connectionsOf(this, player, tile, child -> {
                 if(!closedSet.contains(child)){
-                    child.searchDst = tile.searchDst + 1;
+                    child.searchParent = tile;
                     queue.addFirst(child);
                     closedSet.add(child);
                 }
@@ -247,7 +315,15 @@ public class State{
         }
 
         closedSet.clear();
-        return -1;
+        if(result != null){
+
+            while(result != null){
+                moveArray.add(result);
+                result = result.searchParent;
+            }
+        }
+
+        return moveArray;
     }
 
     /** A reason for preventing the player from placing a track at a location.

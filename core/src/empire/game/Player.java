@@ -5,6 +5,7 @@ import empire.game.World.City;
 import empire.game.World.Tile;
 import io.anuke.arc.collection.Array;
 import io.anuke.arc.collection.ObjectMap;
+import io.anuke.arc.collection.ObjectSet;
 import io.anuke.arc.function.BiConsumer;
 import io.anuke.arc.function.Consumer;
 import io.anuke.arc.graphics.Color;
@@ -22,6 +23,8 @@ public class Player{
     public Loco loco = Loco.freight;
     /** The position on the board of this player.*/
     public Tile position;
+    /** Other players' tracks this player has moved on.*/
+    public ObjectSet<Player> movedPlayers = new ObjectSet<>();
     /** Tracks that this player has placed down.*/
     public final ObjectMap<Tile, Array<Tile>> tracks = new ObjectMap<>();
     /** Player color, used for display purposes.*/
@@ -36,6 +39,11 @@ public class Player{
         this.position = position;
         this.color = color;
         this.demandCards = cards;
+    }
+
+    /** Returns whether this player has this specific track.*/
+    public boolean hasTrack(Tile from, Tile to){
+        return tracks.get(from) != null && tracks.get(from).contains(to);
     }
 
     /** Iterates through each good demanded in a city.*/

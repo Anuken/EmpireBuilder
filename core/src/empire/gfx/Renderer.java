@@ -54,7 +54,7 @@ public class Renderer implements ApplicationListener{
         if(Core.input.keyDown(KeyCode.D)) movement.x += speed;
 
         if(!movement.isZero()){
-            doLerp = false;
+            //doLerp = false;
             Core.camera.position.add(movement.limit(speed));
         }
 
@@ -142,7 +142,7 @@ public class Renderer implements ApplicationListener{
             for(int i = 0; i < 2; i++){
                 int fi = i;
                 if(i == 0){
-                    Draw.colorMul(player.color, 0.6f);
+                    Draw.colorMul(player.color, 0.4f);
                 }else{
                     Draw.color(player.color);
                 }
