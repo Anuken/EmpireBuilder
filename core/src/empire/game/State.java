@@ -17,7 +17,7 @@ public class State{
     /** The current world state.*/
     public World world;
     /** The global turn, in terms of completed whole turns.*/
-    public int turn;
+    public int turn = 1;
     /** The index of the player whose turn it is right now.*/
     public int currentPlayer;
     /** The demand cards of this state.*/
@@ -26,6 +26,10 @@ public class State{
     public final int locoCost = 20;
     /** Max amount of money to spend on rails per turn.*/
     public final int maxRailSpend = 20;
+    /** Amount of money needed to win.*/
+    public final int winMoneyAmount = 250;
+    /** Number of turns with no movement at the start.*/
+    public final int preMovementTurns = 2;
 
     /** A set of closed tiles. Temp usage only.*/
     private static final ObjectSet<Tile> closedSet = new ObjectSet<>();
@@ -40,6 +44,22 @@ public class State{
         return out;
     }
 
+    /** Returns whether players are currently in the pre-movement phase.*/
+    public boolean isPreMovement(){
+        return turn <= preMovementTurns;
+    }
+
+    /** Goes through each player and returns them if they have won the game.*/
+    public Player checkGameOver(){
+        for(Player player : players){
+            if(player.money >= winMoneyAmount){
+                return player;
+            }
+        }
+        return null;
+    }
+
+    /** Simulates a 'sell good' event.*/
     public void sellGood(Player player, City city, String good){
         DemandCard card = Structs.find(player.demandCards, f -> Structs.contains(f.demands, res -> res.city == city && res.good.equals(good)));
         if(card != null){
@@ -118,8 +138,8 @@ public class State{
         if(player.position != from
             && !player.tracks.containsKey(from) //check existing track connections
             && !player.tracks.containsKey(to)
-            && !(player.position.port != null && //check port
-                (player.position.port.from == from || player.position.port.to == from))
+            && !(from.port != null && //check port
+                (from.port.from == from || from.port.to == from))
             && world.getMajorCity(from) == null){ //make sure to check for major cities too; track can be placed from any major city
             return false;
         }

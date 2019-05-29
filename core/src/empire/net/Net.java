@@ -1,6 +1,6 @@
 package empire.net;
 
-public class Net{
+public abstract class Net{
 
     //packet types
 

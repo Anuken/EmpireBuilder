@@ -72,18 +72,34 @@ public class Renderer implements ApplicationListener{
 
     /** Draws player input on the board.*/
     void drawControl(){
-        //draw selected tile for debugging purposes
-        if(control.placeLoc != null){
-            Vector2 world = control.toWorld(control.placeLoc.x, control.placeLoc.y);
+        Tile other = control.tileMouse();
+        if(other != null){
+            Draw.color(1f, 1f, 1f, 0.2f);
+            Vector2 world = control.toWorld(other);
+            Fill.rect(world.x, world.y, tilesize, tilesize);
+        }
 
-            Lines.stroke(4f, Color.PURPLE);
-            Lines.square(world.x, world.y, tilesize/2f);
+        //draw rail track placement
+        if(control.placeLoc != null && other != null){
+            Tile last = control.placeLoc;
+            int cost = 0;
+            for(Tile tile : control.getTiles(control.placeLoc, other)){
+                if(tile != last){
+                    Vector2 world = control.toWorld(last);
+                    float fx = world.x, fy = world.y;
+                    control.toWorld(tile);
 
-            Tile other = control.tileMouse();
-            if(other != null && state.canPlaceTrack(state.player(), control.placeLoc, other)){
-                Draw.color(Color.YELLOW);
-                control.toWorld(other.x, other.y);
-                Lines.square(world.x, world.y, tilesize/2f);
+                    cost += state.getTrackCost(last, tile);
+
+                    if(state.isPassable(state.player(), tile) && state.canSpendRail(state.player(), cost)){
+                        Draw.color(1f, 1f, 1f, 0.5f);
+                    }else{
+                        Draw.color(1f, 0.3f, 0.3f, 0.5f);
+                    }
+
+                    drawTrack(fx, fy, world.x, world.y);
+                }
+                last = tile;
             }
         }
     }
@@ -119,7 +135,7 @@ public class Renderer implements ApplicationListener{
                     control.toWorld(to.x, to.y);
 
                     if(fi == 0){
-                        drawTrack(fx, fy - 3, vec.x, vec.y - 3);
+                        drawTrack(fx, fy - 1, vec.x, vec.y - 1);
                     }else{
                         drawTrack(fx, fy, vec.x, vec.y);
                     }

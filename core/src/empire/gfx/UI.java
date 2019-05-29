@@ -24,6 +24,7 @@ import io.anuke.arc.scene.ui.Dialog;
 import io.anuke.arc.scene.ui.Label;
 import io.anuke.arc.scene.ui.layout.Table;
 import io.anuke.arc.scene.ui.layout.Unit;
+import io.anuke.arc.util.Align;
 import io.anuke.arc.util.Strings;
 import io.anuke.arc.util.Structs;
 import io.anuke.arc.util.Time;
@@ -120,7 +121,7 @@ public class UI implements ApplicationListener{
                 t.row();
                 t.label(() -> "[coral]" + state.player().money + "[] ECU | [lime]" + (state.maxRailSpend - state.player().moneySpent) + "[] this turn");
                 t.row();
-                t.label(() -> "[orange]" + (state.player().loco.speed - state.player().moved) + "[] moves left");
+                t.label(() -> state.isPreMovement() ? "[orange]Building Phase" : "[orange]" + (state.player().loco.speed - state.player().moved) + "[] moves left");
                 t.row();
                 t.label(() -> state.player().cargo.isEmpty() ? "[gray]<Empty>" :
                         "[purple]+ " + state.player().cargo.toString("\n- "));
@@ -256,11 +257,25 @@ public class UI implements ApplicationListener{
 
         Core.scene.add(new Label(""){{
             update(() -> {
+                setText("");
                 Tile tile = control.tileMouse();
-                if(tile != null){
-                    setText((state.world.height - 1 - tile.y) + ", " + tile.x);
+                if(tile != null && control.placeLoc != null){
+                    int totalCost = 0;
+                    int totalTiles = 0;
+                    Tile last = control.placeLoc;
+                    for(Tile other : control.getTiles(control.placeLoc, tile)){
+                        if(other != last){
+                            totalCost += state.getTrackCost(last, other);
+                            totalTiles ++;
+                        }
+
+                        last = other;
+                    }
+                    setText(totalCost + "[coral] ECU[]\n[lime]" + totalTiles + "[] rails");
+                    setColor(state.canSpendRail(state.player(), totalCost) ? Color.WHITE : Color.SCARLET);
                 }
-                setPosition(Core.input.mouseX(), Core.input.mouseY());
+                pack();
+                setPosition(Core.input.mouseX(), Core.input.mouseY(), Align.bottomRight);
             });
         }});
     }

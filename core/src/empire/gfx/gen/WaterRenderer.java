@@ -79,7 +79,6 @@ public class WaterRenderer{
             }
         }
 
-        //TODO cache ports for better performance
         //draw ports
         for(int x = 0; x < state.world.width; x++){
             for(int y = 0; y < state.world.height; y++){
