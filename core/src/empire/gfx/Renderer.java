@@ -2,14 +2,11 @@ package empire.gfx;
 
 import empire.game.Player;
 import empire.game.World.City;
-import empire.game.World.CitySize;
 import empire.game.World.Tile;
 import empire.gfx.gen.WaterRenderer;
 import io.anuke.arc.ApplicationListener;
 import io.anuke.arc.Core;
-import io.anuke.arc.graphics.Camera;
-import io.anuke.arc.graphics.Color;
-import io.anuke.arc.graphics.Texture;
+import io.anuke.arc.graphics.*;
 import io.anuke.arc.graphics.g2d.*;
 import io.anuke.arc.input.KeyCode;
 import io.anuke.arc.math.Mathf;
@@ -174,15 +171,11 @@ public class Renderer implements ApplicationListener{
         for(City city : state.world.cities()){
             Vector2 world = control.toWorld(city.x, city.y);
             float tx = world.x, ty = world.y;
+            TextureRegion region = Core.atlas.find("city-" + city.size.name());
 
-            Lines.stroke(4f, Color.CORAL);
-            if(city.size == CitySize.small){
-                Lines.circle(tx, ty, tilesize/2f);
-            }else if(city.size == CitySize.medium){
-                Lines.square(tx, ty, tilesize/2f);
-            }else{
-                Lines.poly(tx, ty, 6, tilesize);
-            }
+
+            Draw.color();
+            Draw.rect(region, tx, ty, region.getWidth() * tilesize/16f, region.getHeight() * tilesize/16f);
 
             if(state.player().hasGoodDelivery(city)){
                 icon("icon-export", tx, ty, 10f, 10f);
