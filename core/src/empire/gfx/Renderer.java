@@ -7,7 +7,9 @@ import empire.gfx.gen.WaterRenderer;
 import io.anuke.arc.ApplicationListener;
 import io.anuke.arc.Core;
 import io.anuke.arc.graphics.*;
+import io.anuke.arc.graphics.Texture.TextureFilter;
 import io.anuke.arc.graphics.g2d.*;
+import io.anuke.arc.graphics.glutils.FrameBuffer;
 import io.anuke.arc.input.KeyCode;
 import io.anuke.arc.math.Mathf;
 import io.anuke.arc.math.geom.Vector2;
@@ -22,6 +24,7 @@ public class Renderer implements ApplicationListener{
     private float zoom = 4f;
     private Color clearColor = Color.valueOf("5d81e1");
     private Texture riverTexture;
+    private FrameBuffer buffer;
 
     public Renderer(){
         Core.batch = new SpriteBatch();
@@ -30,6 +33,8 @@ public class Renderer implements ApplicationListener{
         Core.atlas = new TextureAtlas("ui/uiskin.atlas");
 
         riverTexture = WaterRenderer.createWaterTexture(state.world);
+        buffer = new FrameBuffer(state.world.width * 16, state.world.height * 16);
+        buffer.getTexture().setFilter(TextureFilter.Nearest, TextureFilter.Nearest);
     }
 
     @Override
@@ -60,7 +65,12 @@ public class Renderer implements ApplicationListener{
 
         //update camera info
         Core.camera.resize(Core.graphics.getWidth() / zoom, Core.graphics.getHeight() / zoom);
-        Draw.proj(Core.camera.projection());
+        Draw.flush();
+
+        buffer.begin();
+
+        Core.graphics.clear(clearColor);
+        Draw.proj().setOrtho(0, 0, buffer.getWidth(), buffer.getHeight());
 
         drawWorld();
         drawRails();
@@ -68,6 +78,16 @@ public class Renderer implements ApplicationListener{
         drawControl();
 
         Draw.flush();
+        buffer.end();
+
+        Draw.color();
+        Draw.proj(Core.camera.projection());
+        Draw.blend(Blending.disabled);
+
+        float rwidth = state.world.width * tilesize, rheight = state.world.height * tilesize;
+        Draw.rect(Draw.wrap(buffer.getTexture()), rwidth/2f, rheight/2f, rwidth, -rheight);
+
+        Draw.blend();
     }
 
     /** Draws player input on the board.*/
@@ -122,7 +142,7 @@ public class Renderer implements ApplicationListener{
             for(int i = 0; i < 2; i++){
                 int fi = i;
                 if(i == 0){
-                    Draw.color(0f, 0f, 0f, 0.5f);
+                    Draw.colorMul(player.color, 0.6f);
                 }else{
                     Draw.color(player.color);
                 }
