@@ -5,7 +5,7 @@ import empire.game.World.City;
 import java.util.Arrays;
 
 /** Represents a demand card in the game.*/
-public class DemandCard{
+public class DemandCard implements Card{
     /** The 3 demands of this card.*/
     public final Demand[] demands;
 

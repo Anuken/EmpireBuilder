@@ -178,6 +178,18 @@ public class World{
             return y % 2 == 0 ? adjacencyEven : adjacencyOdd;
         }
 
+        /** Returns the direction needed to travel from this tile to the other.
+         * May return null.*/
+        public Direction directionTo(Tile other){
+            Point2[] adjacent = getAdjacent();
+            for(int i = 0; i < 6; i++){
+                if(x + adjacent[i].x == other.x && y + adjacent[i].y == other.y){
+                    return Direction.all[i];
+                }
+            }
+            return null;
+        }
+
         @Override
         public String toString(){
             return x + "," + y + ",t=" + type;

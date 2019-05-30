@@ -1,12 +1,11 @@
 package empire.gfx;
 
-import empire.game.DemandCard;
+import empire.game.*;
 import empire.game.DemandCard.Demand;
-import empire.game.Loco;
-import empire.game.Player;
 import empire.game.World.City;
 import empire.game.World.Tile;
 import empire.gfx.ui.Collapser;
+import empire.gfx.ui.EventDialog;
 import io.anuke.arc.ApplicationListener;
 import io.anuke.arc.Core;
 import io.anuke.arc.freetype.FreeTypeFontGenerator;
@@ -34,6 +33,7 @@ import static empire.gfx.EmpireCore.state;
 
 /** Handles all overlaid UI for the game. */
 public class UI implements ApplicationListener{
+    EventDialog events;
 
     public UI(){
         Skin skin = new Skin(Core.atlas);
@@ -65,6 +65,7 @@ public class UI implements ApplicationListener{
 
     @Override
     public void init(){
+        events = new EventDialog();
 
         //display player info
         Core.scene.table(main -> {
@@ -93,16 +94,16 @@ public class UI implements ApplicationListener{
                         });
                     }
                     arr[0].toggle();
-                }).disabled(b -> state.player().money < state.locoCost).update(b -> {
+                }).disabled(b -> state.player().money < State.locoCost).update(b -> {
                     String baseText = "Upgrade";
-                    if(state.player().money < state.locoCost){
+                    if(state.player().money < State.locoCost){
                         baseText = "Upgrade\n[scarlet]20 ECU required";
                     }
                     b.setText(baseText);
                 });
                 t.row();
                 t.addButton("Discard Cards", () -> {
-                    state.discardCards(state.player());
+                    state.discardCards(state.player(), events::show);
                     state.nextPlayer();
                     arr[0].toggle();
                 });
@@ -226,7 +227,7 @@ public class UI implements ApplicationListener{
                                 if(has && atCity){
                                     table.addImageTextButton(Strings.capitalize(d.good) + "[] for[coral] " + d.cost + "[] ECU",
                                             "icon-project-open", 14*2, () -> {
-                                        state.sellGood(state.player(), d.city, d.good);
+                                        state.sellGood(state.player(), d.city, d.good, events::show);
                                         lastPlayer[0] = null; //trigger a refresh next frame
                                     }).colspan(2).left().fillX().width(190f).height(45f);
 
@@ -291,6 +292,8 @@ public class UI implements ApplicationListener{
     public void resize(int width, int height){
         Core.scene.resize(width, height);
     }
+
+
 
     public void showFade(String text){
         Label label = new Label(text);

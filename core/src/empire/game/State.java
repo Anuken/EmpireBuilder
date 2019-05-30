@@ -3,6 +3,7 @@ package empire.game;
 import empire.game.DemandCard.Demand;
 import empire.game.World.*;
 import io.anuke.arc.collection.*;
+import io.anuke.arc.function.Consumer;
 import io.anuke.arc.util.Structs;
 
 /** Holds the state of the entire game. */
@@ -25,20 +26,31 @@ public class State{
     /** The index of the player whose turn it is right now.*/
     public int currentPlayer;
     /** The demand cards of this state.*/
-    public Array<DemandCard> demandCards;
+    public Array<Card> cards;
 
     /** Tile collections for temporary usage.*/
     private static final ObjectSet<Tile> closedSet = new ObjectSet<>();
     private static final Queue<Tile> queue = new Queue<>();
     private static final Array<Tile> moveArray = new Array<>();
 
-    /** Grabs 3 demand cards from the top of the deck and returns them.*/
+    /** Grabs 3 demand cards from the top of the deck and returns them.
+     * Event cards are discarded.*/
     public DemandCard[] grabCards(){
         DemandCard[] out = new DemandCard[3];
         for(int i = 0; i < 3; i++){
-            out[i] = demandCards.pop();
+            //draw a demand card, any event cards found will be inserted in index 0 (shuffled to back)
+            out[i] = drawDemandCard(e -> cards.insert(0, e));
         }
         return out;
+    }
+
+    /** Attempts to draw a demand card; passes on all event cards drawn.*/
+    public DemandCard drawDemandCard(Consumer<EventCard> eventHandler){
+        Card nextDemand;
+        while(!((nextDemand = cards.pop()) instanceof DemandCard)){
+            eventHandler.accept((EventCard)nextDemand);
+        }
+        return (DemandCard)nextDemand;
     }
 
     /** Returns whether players are currently in the pre-movement phase.*/
@@ -57,27 +69,27 @@ public class State{
     }
 
     /** Simulates a 'sell good' event.*/
-    public void sellGood(Player player, City city, String good){
+    public void sellGood(Player player, City city, String good, Consumer<EventCard> eventHandler){
         DemandCard card = Structs.find(player.demandCards, f -> Structs.contains(f.demands, res -> res.city == city && res.good.equals(good)));
         if(card != null){
             Demand demand = Structs.find(card.demands, res -> res.city == city && res.good.equals(good));
             player.money += demand.cost;
             player.cargo.remove(good);
             int idx = Structs.indexOf(player.demandCards, card);
-            player.demandCards[idx] = demandCards.pop();
-            demandCards.insert(0, card);
+            player.demandCards[idx] = drawDemandCard(event -> handleEvent(event, player, eventHandler));
+            this.cards.insert(0, card);
         }else{
             throw new IllegalArgumentException("Incorrect usage. No matching city/good combination found.");
         }
     }
 
     /** Discards this player's demand cards and replaces them with new ones.*/
-    public void discardCards(Player player){
+    public void discardCards(Player player, Consumer<EventCard> eventHandler){
         for(int i = 2; i >= 0; i--){
-            demandCards.insert(0, player.demandCards[i]);
+            cards.insert(0, player.demandCards[i]);
         }
         for(int i = 0; i < 3; i++){
-            player.demandCards[i] = demandCards.pop();
+            player.demandCards[i] = drawDemandCard(event -> handleEvent(event, player, eventHandler));
         }
     }
 
@@ -99,7 +111,9 @@ public class State{
         player().moneySpent = 0;
         player().moved = 0;
         player().movedPlayers.clear();
+        player().eventCards.clear();
 
+        //begin next player's turn
         currentPlayer ++;
         if(currentPlayer >= players.size){
             currentPlayer = 0;
@@ -220,6 +234,11 @@ public class State{
             return null;
         }
 
+        //can't move backwards
+        if(player.position.directionTo(moves.first()).opposite(player.direction)){
+            return null;
+        }
+
         //find a port in the path if one exists and stop if that is the case
         int used = moves.size;
         boolean endTurn = false;
@@ -257,13 +276,14 @@ public class State{
             moves.truncate(used);
         }
 
-        //TODO moving on other player's tracks cost?
-        if(moves.size + player.moved <= player.loco.speed &&
+        //check costs
+        if(moves.size - 1 + player.moved <= player.loco.speed &&
             player.money - otherMoves.size*4 >= 0){
             player.position = moves.peek();
             player.moved += (moves.size - 1);
             player.money -= otherMoves.size*4;
             player.movedPlayers.addAll(otherMoves);
+            player.direction = moves.get(moves.size - 2).directionTo(moves.get(moves.size - 1));
             if(endTurn){
                 //go to the next player if there's a port in the way
                 nextPlayer();
@@ -319,6 +339,16 @@ public class State{
         }
 
         return moveArray;
+    }
+
+    /** Utility method for handling events that put the event card to the back,
+     * gives it to the player and activates the handler.*/
+    private void handleEvent(EventCard card, Player player, Consumer<EventCard> handler){
+        cards.insert(0, card);
+        if(!card.apply(player)){
+            player.eventCards.add(card);
+        }
+        handler.accept(card);
     }
 
     /** A reason for preventing the player from placing a track at a location.

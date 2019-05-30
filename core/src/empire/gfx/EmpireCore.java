@@ -24,8 +24,8 @@ public class EmpireCore extends ApplicationCore{
         //create state and modules for viewing/controlling that state
         state = new State();
         state.world = MapIO.loadTiles(Core.files.internal("maps/eurorails.txt"));
-        state.demandCards = CardIO.loadCards(state.world, Core.files.internal("maps/deck.txt"));
-        state.demandCards.shuffle(); //shuffle cards when inputted
+        state.cards = CardIO.loadCards(state.world, Core.files.internal("maps/deck.txt"));
+        state.cards.shuffle(); //shuffle cards when inputted
 
         City startCity = state.world.getCity("berlin");
         City otherCity = state.world.getCity("leipzig");

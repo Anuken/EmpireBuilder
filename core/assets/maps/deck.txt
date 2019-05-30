@@ -1,3 +1,5 @@
+#DEMANDS
+
 001 Berlin      Cattle    17 Lyon        Copper    26 Budapest    Machinery 22
 002 Berlin      Imports   06 Hamburg     Bauxite   21 Kaliningrad Machinery 21
 003 Berlin      Marble    24 Luxembourg  Wheat     10 Bilbao      Wine      08
@@ -118,3 +120,26 @@
 118 Nantes      Oranges   22 Napoli      Ham       37 Belfast     Steel     15
 119 Lodz        Machinery 17 Szczecin    Tobacco   36 Glasgow     Iron      13
 120 Warszawa    Coal      07 Beograd     Wine      12 Dublin      Hops      12
+
+#EVENTS
+
+121 INLAND_STRIKE > 3 Mileposts from Ocean No Pickup or Delivery
+122 COASTAL_STRIKE < 3 Mileposts from Ocean No Pickup or Delivery
+123 GENERAL_RAIL_STRIKE No movement or building on Drawing Player's Track
+124 EXCESS_PROFITS_TAX
+125 DERAILMENT Bern Madrid Wroclaw Munchen Firenze Bilbao
+126 DERAILMENT Leipzig Manchester Bordeaux Budapest Paris Valencia
+127 DERAILMENT Roma Kobenhaven Holland Luxemborg Lyon Krakow
+128 DERAILMENT Berlin Zagreb Newcastle Marseille Nantes Bruxelles
+129 DERAILMENT Milano Praha Beograd Goteborg Bremen Toulouse
+130 HEAVY_SNOW 6 Torino
+131 HEAVY_SNOW 5 Munchen
+132 HEAVY_SNOW 4 Praha
+133 HEAVY_SNOW 6 Krakow
+134 FOG 4 Frankfurt
+135 FLOOD Rhine
+136 FLOOD Danube
+137 FLOOD Loire
+138 HEAVY_RAINS 6 English_Channel North_Sea Baltic_Sea Irish_Sea
+139 HEAVY_RAINS 4 Mediterranean_Sea Adriatic_Sea
+140 HEAVY_RAINS 4 Atlantic_Ocean

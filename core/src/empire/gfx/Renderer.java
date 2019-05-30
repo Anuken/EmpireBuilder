@@ -126,11 +126,13 @@ public class Renderer implements ApplicationListener{
 
     /** Draws all player icons on the board.*/
     void drawPlayers(){
-        Draw.color(Color.WHITE);
         for(Player player : state.players){
             Vector2 world = control.toWorld(player.position.x, player.position.y);
+
+            Draw.colorMul(player.color, 0.5f);
+            Draw.rect("icon-arrow-right", world.x, world.y - 1, player.direction.angle());
             Draw.color(player.color);
-            Draw.rect("icon-trash", world.x, world.y, tilesize, tilesize);
+            Draw.rect("icon-arrow-right", world.x, world.y, player.direction.angle());
         }
     }
 

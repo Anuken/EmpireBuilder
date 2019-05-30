@@ -273,7 +273,7 @@ public class MapIO{
     }
 
     /** Utility function to make sure sections of a text file are the correct input.*/
-    private static void expect(Scanner scan, String expected){
+    public static void expect(Scanner scan, String expected){
         String next = scan.next();
         if(!next.equals(expected)){
             throw new IllegalArgumentException("Invalid input. Expected: '" + expected+ "'; Actual: '" + next + "'");
