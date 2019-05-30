@@ -21,7 +21,7 @@ public class CardIO{
         "EXCESS_PROFITS_TAX", (Supplier) ExcessProfitsTaxEvent::new,
         "DERAILMENT", (Supplier) DerailmentEvent::new,
         "HEAVY_SNOW", (Supplier) HeavySnowEvent::new,
-        "HEAVY_RAINS", (Supplier) HeavyRainsEvent::new,
+        "HEAVY_RAINS", (Supplier) GaleEvent::new,
         "FOG", (Supplier) FogEvent::new,
         "FLOOD", (Supplier) FloodEvent::new
     );
@@ -43,10 +43,6 @@ public class CardIO{
             Demand[] demands = new Demand[3];
             for(int i = 0; i < 3; i++){
                 String city = scan.next().toLowerCase();
-                if(world.getCity(city) == null){
-                    throw new IllegalArgumentException("No city with name " + city + " found in card #" + next);
-                }
-
                 String good = scan.next().toLowerCase();
                 int profit = scan.nextInt();
                 demands[i] = new Demand(good, world.getCity(city), profit);
@@ -63,7 +59,7 @@ public class CardIO{
                 throw new IllegalArgumentException("Unknown event \"" + type + "\"!");
             }
             EventCard card = cardMaps.get(type).get();
-            card.load(scan);
+            card.load(scan, world);
             out.add(card);
         }
 

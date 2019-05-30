@@ -49,6 +49,32 @@ public class MapIO{
             }
         }
 
+        //set up inland tiles
+        for(int x = 0; x < width; x++){
+            for(int y = 0; y < height; y++){
+                int radius = 3;
+                Tile tile = tiles[x][y];
+
+                if(tile.type == Terrain.water){
+                    tile.inland = false;
+                    continue;
+                }
+
+                outer:
+                for(int rx = -radius; rx <= radius; rx++){
+                    for(int ry = -radius; ry <= radius; ry++){
+                        Tile other = tiles
+                                    [Mathf.clamp(x + rx, 0, width - 1)]
+                                    [Mathf.clamp(y + ry, 0, height - 1)];
+                        if(other.type == Terrain.water){
+                            tile.inland = true;
+                            break outer;
+                        }
+                    }
+                }
+            }
+        }
+
         expect(scan, "#CITIES");
 
         //now read cities
@@ -107,7 +133,7 @@ public class MapIO{
 
         String next = scan.next();
         while(!next.equals("#LAKES")){ //'next' is the river name right now
-            String name = next;
+            String name = next.toLowerCase();
             //parse l-side
             expect(scan, "l");
             scan.nextLine();
@@ -121,8 +147,6 @@ public class MapIO{
             next = scan.next();
 
             if(left.isEmpty() || right.isEmpty()) continue;
-
-            linkWaterTiles(tiles, left, right);
 
             //create smoothed river polyline
             Array<Vector2> mv = (left.size > right.size ? left : right).map(p -> new Vector2(p.x, p.y));
@@ -177,7 +201,11 @@ public class MapIO{
                 out = smoothed;
             }
 
-            rivers.add(new River(name, out));
+            River river = new River(name, out);
+
+            linkWaterTiles(tiles, 2, river, left, right);
+
+            rivers.add(river);
         }
 
         //TODO read lakes and inlets
@@ -194,7 +222,7 @@ public class MapIO{
             Array<Point2> left = parseRivers.get();
             Array<Point2> right = parseRivers.get();
 
-            linkWaterTiles(tiles, left, right);
+            linkWaterTiles(tiles, 3, null, left, right);
             lakes.add(makeLake(left, right));
             next = scan.next();
         }
@@ -207,7 +235,7 @@ public class MapIO{
             Array<Point2> left = parseRivers.get();
             Array<Point2> right = parseRivers.get();
 
-            linkWaterTiles(tiles, left, right);
+            linkWaterTiles(tiles, 3, null, left, right);
             lakes.add(makeLake(left, right));
         }
 
@@ -220,14 +248,14 @@ public class MapIO{
     }
 
     /** Adds the appropriate water tile costs.*/
-    private static void linkWaterTiles(Tile[][] tiles, Array<Point2> left, Array<Point2> right){
+    private static void linkWaterTiles(Tile[][] tiles, int cost, River river, Array<Point2> left, Array<Point2> right){
         for(Point2 p : left){
             Tile tile = tiles[p.x][p.y];
             for(Point2 adj : tile.getAdjacent()){
                 if(right.contains(test -> test.equals(p.x + adj.x, p.y + adj.y))){
-                    if(tile.riverTiles == null){
-                        tile.riverTiles = new Array<>();
-                        tile.riverTiles.add(tiles[p.x + adj.x][p.y + adj.y]);
+                    if(tile.crossings == null){
+                        tile.crossings = new Array<>();
+                        tile.crossings.add(new WaterCrossing(cost, river, tiles[p.x + adj.x][p.y + adj.y]));
                     }
                 }
             }

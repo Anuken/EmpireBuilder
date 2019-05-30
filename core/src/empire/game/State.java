@@ -17,15 +17,15 @@ public class State{
     /** Number of turns with no movement at the start.*/
     public final static int preMovementTurns = 2;
 
-    /** All player states by index.*/
-    public final Array<Player> players = new Array<>();
     /** The current world state.*/
     public World world;
+    /** All player states by index.*/
+    public final Array<Player> players = new Array<>();
     /** The global turn, in terms of completed whole turns.*/
     public int turn = 1;
     /** The index of the player whose turn it is right now.*/
     public int currentPlayer;
-    /** The demand cards of this state.*/
+    /** All the cards of this state. May be event or demand cards*/
     public Array<Card> cards;
 
     /** Tile collections for temporary usage.*/
@@ -66,6 +66,10 @@ public class State{
             }
         }
         return null;
+    }
+
+    public boolean canLoadUnload(Player player, Tile tile){
+        return player.isAllowed(e -> e.canLoadOrUnload(player, tile));
     }
 
     /** Simulates a 'sell good' event.*/
@@ -112,12 +116,26 @@ public class State{
         player().moved = 0;
         player().movedPlayers.clear();
         player().eventCards.clear();
+        if(player().lostTurns > 0){
+            player().lostTurns --;
+        }
 
         //begin next player's turn
         currentPlayer ++;
         if(currentPlayer >= players.size){
             currentPlayer = 0;
             turn ++;
+        }
+
+        //recursively advance the next player until there are no lost turns left.
+        if(player().lostTurns > 0){
+            nextPlayer();
+        }
+    }
+
+    public void checkLostTurns(){
+        if(player().lostTurns > 0){
+            nextPlayer();
         }
     }
 
@@ -155,6 +173,11 @@ public class State{
             && !(from.port != null && //check port
                 (from.port.from == from || from.port.to == from))
             && world.getMajorCity(from) == null){ //make sure to check for major cities too; track can be placed from any major city
+            return false;
+        }
+
+        //sometimes events don't allow placing tack
+        if(!player.isAllowed(event -> event.canPlaceTrack(player, from, to))){
             return false;
         }
 
@@ -201,8 +224,11 @@ public class State{
             to.type == Terrain.alpine ? 5 : 0;
 
         //TODO custom cost for inlets and lakes
-        if(from.riverTiles != null && from.riverTiles.contains(to)){
-            baseCost += 2;
+        if(from.crossings != null){
+            WaterCrossing cross = from.crossings.find(c -> c.to == to);
+            if(cross != null){
+                baseCost += cross.cost;
+            }
         }
 
         return baseCost;
@@ -235,7 +261,8 @@ public class State{
         }
 
         //can't move backwards
-        if(player.position.directionTo(moves.first()).opposite(player.direction)){
+        if(player.position.directionTo(moves.get(1)).opposite(player.direction) &&
+                world.getCity(player.position) == null){
             return null;
         }
 
@@ -321,7 +348,9 @@ public class State{
 
             //iterate through /connections/ of each tile
             world.connectionsOf(this, player, tile, child -> {
-                if(!closedSet.contains(child)){
+                if(!closedSet.contains(child)
+                        //make sure player isn't blocked by event cards!
+                        && player.isAllowed(e -> e.canMove(player, tile, child))){
                     child.searchParent = tile;
                     queue.addFirst(child);
                     closedSet.add(child);
@@ -345,7 +374,7 @@ public class State{
      * gives it to the player and activates the handler.*/
     private void handleEvent(EventCard card, Player player, Consumer<EventCard> handler){
         cards.insert(0, card);
-        if(!card.apply(player)){
+        if(!card.apply(this, player)){
             player.eventCards.add(card);
         }
         handler.accept(card);

@@ -15,7 +15,7 @@ public class EventDialog extends Dialog{
         cont.clearChildren();
         buttons.clearChildren();
 
-        cont.add(card.description(EmpireCore.state.player())).width(200f).wrap().pad(15f);
+        cont.add(card.description(EmpireCore.state.player())).width(400f).wrap().pad(15f);
 
         buttons.addButton("oh no", this::hide).size(100f, 60f);
 

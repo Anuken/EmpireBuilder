@@ -20,16 +20,19 @@ public class Player{
     public int moneySpent;
     /** How much the player has moved this turn.*/
     public int moved;
+    /** How many turns this player has lost due to event cards.*/
+    public int lostTurns;
     /** The current locomotive type.*/
     public Loco loco = Loco.freight;
     /** The position on the board of this player.*/
     public Tile position;
-    /** Other players' tracks this player has moved on.*/
-    public ObjectSet<Player> movedPlayers = new ObjectSet<>();
     /** Direction this player is facing.*/
     public Direction direction = Direction.left;
+
+    /** Other players' tracks this player has moved on.*/
+    public final ObjectSet<Player> movedPlayers = new ObjectSet<>();
     /** All the event cards this player drew this turn.*/
-    public Array<EventCard> eventCards = new Array<>();
+    public final Array<EventCard> eventCards = new Array<>();
     /** Tracks that this player has placed down.*/
     public final ObjectMap<Tile, Array<Tile>> tracks = new ObjectMap<>();
     /** Player color, used for display purposes.*/
@@ -44,6 +47,28 @@ public class Player{
         this.position = position;
         this.color = color;
         this.demandCards = cards;
+    }
+
+    /** @return whether this player is within distance of this tile.*/
+    public boolean within(int x, int y, int dst){
+        return position.distanceTo(x, y) <= dst;
+    }
+
+    /** Removes one of this player's tracks.*/
+    public void removeTrack(Tile from, Tile to){
+        if(tracks.containsKey(from)){
+            tracks.get(from).remove(to);
+            if(tracks.get(from).isEmpty()){
+                tracks.remove(from);
+            }
+        }
+
+        if(tracks.containsKey(to)){
+            tracks.get(to).remove(from);
+            if(tracks.get(to).isEmpty()){
+                tracks.remove(to);
+            }
+        }
     }
 
     /** Returns whether a certain action is allowed, according to the event cards.

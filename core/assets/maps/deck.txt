@@ -129,7 +129,7 @@
 124 EXCESS_PROFITS_TAX
 125 DERAILMENT Bern Madrid Wroclaw Munchen Firenze Bilbao
 126 DERAILMENT Leipzig Manchester Bordeaux Budapest Paris Valencia
-127 DERAILMENT Roma Kobenhaven Holland Luxemborg Lyon Krakow
+127 DERAILMENT Roma Kobenhavn Holland Luxembourg Lyon Krakow
 128 DERAILMENT Berlin Zagreb Newcastle Marseille Nantes Bruxelles
 129 DERAILMENT Milano Praha Beograd Goteborg Bremen Toulouse
 130 HEAVY_SNOW 6 Torino
@@ -137,8 +137,8 @@
 132 HEAVY_SNOW 4 Praha
 133 HEAVY_SNOW 6 Krakow
 134 FOG 4 Frankfurt
-135 FLOOD Rhine
-136 FLOOD Danube
+135 FLOOD Rhein
+136 FLOOD Donau
 137 FLOOD Loire
 138 HEAVY_RAINS 6 English_Channel North_Sea Baltic_Sea Irish_Sea
 139 HEAVY_RAINS 4 Mediterranean_Sea Adriatic_Sea

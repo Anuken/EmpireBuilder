@@ -1,5 +1,8 @@
 package empire.gfx;
 
+import empire.game.EventCard;
+import empire.game.EventCard.FogEvent;
+import empire.game.EventCard.HeavySnowEvent;
 import empire.game.Player;
 import empire.game.World.City;
 import empire.game.World.Tile;
@@ -27,6 +30,8 @@ public class Renderer implements ApplicationListener{
     private FrameBuffer buffer;
 
     public Renderer(){
+        Lines.setCircleVertices(30);
+
         Core.batch = new SpriteBatch();
         Core.camera = new Camera();
         Core.camera.position.set(state.world.width * tilesize/2f, state.world.height*tilesize/2f);
@@ -122,6 +127,26 @@ public class Renderer implements ApplicationListener{
                 last = tile;
             }
         }
+
+        for(EventCard card : state.player().eventCards){
+            if(card instanceof HeavySnowEvent){
+                int dst = ((HeavySnowEvent) card).dst;
+                City city = ((HeavySnowEvent) card).city;
+
+                Vector2 world = control.toWorld(city.x, city.y);
+
+                Lines.stroke(1f, Color.WHITE);
+                Lines.dashCircle(world.x, world.y, dst * tilesize);
+            }else if(card instanceof FogEvent){
+                int dst = ((FogEvent) card).dst;
+                City city = ((FogEvent) card).city;
+
+                Vector2 world = control.toWorld(city.x, city.y);
+
+                Lines.stroke(1f, Color.LIGHT_GRAY);
+                Lines.dashCircle(world.x, world.y, dst * tilesize);
+            }
+        }
     }
 
     /** Draws all player icons on the board.*/
@@ -214,7 +239,7 @@ public class Renderer implements ApplicationListener{
         if(selected != null && state.world.getCity(selected) != null){
             City city = state.world.getCity(selected);
             Vector2 world = control.toWorld(city.x, city.y);
-            Draw.color(Color.CORAL.cpy().mul(0.6f));
+            Draw.colorMul(Color.CORAL, 0.6f);
             Draw.rect("city-" + city.size.name() + "-select", world.x, world.y);
             Draw.color(Color.CORAL);
             Draw.rect("city-" + city.size.name() + "-select", world.x, world.y + 1);

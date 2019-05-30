@@ -206,10 +206,15 @@ public class UI implements ApplicationListener{
                         for(String good : city.goods){
 
                             if(atCity){
-                                table.addImageTextButton(Strings.capitalize(good), "icon-export", 10*2, () -> {
-                                    state.player().addCargo(good);
-                                    showFade(Strings.capitalize(good) + " obtained.");
-                                }).colspan(2).left().fillX().disabled(b -> !state.player().hasCargoSpace()).width(190f).height(45f);
+                                if(state.canLoadUnload(state.player(), state.world.tile(city.x, city.y))){
+                                    table.addImageTextButton(Strings.capitalize(good), "icon-export", 10*2, () -> {
+                                        state.player().addCargo(good);
+                                        showFade(Strings.capitalize(good) + " obtained.");
+                                    }).colspan(2).left().fillX().disabled(b -> !state.player().hasCargoSpace()).width(190f).height(45f);
+                                }else{
+                                    table.addImage("icon-trash").size(14*2).padRight(3).right().color(Color.SCARLET);
+                                    table.add(Strings.capitalize(good)).color(Color.LIGHT_GRAY);
+                                }
                             }else{
                                 table.addImage("icon-file").size(8*3).padRight(3).right();
                                 table.add(Strings.capitalize(good)).color(Color.LIGHT_GRAY);
@@ -225,12 +230,17 @@ public class UI implements ApplicationListener{
                             state.player().eachGoodByCity(city, d -> {
                                 boolean has = state.player().cargo.contains(d.good);
                                 if(has && atCity){
-                                    table.addImageTextButton(Strings.capitalize(d.good) + "[] for[coral] " + d.cost + "[] ECU",
-                                            "icon-project-open", 14*2, () -> {
-                                        state.sellGood(state.player(), d.city, d.good, events::show);
-                                        lastPlayer[0] = null; //trigger a refresh next frame
-                                    }).colspan(2).left().fillX().width(190f).height(45f);
-
+                                    //make sure player is not event-blocked here
+                                    if(state.canLoadUnload(state.player(), state.world.tile(fcity.x, fcity.y))){
+                                        table.addImageTextButton(Strings.capitalize(d.good) + "[] for[coral] " + d.cost + "[] ECU",
+                                        "icon-project-open", 14 * 2, () -> {
+                                            state.sellGood(state.player(), d.city, d.good, events::show);
+                                            lastPlayer[0] = null; //trigger a refresh next frame
+                                        }).colspan(2).left().fillX().width(190f).height(45f);
+                                    }else{
+                                        table.addImage("icon-trash").size(14 * 2).padRight(3).color(Color.SCARLET).right();
+                                        table.add("[lightgray]" + Strings.capitalize(d.good) + "[] for[coral] " + d.cost + "[] ECU");
+                                    }
                                 }else{
                                     table.addImage(has ? "icon-project-open" : "icon-minus").size(has ? 14*2 : 8 * 3).padRight(3).right().update(i -> {
                                         if(has){

@@ -3,8 +3,10 @@ package empire.game;
 import io.anuke.arc.collection.Array;
 import io.anuke.arc.collection.ObjectMap;
 import io.anuke.arc.function.Consumer;
+import io.anuke.arc.math.Mathf;
 import io.anuke.arc.math.geom.Point2;
 import io.anuke.arc.math.geom.Vector2;
+import io.anuke.arc.util.Strings;
 import io.anuke.arc.util.Structs;
 
 /** Holds information about the game's world, such as tiles and their costs.*/
@@ -90,9 +92,21 @@ public class World{
         return tile(index % width, index / width);
     }
 
-    /** Returns a city by name.*/
+    /** Returns a city by name. Throws an exception if not found.*/
     public City getCity(String name){
+        if(!cities.containsKey(name)){
+            throw new IllegalArgumentException("No city found with name: \"" + name + "\"");
+        }
         return cities.get(name);
+    }
+
+    /** Returns a river by name. Throws an exception if not found.*/
+    public River getRiver(String name){
+        River river = rivers.find(r -> r.name.equals(name));
+        if(river == null){
+            throw new IllegalArgumentException("No river found with name: \"" + name + "\"");
+        }
+        return river;
     }
 
     /** Returns the cities in this world.*/
@@ -165,8 +179,10 @@ public class World{
         public Port port;
         /** Temporary search parent.*/
         public Tile searchParent;
-        /** List of tiles that require crossing a river to get to from this tile.*/
-        public Array<Tile> riverTiles;
+        /** List of crossings to other tiles.*/
+        public Array<WaterCrossing> crossings;
+        /** Whether this tile is inland, e.g. 3 tiles from shore.*/
+        public boolean inland = true;
 
         public Tile(Terrain type, int x, int y){
             this.type = type;
@@ -174,8 +190,27 @@ public class World{
             this.y = y;
         }
 
+        public boolean isMountainous(){
+            return type == Terrain.alpine || type == Terrain.mountain;
+        }
+
         public Point2[] getAdjacent(){
             return y % 2 == 0 ? adjacencyEven : adjacencyOdd;
+        }
+
+        public int distanceTo(int ox, int oy){
+            if(x == ox){
+                return Math.abs(y - oy);
+            }else if(y == oy){
+                return Math.abs(x - ox);
+            }else{
+                //TODO this is.. incorrect
+                return (int)Mathf.dst(ox, oy);
+            }
+        }
+
+        public int distanceTo(Tile other){
+            return distanceTo(other.x, other.y);
         }
 
         /** Returns the direction needed to travel from this tile to the other.
@@ -201,6 +236,22 @@ public class World{
         water, plain, mountain, alpine, port
     }
 
+    /** Defines a crossing between two tiles that intersects a body of water.*/
+    public static class WaterCrossing{
+        /** Cost of this crossing in ECU.*/
+        public final int cost;
+        /** River that this crosses; may be null.*/
+        public final River river;
+        /** The destination tile.*/
+        public final Tile to;
+
+        public WaterCrossing(int cost, River river, Tile to){
+            this.cost = cost;
+            this.river = river;
+            this.to = to;
+        }
+    }
+
     /** Represents a port, from one location to another.*/
     public static class Port{
         /** The port names.*/
@@ -221,6 +272,7 @@ public class World{
 
     /** Represents a city on the map.*/
     public static class City{
+        /** City name in lower case.*/
         public final String name;
         /** This city's x/y position.*/
         public final int x, y;
@@ -235,6 +287,10 @@ public class World{
             this.y = y;
             this.size = size;
             this.goods = goods;
+        }
+
+        public String formalName(){
+            return Strings.capitalize(name);
         }
     }
 
