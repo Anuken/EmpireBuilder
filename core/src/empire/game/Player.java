@@ -28,6 +28,8 @@ public class Player{
     public Tile position;
     /** Direction this player is facing.*/
     public Direction direction = Direction.right;
+    /** Whether this player is local and controllable.*/
+    public boolean local;
 
     /** Other players' tracks this player has moved on.*/
     public final ObjectSet<Player> movedPlayers = new ObjectSet<>();
@@ -41,9 +43,12 @@ public class Player{
     public final Array<String> cargo = new Array<>();
     /** This player's demand cards. Always of length 3, never with null elements.*/
     public final DemandCard[] demandCards;
+    /** Name for this player, displayed on the board.*/
+    public final String name;
 
     /** Creates a player at a position.*/
-    public Player(Tile position, Color color, DemandCard[] cards){
+    public Player(String name, Tile position, Color color, DemandCard[] cards){
+        this.name = name;
         this.position = position;
         this.color = color;
         this.demandCards = cards;

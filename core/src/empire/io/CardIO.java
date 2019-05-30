@@ -26,6 +26,8 @@ public class CardIO{
         "FLOOD", (Supplier) FloodEvent::new
     );
 
+    public static final Card[] cardsByID = new Card[140];
+
     /** Loads a deck of cards. Uses a world to look up cities by name.*/
     public static Array<Card> loadCards(World world, FileHandle file){
         Scanner scan = new Scanner(file.read(1024));
@@ -35,6 +37,8 @@ public class CardIO{
         if(!next.equals("#DEMANDS")){
             throw new IllegalArgumentException("Expecting demands, but got " + next);
         }
+
+        int id = 0;
 
         //read demand cards
         while(!(next = scan.next()).equals("#EVENTS")){
@@ -48,7 +52,10 @@ public class CardIO{
                 demands[i] = new Demand(good, world.getCity(city), profit);
             }
 
-            out.add(new DemandCard(demands));
+            DemandCard card = new DemandCard(demands);
+            card.id = id ++;
+            cardsByID[card.id] = card;
+            out.add(card);
         }
 
         //read event cards
@@ -59,7 +66,9 @@ public class CardIO{
                 throw new IllegalArgumentException("Unknown event \"" + type + "\"!");
             }
             EventCard card = cardMaps.get(type).get();
+            card.id = id++;
             card.load(scan, world);
+            cardsByID[card.id] = card;
             out.add(card);
         }
 

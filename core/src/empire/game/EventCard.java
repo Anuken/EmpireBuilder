@@ -10,7 +10,7 @@ import java.util.Scanner;
 
 /** Defines some type of event card, which may prevent the player from doing an action
  * or simply do something to the player when it is first drawn. */
-public abstract class EventCard implements Card{
+public abstract class EventCard extends Card{
 
     /** Loads an event card from a text file.*/
     public abstract void load(Scanner scan, World world);
