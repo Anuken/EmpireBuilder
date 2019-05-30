@@ -1,18 +1,21 @@
 package empire.game;
 
 import empire.game.DemandCard.Demand;
-import empire.game.World.City;
-import empire.game.World.CitySize;
-import empire.game.World.Terrain;
-import empire.game.World.Tile;
-import io.anuke.arc.collection.Array;
-import io.anuke.arc.collection.ObjectSet;
-import io.anuke.arc.collection.Queue;
-import io.anuke.arc.util.Log;
+import empire.game.World.*;
+import io.anuke.arc.collection.*;
 import io.anuke.arc.util.Structs;
 
 /** Holds the state of the entire game. */
 public class State{
+    /** Cost to upgrade a loco.*/
+    public final static int locoCost = 20;
+    /** Max amount of money to spend on rails per turn.*/
+    public final int maxRailSpend = 20;
+    /** Amount of money needed to win.*/
+    public final static int winMoneyAmount = 250;
+    /** Number of turns with no movement at the start.*/
+    public final static int preMovementTurns = 2;
+
     /** All player states by index.*/
     public final Array<Player> players = new Array<>();
     /** The current world state.*/
@@ -23,16 +26,8 @@ public class State{
     public int currentPlayer;
     /** The demand cards of this state.*/
     public Array<DemandCard> demandCards;
-    /** Cost to upgrade a loco.*/
-    public final int locoCost = 20;
-    /** Max amount of money to spend on rails per turn.*/
-    public final int maxRailSpend = 20;
-    /** Amount of money needed to win.*/
-    public final int winMoneyAmount = 250;
-    /** Number of turns with no movement at the start.*/
-    public final int preMovementTurns = 2;
 
-    /** A set of closed tiles. Temp usage only.*/
+    /** Tile collections for temporary usage.*/
     private static final ObjectSet<Tile> closedSet = new ObjectSet<>();
     private static final Queue<Tile> queue = new Queue<>();
     private static final Array<Tile> moveArray = new Array<>();

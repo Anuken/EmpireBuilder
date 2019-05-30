@@ -85,6 +85,11 @@ public class World{
         return tile.x + tile.y * width;
     }
 
+    /** Returns a tile by index.*/
+    public Tile tile(int index){
+        return tile(index % width, index / width);
+    }
+
     /** Returns a city by name.*/
     public City getCity(String name){
         return cities.get(name);

@@ -7,8 +7,6 @@ public abstract class Net{
 
     public abstract void connect(String host);
 
-
-
     protected void handleError(Throwable t){
         errorHandler.accept(t);
     }
