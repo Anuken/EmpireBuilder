@@ -135,7 +135,7 @@ public class Renderer implements ApplicationListener{
 
                 Vector2 world = control.toWorld(city.x, city.y);
 
-                Lines.stroke(1f, Color.WHITE);
+                Lines.stroke(2f, Color.WHITE);
                 Lines.dashCircle(world.x, world.y, dst * tilesize);
             }else if(card instanceof FogEvent){
                 int dst = ((FogEvent) card).dst;
@@ -143,7 +143,7 @@ public class Renderer implements ApplicationListener{
 
                 Vector2 world = control.toWorld(city.x, city.y);
 
-                Lines.stroke(1f, Color.LIGHT_GRAY);
+                Lines.stroke(2f, Color.LIGHT_GRAY);
                 Lines.dashCircle(world.x, world.y, dst * tilesize);
             }
         }

@@ -7,6 +7,7 @@ import empire.io.CardIO;
 import empire.io.MapIO;
 import io.anuke.arc.ApplicationCore;
 import io.anuke.arc.Core;
+import io.anuke.arc.collection.Array;
 import io.anuke.arc.graphics.Color;
 
 /** Main class for graphical renderer. Initializes state and its renderers.*/
@@ -27,8 +28,8 @@ public class EmpireCore extends ApplicationCore{
         state.cards = CardIO.loadCards(state.world, Core.files.internal("maps/deck.txt"));
         state.cards.shuffle(); //shuffle cards when inputted
 
-        City startCity = state.world.getCity("berlin");
-        City otherCity = state.world.getCity("leipzig");
+        City startCity = Array.with(state.world.cities()).random();
+        City otherCity = Array.with(state.world.cities()).random();
 
         state.players.add(new Player(state.world.tile(startCity.x, startCity.y), Color.PINK, state.grabCards()));
         state.players.add(new Player(state.world.tile(otherCity.x, otherCity.y), Color.GOLD, state.grabCards()));

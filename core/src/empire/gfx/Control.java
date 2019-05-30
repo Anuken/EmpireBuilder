@@ -16,42 +16,21 @@ import static empire.gfx.EmpireCore.tilesize;
 
 /** Handles user input.*/
 public class Control implements ApplicationListener{
-    private Bresenham2 bres = new Bresenham2();
     private Array<Tile> outArray = new Array<>();
     public Tile placeLoc = null;
 
     @Override
-    public void init(){
-        //Core.scene.table(t -> t.touchable(Touchable.enabled)).dragged((x, y) -> {
-        //    Core.camera.position.sub(x / renderer.zoom, y / renderer.zoom);
-        //});
-    }
-
-    @Override
     public void update(){
 
+        //begin placing on mouse down
         if(Core.input.keyTap(KeyCode.MOUSE_LEFT)){
             Tile tile = tileMouse();
             if(tile != null && state.canBeginTrack(state.player(), tile)){
                 placeLoc = tile;
             }
-            /*
-            if(placeLoc != null){
-                if(state.canPlaceTrack(state.player(), placeLoc, tile)){
-                    int cost = state.getTrackCost(placeLoc, tile);
-                    if(state.canSpendRail(state.player(), cost)){
-                        state.placeTrack(state.player(), placeLoc, tile);
-                        placeLoc = tile;
-                    }
-                }
-            }else{
-                Player player = state.player();
-                if(tile != null && state.canBeginTrack(player, tile)){
-                    placeLoc = tile;
-                }
-            }*/
         }
 
+        //place lines on mouse up
         if(Core.input.keyRelease(KeyCode.MOUSE_LEFT)){
             Tile other = tileMouse();
             if(placeLoc != null && other != null && canPlaceLine(placeLoc, other)){

@@ -27,7 +27,7 @@ public class Player{
     /** The position on the board of this player.*/
     public Tile position;
     /** Direction this player is facing.*/
-    public Direction direction = Direction.left;
+    public Direction direction = Direction.right;
 
     /** Other players' tracks this player has moved on.*/
     public final ObjectSet<Player> movedPlayers = new ObjectSet<>();

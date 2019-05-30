@@ -60,7 +60,7 @@ public class WaterRenderer{
         }
 
         //now draw darker stuff on top
-        Lines.stroke(2f, Color.valueOf("4f5ec5"));
+        Lines.stroke(2.5f, Color.valueOf("4f5ec5"));
         drawRivers.run();
 
         for(Lake lake : world.lakes){

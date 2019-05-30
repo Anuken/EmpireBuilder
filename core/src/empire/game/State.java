@@ -162,6 +162,33 @@ public class State{
                         player.tracks.containsKey(tile.port.to)));
     }
 
+    public boolean checkTrackLimits(Player player, Tile tile){
+        //only 2 players can build to or from a port
+        if(tile.port != null){
+            if(players.count(p -> p.tracks.containsKey(tile)) >= 2){
+                return false;
+            }
+        }
+
+        if(tile.city != null){
+            //can't build 3 tracks into a city
+            if(tile.city.size != CitySize.major && player.tracks.get(tile).size >= 3){
+                return true;
+            }
+
+            //max 3 players can build into medium, max 2 into small
+            if(tile.city.size == CitySize.medium && players.count(p -> p.tracks.containsKey(tile)) >= 3){
+                return false;
+            }else if(tile.city.size == CitySize.small && players.count(p -> p.tracks.containsKey(tile)) >= 2){
+                return false;
+            }
+        }
+
+        //TODO obstruction limits; right of building into a city
+
+        return true;
+    }
+
     public boolean canPlaceTrack(Player player, Tile from, Tile to){
         //can't place track into itself
         if(from == to) return false;
@@ -173,6 +200,11 @@ public class State{
             && !(from.port != null && //check port
                 (from.port.from == from || from.port.to == from))
             && world.getMajorCity(from) == null){ //make sure to check for major cities too; track can be placed from any major city
+            return false;
+        }
+
+        //check max track limits now
+        if(!checkTrackLimits(player, from) || !checkTrackLimits(player, to)){
             return false;
         }
 

@@ -67,6 +67,21 @@ public class UI implements ApplicationListener{
     public void init(){
         events = new EventDialog();
 
+        //display event info
+        Core.scene.table(events -> {
+            events.visible(() -> !state.player().eventCards.isEmpty());
+            events.bottom().left();
+            events.update(() -> {
+                events.clearChildren();
+                events.add("[lightgray]Active Events:");
+                events.row();
+                for(EventCard card : state.player().eventCards){
+                    events.add("| " + card.name()).color(Color.CORAL).left();
+                    events.row();
+                }
+            });
+        });
+
         //display player info
         Core.scene.table(main -> {
             float width = 250f;
