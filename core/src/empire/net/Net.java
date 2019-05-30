@@ -61,8 +61,6 @@ public abstract class Net{
         /** Server: Called when a client disconnects from this server.*/
         void disconnected(int connection);
 
-        /** Client: called on a successful connection.*/
-        void connected();
         /** Client: called when a message is recieved.*/
         void message(String txt);
         /** Client: called on server disconnect.*/

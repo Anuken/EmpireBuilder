@@ -137,11 +137,6 @@ public class ActionRelay implements NetListener{
     //client
 
     @Override
-    public void connected(){
-
-    }
-
-    @Override
     public void message(String txt){
         handle(read(txt));
     }
