@@ -89,6 +89,14 @@ public class Actions{
         }
     }
 
+    public static class EndTurn extends PlayerAction{
+
+        @Override
+        public void apply(State state){
+            state.nextPlayer();
+        }
+    }
+
     public static class Move extends PlayerAction{
         public Tile to;
 

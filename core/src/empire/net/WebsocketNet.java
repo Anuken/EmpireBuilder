@@ -17,6 +17,8 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.concurrent.TimeUnit;
 
+import static empire.gfx.EmpireCore.ui;
+
 public class WebsocketNet extends Net{
     InternalServer server;
     InternalClient client;
@@ -72,6 +74,8 @@ public class WebsocketNet extends Net{
     @Override
     public void send(String text){
         if(!active()) throw new IllegalArgumentException("Net isn't ready yet!");
+
+        Log.info("SEND " + text);
 
         if(client()){
             client.send(text);
@@ -160,7 +164,16 @@ public class WebsocketNet extends Net{
 
         @Override
         public void onError(WebSocket conn, Exception ex){
-            ex.printStackTrace();
+            if(ex.getMessage() != null && ex.getMessage().contains("Address already in use")){
+                Core.app.post(() -> {
+                    ui.showDialog("[scarlet]Error", t -> t.cont.add("[coral]Port " + port + " is already in use.\n[]Stop any other servers on the network."));
+                    close();
+                });
+            }else{
+                Core.app.post(() -> {
+                    throw new RuntimeException(ex);
+                });
+            }
         }
 
         @Override
@@ -182,19 +195,19 @@ public class WebsocketNet extends Net{
 
         @Override
         public void onMessage(String message){
-            listener.message(message);
+            Core.app.post(() -> listener.message(message));
         }
 
         @Override
         public void onClose(int code, String reason, boolean remote){
-            Core.app.post(() -> error.accept(new IOException(reason)));
-            listener.disconnected(new IOException(reason));
+            Core.app.post(() -> error.accept(new IOException((reason == null || reason.isEmpty()) ? "Code " + code : reason)));
+            Core.app.post(() -> listener.disconnected(new IOException(reason)));
             close();
         }
 
         @Override
         public void onError(Exception ex){
-            ex.printStackTrace();
+            Core.app.post(() -> {throw new RuntimeException(ex);});
         }
     }
 }

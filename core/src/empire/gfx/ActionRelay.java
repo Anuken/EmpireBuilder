@@ -114,10 +114,8 @@ public class ActionRelay implements NetListener{
         }
 
         if(net.active()){
-            //server applies all its actions locally; clients only apply after a round trip
-            if(net.server()){
-                action.apply(state);
-            }
+            //apply action locally; happens for both client and server
+            action.apply(state);
             //apply effect and send
             net.send(write(action));
         }else{
@@ -127,15 +125,18 @@ public class ActionRelay implements NetListener{
     }
 
     private String write(Action action){
-        String name = ClassReflection.getSimpleName(action.getClass());
-        return name + "|" + json.toJson(action);
+        Class<?> type = action.getClass();
+        if(action.getClass().isAnonymousClass()){
+            type = action.getClass().getSuperclass();
+        }
+        return ClassReflection.getSimpleName(type) + "|" + json.toJson(action);
     }
 
     private Action read(String str){
         int idx = str.indexOf('|');
         String name = str.substring(0, idx);
         String data = str.substring(idx + 1);
-        Class<?> type = classMap.getOr(name, () -> find("empire.game.Actions." + name));
+        Class<?> type = classMap.getOr(name, () -> find("empire.game.Actions$" + name));
         return (Action) json.fromJson(type, data);
     }
 
@@ -157,6 +158,11 @@ public class ActionRelay implements NetListener{
         //assign player to action
         if(action instanceof PlayerAction){
             ((PlayerAction) action).player = state.player();
+
+            //this was already applied, no need to do it again
+            if(state.player().local){
+                return;
+            }
         }
 
         //apply it
@@ -201,7 +207,7 @@ public class ActionRelay implements NetListener{
             //write world state
             net.send(connection, write(new WorldSend(){{
                 cards = state.cards.mapInt(c -> c.id);
-                players = state.players.toArray();
+                players = state.players.toArray(Player.class);
             }}));
 
             //send forward message to everyone

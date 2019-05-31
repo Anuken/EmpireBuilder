@@ -143,7 +143,7 @@ public class UI implements ApplicationListener{
                 t.label(() -> state.isPreMovement() ? "[orange]Building Phase" : "[orange]" + (state.player().loco.speed - state.player().moved) + "[] moves left");
                 t.row();
                 t.label(() -> state.player().cargo.isEmpty() ? "[gray]<Empty>" :
-                        "[magenta]+ " + state.player().cargo.toString("\n+ "));
+                        "[purple]+ " + state.player().cargo.toString("\n+ "));
             }).minWidth(width);
             main.row();
             main.addImageTextButton("Demands...", "icon-file", 8*3, () -> {
@@ -164,9 +164,10 @@ public class UI implements ApplicationListener{
                         d.cont.row();
                     }
                 });
-            }).fillX().height(50);
+            }).disabled(b -> !state.player().local).fillX().height(50);
             main.row();
-            main.addImageTextButton("Action...", "icon-down", 16*2, actions::toggle).fillX().height(50);
+            main.addImageTextButton("Action...", "icon-down", 16*2, actions::toggle)
+                    .disabled(b -> !state.player().local).fillX().height(50);
             main.row();
             main.add(actions).fillX();
         });
@@ -174,9 +175,9 @@ public class UI implements ApplicationListener{
         Core.scene.table(main -> {
             main.top();
             main.addButton("End Turn", () -> {
-                state.nextPlayer();
+                new EndTurn().act();
                 control.placeLoc = null;
-            }).top().height(45f).width(120f);
+            }).top().height(45f).width(120f).visible(() -> state.player().local);
         });
 
         //display cities
@@ -225,7 +226,7 @@ public class UI implements ApplicationListener{
                         table.left();
                         for(String good : city.goods){
 
-                            if(atCity){
+                            if(atCity && state.player().local){
                                 if(state.canLoadUnload(state.player(), state.world.tile(city.x, city.y))){
                                     table.addImageTextButton(Strings.capitalize(good), "icon-export", 10*2, () -> {
                                         new LoadCargo(){{
@@ -250,7 +251,7 @@ public class UI implements ApplicationListener{
 
                             state.player().eachGoodByCity(city, d -> {
                                 boolean has = state.player().cargo.contains(d.good);
-                                if(has && atCity){
+                                if(has && atCity && state.player().local){
                                     //make sure player is not event-blocked here
                                     if(state.canLoadUnload(state.player(), state.world.tile(fcity.x, fcity.y))){
                                         table.addImageTextButton(Strings.capitalize(d.good) + "[] for[coral] " + d.cost + "[] ECU",
