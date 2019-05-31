@@ -1,6 +1,10 @@
 package empire.gfx;
 
 import empire.game.*;
+import empire.game.Actions.DiscardCards;
+import empire.game.Actions.LoadCargo;
+import empire.game.Actions.SellCargo;
+import empire.game.Actions.UpgradeLoco;
 import empire.game.DemandCard.Demand;
 import empire.game.World.City;
 import empire.game.World.Tile;
@@ -33,7 +37,9 @@ import static empire.gfx.EmpireCore.state;
 
 /** Handles all overlaid UI for the game. */
 public class UI implements ApplicationListener{
-    EventDialog events;
+    public EventDialog events;
+
+    private Runnable refresh = () -> {};
 
     public UI(){
         Skin skin = new Skin(Core.atlas);
@@ -90,20 +96,17 @@ public class UI implements ApplicationListener{
                 t.defaults().width(width).height(60f);
                 t.addButton("Upgrade", () -> {
                     if(state.player().loco != Loco.freight){
-                        showFade("Upgrade Purchased!");
-                        state.purchaseLoco(state.player(), Loco.superFreight);
+                        new UpgradeLoco().act();
                     }else{
                         showDialog("Upgrade", b -> {
                             b.cont.defaults().size(180f, 50f);
                             b.cont.addButton("Fast Freight", () -> {
-                                showFade("Upgrade Purchased!");
-                                state.purchaseLoco(state.player(), Loco.fastFreight);
+                                new UpgradeLoco(){{ type = 0; }}.act();
                                 b.hide();
                             });
                             b.cont.row();
                             b.cont.addButton("Heavy Freight", () -> {
-                                showFade("Upgrade Purchased!");
-                                state.purchaseLoco(state.player(), Loco.heavyFreight);
+                                new UpgradeLoco(){{ type = 1; }}.act();
                                 b.hide();
                             });
                         });
@@ -118,8 +121,7 @@ public class UI implements ApplicationListener{
                 });
                 t.row();
                 t.addButton("Discard Cards", () -> {
-                    state.discardCards(state.player(), events::show);
-                    state.nextPlayer();
+                    new DiscardCards().act();
                     arr[0].toggle();
                 });
             }, true);
@@ -182,6 +184,8 @@ public class UI implements ApplicationListener{
             Player[] lastPlayer = {null};
             Tile[] lastPosition = {null};
 
+            refresh = () -> lastPlayer[0] = null;
+
             Table table = new Table("dialogDim");
             table.left();
             main.top().right();
@@ -223,8 +227,9 @@ public class UI implements ApplicationListener{
                             if(atCity){
                                 if(state.canLoadUnload(state.player(), state.world.tile(city.x, city.y))){
                                     table.addImageTextButton(Strings.capitalize(good), "icon-export", 10*2, () -> {
-                                        state.player().addCargo(good);
-                                        showFade(Strings.capitalize(good) + " obtained.");
+                                        new LoadCargo(){{
+                                            cargo = good;
+                                        }}.act();
                                     }).colspan(2).left().fillX().disabled(b -> !state.player().hasCargoSpace()).width(190f).height(45f);
                                 }else{
                                     table.addImage("icon-trash").size(14*2).padRight(3).right().color(Color.SCARLET);
@@ -249,8 +254,9 @@ public class UI implements ApplicationListener{
                                     if(state.canLoadUnload(state.player(), state.world.tile(fcity.x, fcity.y))){
                                         table.addImageTextButton(Strings.capitalize(d.good) + "[] for[coral] " + d.cost + "[] ECU",
                                         "icon-project-open", 14 * 2, () -> {
-                                            state.sellGood(state.player(), d.city, d.good, events::show);
-                                            lastPlayer[0] = null; //trigger a refresh next frame
+                                            new SellCargo(){{
+                                                cargo = d.good;
+                                            }}.act();
                                         }).colspan(2).left().fillX().width(190f).height(45f);
                                     }else{
                                         table.addImage("icon-trash").size(14 * 2).padRight(3).color(Color.SCARLET).right();
@@ -318,7 +324,9 @@ public class UI implements ApplicationListener{
         Core.scene.resize(width, height);
     }
 
-
+    public void refreshCity(){
+        refresh.run();
+    }
 
     public void showFade(String text){
         Label label = new Label(text);

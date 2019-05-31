@@ -105,6 +105,10 @@ public class ActionRelay implements NetListener{
         }
 
         if(net.active()){
+            //server applies all its actions locally; clients only apply after a round trip
+            if(net.server()){
+                action.apply(state);
+            }
             //apply effect and send
             net.send(write(action));
         }else{
@@ -138,7 +142,9 @@ public class ActionRelay implements NetListener{
 
     @Override
     public void message(String txt){
-        handle(read(txt));
+        Log.info("Client: received \n{0}", txt);
+        //just apply it
+        read(txt).apply(state);
     }
 
     @Override
@@ -175,6 +181,11 @@ public class ActionRelay implements NetListener{
             }
 
             Connect connect = (Connect)action;
+
+            //write world state
+            net.send(connection, write(new WorldSend(){{
+                cards = state.cards.mapInt(c -> c.id);
+            }}));
 
             //send forward message to everyone
             handle(new ConnectForward(){{

@@ -1,13 +1,16 @@
 package empire.gfx;
 
-import empire.game.Player;
+import empire.game.Actions.Move;
+import empire.game.Actions.PlaceTrack;
 import empire.game.World.Tile;
 import io.anuke.arc.ApplicationListener;
 import io.anuke.arc.Core;
 import io.anuke.arc.collection.Array;
 import io.anuke.arc.input.KeyCode;
 import io.anuke.arc.math.Mathf;
-import io.anuke.arc.math.geom.*;
+import io.anuke.arc.math.geom.Intersector;
+import io.anuke.arc.math.geom.Point2;
+import io.anuke.arc.math.geom.Vector2;
 import io.anuke.arc.util.Structs;
 import io.anuke.arc.util.Tmp;
 
@@ -38,7 +41,10 @@ public class Control implements ApplicationListener{
                     if(state.canPlaceTrack(state.player(), placeLoc, tile)){
                         int cost = state.getTrackCost(placeLoc, tile);
                         if(state.canSpendRail(state.player(), cost)){
-                            state.placeTrack(state.player(), placeLoc, tile);
+                            new PlaceTrack(){{
+                                from = placeLoc;
+                                to = tile;
+                            }}.act();
                         }
                     }
                     placeLoc = tile;
@@ -49,10 +55,10 @@ public class Control implements ApplicationListener{
 
         if(Core.input.keyTap(KeyCode.SPACE) && !state.isPreMovement()){
             Tile tile = tileMouse();
-            Player player = state.player();
             if(tile != null){
-                //TODO movement animation + sequence of tiles moved on
-                Array<Tile> path = state.movePlayer(player, tile);
+                new Move(){{
+                    to = tile;
+                }}.act();
             }
         }
 

@@ -8,7 +8,6 @@ public abstract class Net{
     protected static final int port = 3257;
 
     protected Consumer<Throwable> errorHandler = Throwable::printStackTrace;
-    protected boolean server, client;
     protected NetListener listener;
 
     public void setListener(NetListener listener){
@@ -20,18 +19,14 @@ public abstract class Net{
     }
 
     /** Whether the net is currently in server mode, e.g. hosting. */
-    public boolean server(){
-        return server;
-    }
+    public abstract boolean server();
 
     /** Whether the net is currently in client mode, e.g. connected to a server. */
-    public boolean client(){
-        return client;
-    }
+    public abstract boolean client();
 
     /** Whether any sort of connection is active right now, e.g. server OR client.*/
     public boolean active(){
-        return server || client;
+        return server() || client();
     }
 
     /** Client: Connects to an IP asynchronously. Calls either the success or error callbacks. */
