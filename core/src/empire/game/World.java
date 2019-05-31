@@ -130,7 +130,7 @@ public class World{
 
     /** Iterates through the connections of a tile, taking into account ports.
      * Also takes into account tracks of this player.*/
-    public void connectionsOf(State state, Player player, Tile tile, Consumer<Tile> adjacent){
+    public void connectionsOf(State state, Player player, Tile tile, boolean otherPlayers, Consumer<Tile> adjacent){
         //water has no connections
         if(tile.type == Terrain.water){
             return;
@@ -147,7 +147,7 @@ public class World{
                     //case 2: tracks between these two points
                 }else if(player.tracks.containsKey(tile) && player.tracks.get(tile).contains(other)){
                     adjacent.accept(other);
-                }else{
+                }else if(otherPlayers){
                     //TODO this is laughably inefficient
                     for(Player otherplayer : state.players){
                         if(otherplayer.tracks.containsKey(tile) && otherplayer.tracks.get(tile).contains(other)){

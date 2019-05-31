@@ -16,6 +16,8 @@ public class State{
     public final static int winMoneyAmount = 250;
     /** Number of turns with no movement at the start.*/
     public final static int preMovementTurns = 2;
+    /** Number of cities connected needed to win.*/
+    public final static int winCityAmount = 7;
 
     /** The current world state.*/
     public World world;
@@ -27,11 +29,14 @@ public class State{
     public int currentPlayer;
     /** All the cards of this state. May be event or demand cards*/
     public Array<Card> cards;
+    /** Event listener for a player winning.*/
+    public Consumer<Player> onWin = p -> {};
 
     /** Tile collections for temporary usage.*/
     private static final ObjectSet<Tile> closedSet = new ObjectSet<>();
     private static final Queue<Tile> queue = new Queue<>();
     private static final Array<Tile> moveArray = new Array<>();
+    private static final ObjectSet<City> citySet = new ObjectSet<>();
 
     /** Grabs 3 demand cards from the top of the deck and returns them.
      * Event cards are discarded.*/
@@ -42,6 +47,13 @@ public class State{
             out[i] = drawDemandCard(e -> cards.insert(0, e));
         }
         return out;
+    }
+
+    /** Reclaims cards for a player. This is only called after net disconnects.*/
+    public void reclaimCards(Player player){
+        for(DemandCard card : player.demandCards){
+            cards.insert(0, card);
+        }
     }
 
     /** Attempts to draw a demand card; passes on all event cards drawn.*/
@@ -58,14 +70,27 @@ public class State{
         return turn <= preMovementTurns;
     }
 
-    /** Goes through each player and returns them if they have won the game.*/
-    public Player checkGameOver(){
-        for(Player player : players){
-            if(player.money >= winMoneyAmount){
-                return player;
+    /** Checks if a player has won a game, and runs the onWin callback if that is the case.*/
+    public void checkIfWon(Player player){
+        if(player.money >= winMoneyAmount){
+            int checked = 0;
+
+            for(City city : world.cities()){
+                //if 2 cities don't have the right connections, none of them can, since there are 8 cities and 7 needed to win.
+                if(checked >= 2){
+                    return;
+                }
+
+                if(city.size == CitySize.major){
+                    if(countConnectedCities(player, world.tile(city.x, city.y)) >= winCityAmount){
+                        onWin.accept(player);
+                        return;
+                    }
+                }
+
+                checked ++;
             }
         }
-        return null;
     }
 
     public boolean canLoadUnload(Player player, Tile tile){
@@ -119,6 +144,7 @@ public class State{
         if(player().lostTurns > 0){
             player().lostTurns --;
         }
+        checkIfWon(player());
 
         //begin next player's turn
         currentPlayer ++;
@@ -352,6 +378,37 @@ public class State{
         return null;
     }
 
+    /** Counts cities connected to a tile using only this player's track.*/
+    public int countConnectedCities(Player player, Tile other){
+        moveArray.clear();
+        closedSet.clear();
+        queue.clear();
+        citySet.clear();
+
+        queue.addFirst(other);
+        closedSet.add(other);
+
+        while(!queue.isEmpty()){
+            Tile tile = queue.removeLast();
+
+            //add encountered city to set
+            if(tile.city != null && tile.city.size == CitySize.major){
+                citySet.add(tile.city);
+            }
+
+            //iterate through /connections/ of each tile
+            world.connectionsOf(this, player, tile, false, child -> {
+                if(!closedSet.contains(child)){
+                    child.searchParent = tile;
+                    queue.addFirst(child);
+                    closedSet.add(child);
+                }
+            });
+        }
+
+        return citySet.size;
+    }
+
     /** Attempts to calculate in-between movement tiles for a player from a start point
      * to a destination. Returns an empty array if impossible. */
     public Array<Tile> calculateMovement(Player player, Tile other){
@@ -379,7 +436,7 @@ public class State{
             }
 
             //iterate through /connections/ of each tile
-            world.connectionsOf(this, player, tile, child -> {
+            world.connectionsOf(this, player, tile, true, child -> {
                 if(!closedSet.contains(child)
                         //make sure player isn't blocked by event cards!
                         && player.isAllowed(e -> e.canMove(player, tile, child))){

@@ -97,34 +97,36 @@ public class Renderer implements ApplicationListener{
 
     /** Draws player input on the board.*/
     void drawControl(){
-        Tile other = control.tileMouse();
-        if(other != null){
-            Draw.color(1f, 1f, 1f, 0.2f);
-            Vector2 world = control.toWorld(other);
-            Fill.rect(world.x, world.y, tilesize, tilesize);
-        }
+        if(!Core.scene.hasMouse()){
+            Tile other = control.tileMouse();
+            if(other != null){
+                Draw.color(1f, 1f, 1f, 0.2f);
+                Vector2 world = control.toWorld(other);
+                Fill.rect(world.x, world.y, tilesize, tilesize);
+            }
 
-        //draw rail track placement
-        if(control.placeLoc != null && other != null){
-            Tile last = control.placeLoc;
-            int cost = 0;
-            for(Tile tile : control.getTiles(control.placeLoc, other)){
-                if(tile != last){
-                    Vector2 world = control.toWorld(last);
-                    float fx = world.x, fy = world.y;
-                    control.toWorld(tile);
+            //draw rail track placement
+            if(control.placeLoc != null && other != null){
+                Tile last = control.placeLoc;
+                int cost = 0;
+                for(Tile tile : control.getTiles(control.placeLoc, other)){
+                    if(tile != last){
+                        Vector2 world = control.toWorld(last);
+                        float fx = world.x, fy = world.y;
+                        control.toWorld(tile);
 
-                    cost += state.getTrackCost(last, tile);
+                        cost += state.getTrackCost(last, tile);
 
-                    if(state.isPassable(state.player(), tile) && state.canSpendRail(state.player(), cost)){
-                        Draw.color(1f, 1f, 1f, 0.5f);
-                    }else{
-                        Draw.color(1f, 0.3f, 0.3f, 0.5f);
+                        if(state.isPassable(state.player(), tile) && state.canSpendRail(state.player(), cost)){
+                            Draw.color(1f, 1f, 1f, 0.5f);
+                        }else{
+                            Draw.color(1f, 0.3f, 0.3f, 0.5f);
+                        }
+
+                        drawTrack(fx, fy, world.x, world.y);
                     }
-
-                    drawTrack(fx, fy, world.x, world.y);
+                    last = tile;
                 }
-                last = tile;
             }
         }
 

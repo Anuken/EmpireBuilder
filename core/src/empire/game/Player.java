@@ -38,13 +38,13 @@ public class Player{
     /** Tracks that this player has placed down.*/
     public final ObjectMap<Tile, Array<Tile>> tracks = new ObjectMap<>();
     /** Player color, used for display purposes.*/
-    public final Color color;
+    public Color color;
     /** Current cargo held.*/
-    public final Array<String> cargo = new Array<>();
+    public Array<String> cargo = new Array<>();
     /** This player's demand cards. Always of length 3, never with null elements.*/
-    public final DemandCard[] demandCards;
+    public DemandCard[] demandCards;
     /** Name for this player, displayed on the board.*/
-    public final String name;
+    public String name;
 
     /** Creates a player at a position.*/
     public Player(String name, Tile position, Color color, DemandCard[] cards){
@@ -53,6 +53,9 @@ public class Player{
         this.color = color;
         this.demandCards = cards;
     }
+
+    /** Serialization use only. */
+    protected Player(){}
 
     /** @return whether this player is within distance of this tile.*/
     public boolean within(int x, int y, int dst){

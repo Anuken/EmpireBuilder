@@ -30,19 +30,31 @@ public class EmpireCore extends ApplicationCore{
         net = new WebsocketNet();
         actions = new ActionRelay();
 
+        net.setListener(actions);
+
         state = new State();
         state.world = MapIO.loadTiles(Core.files.internal("maps/eurorails.txt"));
         state.cards = CardIO.loadCards(state.world, Core.files.internal("maps/deck.txt"));
         state.cards.shuffle(); //shuffle cards when inputted
 
         City startCity = Array.with(state.world.cities()).random();
-        City otherCity = Array.with(state.world.cities()).random();
 
         state.players.add(new Player("Me", state.world.tile(startCity.x, startCity.y), Color.PINK, state.grabCards()));
-        state.players.add(new Player("You", state.world.tile(otherCity.x, otherCity.y), Color.GOLD, state.grabCards()));
 
         add(control = new Control());
         add(renderer = new Renderer());
         add(ui = new UI());
+
+        state.onWin = player -> {
+            ui.showDialog(player.name + " is victorious!", dialog -> {
+                dialog.cont.add(player.name + " has won the game, as they have\nconnected 7 major cities and gotten " + State.winMoneyAmount + " ECU!");
+            });
+        };
+    }
+
+    @Override
+    public void dispose(){
+        super.dispose();
+        net.close();
     }
 }

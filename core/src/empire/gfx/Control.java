@@ -26,7 +26,7 @@ public class Control implements ApplicationListener{
     public void update(){
 
         //begin placing on mouse down
-        if(Core.input.keyTap(KeyCode.MOUSE_LEFT)){
+        if(Core.input.keyTap(KeyCode.MOUSE_LEFT) && !Core.scene.hasMouse()){
             Tile tile = tileMouse();
             if(tile != null && state.canBeginTrack(state.player(), tile)){
                 placeLoc = tile;
@@ -53,7 +53,7 @@ public class Control implements ApplicationListener{
             placeLoc = null;
         }
 
-        if(Core.input.keyTap(KeyCode.SPACE) && !state.isPreMovement()){
+        if(Core.input.keyTap(KeyCode.SPACE) && !state.isPreMovement() && !Core.scene.hasMouse()){
             Tile tile = tileMouse();
             if(tile != null){
                 new Move(){{

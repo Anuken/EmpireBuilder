@@ -18,6 +18,9 @@ public abstract class Net{
         this.errorHandler = handler;
     }
 
+    /** Whether the client is currently connecting.*/
+    public abstract boolean connecting();
+
     /** Whether the net is currently in server mode, e.g. hosting. */
     public abstract boolean server();
 

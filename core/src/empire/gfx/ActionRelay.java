@@ -1,9 +1,7 @@
 package empire.gfx;
 
 import empire.game.Actions.*;
-import empire.game.DemandCard;
-import empire.game.EventCard;
-import empire.game.Player;
+import empire.game.*;
 import empire.game.World.Tile;
 import empire.io.CardIO;
 import empire.net.Net.NetListener;
@@ -12,20 +10,19 @@ import io.anuke.arc.collection.ObjectMap;
 import io.anuke.arc.function.Consumer;
 import io.anuke.arc.graphics.Color;
 import io.anuke.arc.util.Log;
-import io.anuke.arc.util.Strings;
 import io.anuke.arc.util.reflect.ClassReflection;
 import io.anuke.arc.util.serialization.Json;
 import io.anuke.arc.util.serialization.Json.Serializer;
 import io.anuke.arc.util.serialization.JsonValue;
 
-import static empire.gfx.EmpireCore.*;
+import static empire.gfx.EmpireCore.net;
+import static empire.gfx.EmpireCore.state;
 
 /** Relays and handles actions.*/
 public class ActionRelay implements NetListener{
     private Json json = new Json();
     private IntMap<Player> players = new IntMap<>();
     private ObjectMap<String, Class<?>> classMap = new ObjectMap<>();
-    private Connect connectInfo;
 
     public ActionRelay(){
         json.setSerializer(Tile.class, new Serializer<Tile>(){
@@ -37,18 +34,6 @@ public class ActionRelay implements NetListener{
             @Override
             public Tile read(Json json, JsonValue jsonData, Class type){
                 return state.world.tile(jsonData.asInt());
-            }
-        });
-
-        json.setSerializer(Player.class, new Serializer<Player>(){
-            @Override
-            public void write(Json json, Player object, Class knownType){
-                json.writeValue(state.players.indexOf(object));
-            }
-
-            @Override
-            public Player read(Json json, JsonValue jsonData, Class type){
-                return state.players.get(jsonData.asInt());
             }
         });
 
@@ -85,6 +70,30 @@ public class ActionRelay implements NetListener{
             @Override
             public DemandCard read(Json json, JsonValue jsonData, Class type){
                 return (DemandCard) CardIO.cardsByID[jsonData.asInt()];
+            }
+        });
+
+        json.setSerializer(Direction.class, new Serializer<Direction>(){
+            @Override
+            public void write(Json json, Direction object, Class knownType){
+                json.writeValue(object.ordinal());
+            }
+
+            @Override
+            public Direction read(Json json, JsonValue jsonData, Class type){
+                return Direction.all[jsonData.asInt()];
+            }
+        });
+
+        json.setSerializer(Loco.class, new Serializer<Loco>(){
+            @Override
+            public void write(Json json, Loco object, Class knownType){
+                json.writeValue(object.ordinal());
+            }
+
+            @Override
+            public Loco read(Json json, JsonValue jsonData, Class type){
+                return Loco.values()[jsonData.asInt()];
             }
         });
     }
@@ -143,14 +152,20 @@ public class ActionRelay implements NetListener{
     @Override
     public void message(String txt){
         Log.info("Client: received \n{0}", txt);
-        //just apply it
-        read(txt).apply(state);
+        Action action = read(txt);
+
+        //assign player to action
+        if(action instanceof PlayerAction){
+            ((PlayerAction) action).player = state.player();
+        }
+
+        //apply it
+        action.apply(state);
     }
 
     @Override
     public void disconnected(Throwable reason){
-        reason.printStackTrace();
-        ui.showDialog("Disconnected.", d -> d.cont.add(Strings.parseException(reason, false)).width(400f));
+
     }
 
     //server
@@ -162,9 +177,10 @@ public class ActionRelay implements NetListener{
         }
         Player p = players.get(connection);
 
+        state.reclaimCards(p);
         //send it out to everyone else first
         net.send(write(new Disconnect(){{
-            player = p;
+            player = state.players.indexOf(p);
         }}));
 
         //only apply after it has been sent.
@@ -185,6 +201,7 @@ public class ActionRelay implements NetListener{
             //write world state
             net.send(connection, write(new WorldSend(){{
                 cards = state.cards.mapInt(c -> c.id);
+                players = state.players.toArray();
             }}));
 
             //send forward message to everyone
@@ -202,6 +219,12 @@ public class ActionRelay implements NetListener{
             if(action instanceof PlayerAction){
                 ((PlayerAction) action).player = player;
             }
+
+            if(state.player() != player){
+                Log.err("Player '{0}' just attempted to do an action not in their turn!", player.name);
+                return;
+            }
+
             //apply action and send it out
             action.apply(state);
             net.send(write(action));

@@ -22,8 +22,17 @@ public class WebsocketNet extends Net{
     InternalClient client;
 
     int lastClientID;
+    boolean connecting = false;
     IntMap<WebSocket> clients = new IntMap<>();
     ObjectIntMap<WebSocket> clientsIds = new ObjectIntMap<>();
+
+    Runnable success;
+    Consumer<Throwable> error;
+
+    @Override
+    public boolean connecting(){
+        return connecting;
+    }
 
     @Override
     public boolean server(){
@@ -39,17 +48,23 @@ public class WebsocketNet extends Net{
     public void connect(String host, Runnable success, Consumer<Throwable> error){
         close(); //close any current connections
 
+        this.success = success;
+        this.error = error;
+
         try{
-            client = new InternalClient(new URI(host));
+            connecting = true;
+            client = new InternalClient(new URI("ws://" + host + ":" + port));
             async(() -> {
                 try{
                     client.connectBlocking(1000, TimeUnit.MILLISECONDS);
-                    Core.app.post(success);
+                    connecting = false;
                 }catch(Exception e){
+                    connecting = false;
                     Core.app.post(() -> error.accept(e));
                 }
             });
         }catch(Exception e){
+            connecting = false;
             Core.app.post(() -> error.accept(e));
         }
     }
@@ -162,7 +177,7 @@ public class WebsocketNet extends Net{
 
         @Override
         public void onOpen(ServerHandshake handshakedata){
-
+            Core.app.post(success);
         }
 
         @Override
@@ -172,6 +187,7 @@ public class WebsocketNet extends Net{
 
         @Override
         public void onClose(int code, String reason, boolean remote){
+            Core.app.post(() -> error.accept(new IOException(reason)));
             listener.disconnected(new IOException(reason));
             close();
         }

@@ -22,16 +22,23 @@ public class Actions{
     }
 
     public abstract static class PlayerAction implements Action{
-        public Player player;
+        public transient Player player;
     }
 
     public static class WorldSend implements Action{
         public IntArray cards;
+        public Player[] players;
 
         @Override
         public void apply(State state){
+            state.players.clear();
+            state.players.addAll(players);
+            //what this does is clear local players, since nothing sent here can be local
+            state.players.each(player -> player.local = false);
+            state.cards.clear();
+
             for(int i = 0; i < cards.size; i++){
-                state.cards.set(i, CardIO.cardsByID[cards.get(i)]);
+                state.cards.add(CardIO.cardsByID[cards.get(i)]);
             }
         }
     }
@@ -55,14 +62,21 @@ public class Actions{
         @Override
         public void apply(State state){
             state.players.add(new Player(name, start, color, state.grabCards()));
+
+            //must be local player if it's just sent and there's nothing local yet.
+            if(!state.players.contains(p -> p.local)){
+                state.players.peek().local = true;
+            }
         }
     }
 
     public static class Disconnect implements Action{
-        public Player player;
+        public int player;
 
         @Override
         public void apply(State state){
+            Player p = state.players.get(player);
+            state.reclaimCards(p);
             state.players.remove(player);
         }
     }
