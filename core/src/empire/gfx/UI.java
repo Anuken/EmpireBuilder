@@ -29,10 +29,7 @@ import io.anuke.arc.scene.ui.Dialog;
 import io.anuke.arc.scene.ui.Label;
 import io.anuke.arc.scene.ui.layout.Table;
 import io.anuke.arc.scene.ui.layout.Unit;
-import io.anuke.arc.util.Align;
-import io.anuke.arc.util.Strings;
-import io.anuke.arc.util.Structs;
-import io.anuke.arc.util.Time;
+import io.anuke.arc.util.*;
 
 import static empire.gfx.EmpireCore.*;
 
@@ -132,7 +129,10 @@ public class UI implements ApplicationListener{
             main.top().left().table("dialogDim", t -> {
                 t.margin(10f);
                 t.defaults().left();
-                t.label(() -> state.player().name).update(l -> l.setColor(state.player().color));
+                t.add("").update(l -> {
+                    l.setColor(state.player().color);
+                    l.setText(state.player().name);
+                });
                 t.row();
                 t.addImage("white").fillX().height(3f).pad(3).update(l -> l.setColor(state.player().color));
                 t.row();
@@ -143,7 +143,7 @@ public class UI implements ApplicationListener{
                 t.label(() -> state.isPreMovement() ? "[orange]Building Phase" : "[orange]" + (state.player().loco.speed - state.player().moved) + "[] moves left");
                 t.row();
                 t.label(() -> state.player().cargo.isEmpty() ? "[gray]<Empty>" :
-                        "[purple]+ " + state.player().cargo.toString("\n- "));
+                        "[magenta]+ " + state.player().cargo.toString("\n+ "));
             }).minWidth(width);
             main.row();
             main.addImageTextButton("Demands...", "icon-file", 8*3, () -> {
@@ -289,6 +289,7 @@ public class UI implements ApplicationListener{
         });
 
         Core.scene.add(new Label(""){{
+            touchable(Touchable.disabled);
             update(() -> {
                 setText("");
                 Tile tile = control.tileMouse();

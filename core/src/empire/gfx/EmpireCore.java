@@ -51,10 +51,4 @@ public class EmpireCore extends ApplicationCore{
             });
         };
     }
-
-    @Override
-    public void dispose(){
-        super.dispose();
-        net.close();
-    }
 }

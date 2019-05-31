@@ -9,6 +9,13 @@ public class DesktopLauncher {
 		Lwjgl3ApplicationConfiguration config = new Lwjgl3ApplicationConfiguration();
 		config.setTitle("EmpireBuilderRenderer");
 		config.setMaximized(true);
-		new Lwjgl3Application(new EmpireCore(), config);
+
+		try{
+			new Lwjgl3Application(new EmpireCore(), config);
+			EmpireCore.net.close();
+		}catch(Throwable t){
+			t.printStackTrace();
+			EmpireCore.net.close();
+		}
 	}
 }

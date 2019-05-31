@@ -46,26 +46,8 @@ public class Renderer implements ApplicationListener{
     public void update(){
         Core.graphics.clear(clearColor);
 
-        //update zoom based on input
-        zoom += Core.input.axis(KeyCode.SCROLL)* 0.03f;
-        zoom = Mathf.clamp(zoom, 0.2f, 20f);
-
-        float speed = 15f * Time.delta();
-
-        Vector2 movement = Tmp.v1.setZero();
-        if(Core.input.keyDown(KeyCode.W)) movement.y += speed;
-        if(Core.input.keyDown(KeyCode.A)) movement.x -= speed;
-        if(Core.input.keyDown(KeyCode.S)) movement.y -= speed;
-        if(Core.input.keyDown(KeyCode.D)) movement.x += speed;
-
-        if(!movement.isZero()){
-            //doLerp = false;
-            Core.camera.position.add(movement.limit(speed));
-        }
-
-        if(doLerp){
-            Vector2 v = control.toWorld(state.player().position);
-            Core.camera.position.lerpDelta(v, 0.09f);
+        if(net.active()){
+            doMovement();
         }
 
         //update camera info
@@ -93,6 +75,30 @@ public class Renderer implements ApplicationListener{
         Draw.rect(Draw.wrap(buffer.getTexture()), rwidth/2f, rheight/2f, rwidth, -rheight);
 
         Draw.blend();
+    }
+
+    void doMovement(){
+        //update zoom based on input
+        zoom += Core.input.axis(KeyCode.SCROLL)* 0.03f;
+        zoom = Mathf.clamp(zoom, 0.2f, 20f);
+
+        float speed = 15f * Time.delta();
+
+        Vector2 movement = Tmp.v1.setZero();
+        if(Core.input.keyDown(KeyCode.W)) movement.y += speed;
+        if(Core.input.keyDown(KeyCode.A)) movement.x -= speed;
+        if(Core.input.keyDown(KeyCode.S)) movement.y -= speed;
+        if(Core.input.keyDown(KeyCode.D)) movement.x += speed;
+
+        if(!movement.isZero()){
+            //doLerp = false;
+            Core.camera.position.add(movement.limit(speed));
+        }
+
+        if(doLerp){
+            Vector2 v = control.toWorld(state.player().position);
+            Core.camera.position.lerpDelta(v, 0.09f);
+        }
     }
 
     /** Draws player input on the board.*/

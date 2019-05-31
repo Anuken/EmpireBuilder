@@ -133,7 +133,7 @@ public class ActionRelay implements NetListener{
 
     private Action read(String str){
         int idx = str.indexOf('|');
-        String name = str.substring(0, idx - 1);
+        String name = str.substring(0, idx);
         String data = str.substring(idx + 1);
         Class<?> type = classMap.getOr(name, () -> find("empire.game.Actions." + name));
         return (Action) json.fromJson(type, data);

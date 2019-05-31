@@ -198,7 +198,7 @@ public class State{
 
         if(tile.city != null){
             //can't build 3 tracks into a city
-            if(tile.city.size != CitySize.major && player.tracks.get(tile).size >= 3){
+            if(tile.city.size != CitySize.major && player.tracks.containsKey(tile) && player.tracks.get(tile).size >= 3){
                 return true;
             }
 
