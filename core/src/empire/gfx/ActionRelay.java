@@ -114,8 +114,10 @@ public class ActionRelay implements NetListener{
         }
 
         if(net.active()){
-            //apply action locally; happens for both client and server
-            action.apply(state);
+            //apply action locally; happens for server by default, but also for special local actions
+            if(net.server() || action instanceof LocalAction){
+                action.apply(state);
+            }
             //apply effect and send
             net.send(write(action));
         }else{
@@ -129,13 +131,13 @@ public class ActionRelay implements NetListener{
         if(action.getClass().isAnonymousClass()){
             type = action.getClass().getSuperclass();
         }
-        return ClassReflection.getSimpleName(type) + "|" + json.toJson(action);
+        return ClassReflection.getSimpleName(type) + json.toJson(action);
     }
 
     private Action read(String str){
-        int idx = str.indexOf('|');
+        int idx = str.indexOf('{');
         String name = str.substring(0, idx);
-        String data = str.substring(idx + 1);
+        String data = str.substring(idx);
         Class<?> type = classMap.getOr(name, () -> find("empire.game.Actions$" + name));
         return (Action) json.fromJson(type, data);
     }
@@ -152,17 +154,17 @@ public class ActionRelay implements NetListener{
 
     @Override
     public void message(String txt){
-        Log.info("Client: received \n{0}", txt);
+        Log.info("Client: received {0}", txt);
         Action action = read(txt);
 
         //assign player to action
         if(action instanceof PlayerAction){
             ((PlayerAction) action).player = state.player();
+        }
 
-            //this was already applied, no need to do it again
-            if(state.player().local){
-                return;
-            }
+        //local actions have already been applied clientside, ignored htem
+        if(state.player().local && action instanceof LocalAction){
+            return;
         }
 
         //apply it
@@ -192,6 +194,9 @@ public class ActionRelay implements NetListener{
         //only apply after it has been sent.
         state.players.remove(p);
         players.remove(connection);
+
+        //prevent index out of bounds errors
+        state.currentPlayer %= state.players.size;
     }
 
     @Override
@@ -208,6 +213,8 @@ public class ActionRelay implements NetListener{
             net.send(connection, write(new WorldSend(){{
                 cards = state.cards.mapInt(c -> c.id);
                 players = state.players.toArray(Player.class);
+                currentPlayer = state.currentPlayer;
+                turn = state.turn;
             }}));
 
             //send forward message to everyone

@@ -41,6 +41,7 @@ public class Control implements ApplicationListener{
                     if(state.canPlaceTrack(state.player(), placeLoc, tile)){
                         int cost = state.getTrackCost(placeLoc, tile);
                         if(state.canSpendRail(state.player(), cost)){
+                            //placing tracks is a special case, so it is executed locally as well
                             new PlaceTrack(){{
                                 from = placeLoc;
                                 to = tile;

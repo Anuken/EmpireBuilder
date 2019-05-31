@@ -9,13 +9,17 @@ import empire.game.World.Tile;
 import empire.gfx.gen.WaterRenderer;
 import io.anuke.arc.ApplicationListener;
 import io.anuke.arc.Core;
-import io.anuke.arc.graphics.*;
+import io.anuke.arc.graphics.Blending;
+import io.anuke.arc.graphics.Camera;
+import io.anuke.arc.graphics.Color;
+import io.anuke.arc.graphics.Texture;
 import io.anuke.arc.graphics.Texture.TextureFilter;
 import io.anuke.arc.graphics.g2d.*;
 import io.anuke.arc.graphics.glutils.FrameBuffer;
 import io.anuke.arc.input.KeyCode;
 import io.anuke.arc.math.Mathf;
 import io.anuke.arc.math.geom.Vector2;
+import io.anuke.arc.util.Align;
 import io.anuke.arc.util.Time;
 import io.anuke.arc.util.Tmp;
 
@@ -63,6 +67,7 @@ public class Renderer implements ApplicationListener{
         drawRails();
         drawPlayers();
         drawControl();
+        drawOver();
 
         Draw.flush();
         buffer.end();
@@ -73,8 +78,9 @@ public class Renderer implements ApplicationListener{
 
         float rwidth = state.world.width * tilesize, rheight = state.world.height * tilesize;
         Draw.rect(Draw.wrap(buffer.getTexture()), rwidth/2f, rheight/2f, rwidth, -rheight);
-
         Draw.blend();
+
+
     }
 
     void doMovement(){
@@ -99,6 +105,21 @@ public class Renderer implements ApplicationListener{
             Vector2 v = control.toWorld(state.player().position);
             Core.camera.position.lerpDelta(v, 0.09f);
         }
+    }
+
+    void drawOver(){
+        BitmapFont font = Core.scene.skin.getFont("default");
+        font.setUseIntegerPositions(false);
+        font.getData().setScale(1f);
+        for(Player player : state.players){
+            Vector2 v = control.toWorld(player.position);
+
+            font.setColor(player.color);
+            font.draw(player.name, v.x, v.y + tilesize, Align.center);
+        }
+        font.setUseIntegerPositions(true);
+        font.getData().setScale(2f);
+        font.setColor(Color.WHITE);
     }
 
     /** Draws player input on the board.*/
@@ -164,7 +185,7 @@ public class Renderer implements ApplicationListener{
 
             Draw.colorMul(player.color, 0.5f);
             Draw.rect("icon-arrow-right", world.x, world.y - 1, player.direction.angle());
-            Draw.color(player.color);
+            Draw.colorMul(player.color, 1.1f);
             Draw.rect("icon-arrow-right", world.x, world.y, player.direction.angle());
         }
     }
@@ -177,9 +198,9 @@ public class Renderer implements ApplicationListener{
             for(int i = 0; i < 2; i++){
                 int fi = i;
                 if(i == 0){
-                    Draw.colorMul(player.color, 0.4f);
+                    Draw.colorMul(player.color, 0.3f);
                 }else{
-                    Draw.color(player.color);
+                    Draw.colorMul(player.color, 0.8f);
                 }
                 player.eachTrack((from, to) -> {
                     if(state.world.index(from) < state.world.index(to)){
@@ -233,12 +254,14 @@ public class Renderer implements ApplicationListener{
             Draw.color();
             Draw.rect(region, tx, ty, region.getWidth() * tilesize/16f, region.getHeight() * tilesize/16f);
 
-            if(state.player().hasGoodDelivery(city)){
-                icon("icon-export", tx, ty, 10f, 10f);
-            }
+            if(state.player().local){
+                if(state.player().hasGoodDelivery(city)){
+                    icon("icon-export", tx, ty, 10f, 10f);
+                }
 
-            if(state.player().hasGoodDemand(city)){
-                icon("icon-open", tx, ty, -10f, 10f);
+                if(state.player().hasGoodDemand(city)){
+                    icon("icon-open", tx, ty, -10f, 10f);
+                }
             }
         }
 

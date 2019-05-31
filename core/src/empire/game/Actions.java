@@ -21,6 +21,10 @@ public class Actions{
         }
     }
 
+    public interface LocalAction{
+
+    }
+
     public abstract static class PlayerAction implements Action{
         public transient Player player;
     }
@@ -28,6 +32,8 @@ public class Actions{
     public static class WorldSend implements Action{
         public IntArray cards;
         public Player[] players;
+        public int currentPlayer;
+        public int turn;
 
         @Override
         public void apply(State state){
@@ -35,6 +41,8 @@ public class Actions{
             state.players.addAll(players);
             //what this does is clear local players, since nothing sent here can be local
             state.players.each(player -> player.local = false);
+            state.turn = turn;
+            state.currentPlayer = currentPlayer;
             state.cards.clear();
 
             for(int i = 0; i < cards.size; i++){
@@ -107,7 +115,7 @@ public class Actions{
         }
     }
 
-    public static class PlaceTrack extends PlayerAction{
+    public static class PlaceTrack extends PlayerAction implements LocalAction{
         public Tile from, to;
 
         @Override
