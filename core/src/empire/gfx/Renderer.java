@@ -27,7 +27,6 @@ import static empire.gfx.EmpireCore.*;
 
 /** Renders the game world, handles user input interactions if needed. */
 public class Renderer implements ApplicationListener{
-    private boolean doLerp = true;
     private float zoom = 4f;
     private Color clearColor = Color.valueOf("5d81e1");
     private Texture riverTexture;
@@ -50,7 +49,7 @@ public class Renderer implements ApplicationListener{
     public void update(){
         Core.graphics.clear(clearColor);
 
-        if(net.active()){
+        if(net.active() && !ui.chat.chatOpen()){
             doMovement();
         }
 
@@ -97,19 +96,16 @@ public class Renderer implements ApplicationListener{
         if(Core.input.keyDown(KeyCode.D)) movement.x += speed;
 
         if(!movement.isZero()){
-            //doLerp = false;
             Core.camera.position.add(movement.limit(speed));
         }
 
-        if(doLerp){
-            Vector2 v = control.toWorld(state.player().position);
-            Core.camera.position.lerpDelta(v, 0.09f);
-        }
+        Vector2 v = control.toWorld(state.player().position);
+        Core.camera.position.lerpDelta(v, 0.09f);
     }
 
+    /** Draw player names and such.*/
     void drawOver(){
         BitmapFont font = Core.scene.skin.getFont("default");
-        font.setUseIntegerPositions(false);
         font.getData().setScale(1f);
         for(Player player : state.players){
             Vector2 v = control.toWorld(player.position);
@@ -117,7 +113,6 @@ public class Renderer implements ApplicationListener{
             font.setColor(player.color);
             font.draw(player.name, v.x, v.y + tilesize, Align.center);
         }
-        font.setUseIntegerPositions(true);
         font.getData().setScale(2f);
         font.setColor(Color.WHITE);
     }

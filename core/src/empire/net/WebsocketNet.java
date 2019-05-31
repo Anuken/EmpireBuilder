@@ -196,7 +196,8 @@ public class WebsocketNet extends Net{
 
         @Override
         public void onError(Exception ex){
-            handleError(ex);
+            //TODO add
+            //handleError(ex);
         }
     }
 }

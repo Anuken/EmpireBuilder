@@ -90,10 +90,11 @@ public class Actions{
     }
 
     public static class Chat extends PlayerAction{
+        public String message;
 
         @Override
         public void apply(State state){
-
+            ui.chat.addMessage(message, "[#" + player.color + "]" + player.name);
         }
     }
 

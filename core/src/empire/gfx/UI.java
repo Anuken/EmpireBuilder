@@ -5,6 +5,7 @@ import empire.game.Actions.*;
 import empire.game.DemandCard.Demand;
 import empire.game.World.City;
 import empire.game.World.Tile;
+import empire.gfx.ui.ChatFragment;
 import empire.gfx.ui.Collapser;
 import empire.gfx.ui.EventDialog;
 import empire.net.Net;
@@ -37,6 +38,7 @@ import static empire.gfx.EmpireCore.*;
 /** Handles all overlaid UI for the game. */
 public class UI implements ApplicationListener{
     public EventDialog events;
+    public ChatFragment chat;
 
     private Runnable refresh = () -> {};
 
@@ -66,6 +68,14 @@ public class UI implements ApplicationListener{
 
         skin.add("default", font);
         skin.getFont("default").getData().markupEnabled = true;
+
+        skin.add("chat", generator.generateFont(param));
+        skin.getFont("chat").getData().markupEnabled = false;
+
+        font = skin.getFont("chat");
+
+        font.getData().setScale(2f);
+        font.getData().down += 11f;
     }
 
     @Override
@@ -300,6 +310,7 @@ public class UI implements ApplicationListener{
             });
         });
 
+        //display hovered over ECU info
         Core.scene.add(new Label(""){{
             touchable(Touchable.disabled);
             update(() -> {
@@ -325,6 +336,10 @@ public class UI implements ApplicationListener{
             });
         }});
 
+        //chat
+        Core.scene.add(chat  = new ChatFragment());
+
+        //connect info
         Core.scene.table("dialogDim", t -> {
             City city = Array.with(state.world.cities()).random();
             String[] host = {"localhost"};

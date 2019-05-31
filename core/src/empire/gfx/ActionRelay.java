@@ -225,6 +225,7 @@ public class ActionRelay implements NetListener{
             }});
 
             //last player must always be the one that was just added
+            state.players.peek().local = false;
             players.put(connection, state.players.peek());
             Log.info("Connection success: {0}//'{1}'", connection, connect.name);
         }else{

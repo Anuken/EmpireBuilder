@@ -26,7 +26,7 @@ public class Control implements ApplicationListener{
     public void update(){
 
         //begin placing on mouse down
-        if(Core.input.keyTap(KeyCode.MOUSE_LEFT) && !Core.scene.hasMouse()){
+        if(Core.input.keyTap(KeyCode.MOUSE_LEFT) && !Core.scene.hasMouse() && state.player().local){
             Tile tile = tileMouse();
             if(tile != null && state.canBeginTrack(state.player(), tile)){
                 placeLoc = tile;
