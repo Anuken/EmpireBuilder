@@ -1,11 +1,12 @@
 package empire.net;
 
+import io.anuke.arc.Core;
 import io.anuke.arc.function.Consumer;
 
 /** An abstract class for handling netcode. */
 public abstract class Net{
     /** The port to be used. */
-    protected static final int port = 3257;
+    public static final int port = 3257;
 
     protected Consumer<Throwable> errorHandler = Throwable::printStackTrace;
     protected NetListener listener;
@@ -50,7 +51,7 @@ public abstract class Net{
     public abstract void close();
 
     protected void handleError(Throwable t){
-        errorHandler.accept(t);
+        Core.app.post(() -> errorHandler.accept(t));
     }
 
     public interface NetListener{

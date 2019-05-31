@@ -17,8 +17,6 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.concurrent.TimeUnit;
 
-import static empire.gfx.EmpireCore.ui;
-
 public class WebsocketNet extends Net{
     InternalServer server;
     InternalClient client;
@@ -164,16 +162,7 @@ public class WebsocketNet extends Net{
 
         @Override
         public void onError(WebSocket conn, Exception ex){
-            if(ex.getMessage() != null && ex.getMessage().contains("Address already in use")){
-                Core.app.post(() -> {
-                    ui.showDialog("[scarlet]Error", t -> t.cont.add("[coral]Port " + port + " is already in use.\n[]Stop any other servers on the network."));
-                    close();
-                });
-            }else{
-                Core.app.post(() -> {
-                    throw new RuntimeException(ex);
-                });
-            }
+            handleError(ex);
         }
 
         @Override
@@ -207,7 +196,7 @@ public class WebsocketNet extends Net{
 
         @Override
         public void onError(Exception ex){
-            Core.app.post(() -> {throw new RuntimeException(ex);});
+            handleError(ex);
         }
     }
 }

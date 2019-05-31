@@ -7,6 +7,7 @@ import empire.game.World.City;
 import empire.game.World.Tile;
 import empire.gfx.ui.Collapser;
 import empire.gfx.ui.EventDialog;
+import empire.net.Net;
 import io.anuke.arc.Application.ApplicationType;
 import io.anuke.arc.ApplicationListener;
 import io.anuke.arc.Core;
@@ -70,6 +71,16 @@ public class UI implements ApplicationListener{
     @Override
     public void init(){
         events = new EventDialog();
+
+        net.setErrorHandler(ex -> {
+            net.close();
+
+            if(ex.getMessage() != null && ex.getMessage().contains("Address already in use")){
+                showDialog("[scarlet]Error", t -> t.cont.add("[coral]Port " + Net.port + " is already in use.\n[]Stop any other servers on the network."));
+            }else{
+                showDialog("[scarlet]Error", t -> Strings.parseException(ex, true));
+            }
+        });
 
         //display event info
         Core.scene.table(events -> {
