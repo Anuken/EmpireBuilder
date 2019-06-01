@@ -106,11 +106,6 @@ public class Control implements ApplicationListener{
         return true;
     }
 
-    public Tile tileMouseMid(){
-        return tileWorld(Core.input.mouseWorld().x - tilesize/2f, Core.input.mouseWorld().y - tilesize/2f);
-    }
-
-    //todo move to control
     public Tile tileMouse(){
         return tileWorld(Core.input.mouseWorld().x, Core.input.mouseWorld().y);
     }
