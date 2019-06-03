@@ -366,7 +366,7 @@ public class UI implements ApplicationListener{
         //connect info
         Core.scene.table("dialogDim", t -> {
             City city = Array.with(state.world.cities()).random();
-            String[] host = {"localhost"};
+            String[] host = {"206.21.122.239"};
 
             Connect connect = new Connect();
             connect.name = System.getProperty("user.name");

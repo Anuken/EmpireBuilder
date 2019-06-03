@@ -17,7 +17,7 @@ public class EventDialog extends Dialog{
 
         cont.add(card.description(EmpireCore.state.player())).width(400f).wrap().pad(15f);
 
-        buttons.addButton("oh no", this::hide).size(100f, 60f);
+        buttons.addButton("OK", this::hide).size(100f, 60f);
 
         show();
     }

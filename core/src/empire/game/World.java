@@ -336,7 +336,7 @@ public class World{
 
     /** Represents a river on the map.*/
     public static class River{
-        /** Smooth oints that the river passes through in tile coordinates.*/
+        /** Smooth points that the river passes through in tile coordinates.*/
         public final Array<Vector2> points;
         /** River name.*/
         public final String name;

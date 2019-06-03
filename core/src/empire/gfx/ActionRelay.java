@@ -113,6 +113,10 @@ public class ActionRelay implements NetListener{
             ((PlayerAction) action).player = state.player();
         }
 
+        if(action instanceof AnyPlayerAction){
+            ((AnyPlayerAction) action).player = state.player();
+        }
+
         if(net.active()){
             //apply action locally; happens for server by default, but also for special local actions
             if(net.server() || action instanceof LocalAction){
@@ -234,7 +238,11 @@ public class ActionRelay implements NetListener{
                 ((PlayerAction) action).player = player;
             }
 
-            if(state.player() != player && !(action instanceof AnytimeAction)){
+            if(action instanceof AnyPlayerAction){
+                ((AnyPlayerAction) action).player = player;
+            }
+
+            if(state.player() != player && !(action instanceof AnyPlayerAction)){
                 Log.err("Player '{0}' just attempted to do an action not in their turn!", player.name);
                 return;
             }
