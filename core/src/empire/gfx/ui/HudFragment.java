@@ -191,7 +191,9 @@ public class HudFragment{
 
             //automatically update city that's hovered over
             main.update(() -> {
-                if(lastPlayer[0] != state.player() || lastPosition[0] != state.player().position){
+                Player player = state.localPlayer();
+
+                if(lastPlayer[0] != player || lastPosition[0] != player.position){
                     table.clearChildren();
                     selectedCity[0] = null;
                 }
@@ -200,9 +202,9 @@ public class HudFragment{
                 City city = on == null ? null : state.world.getCity(on);
 
                 if(city == null){
-                    city = state.player().position.city;
+                    city = player.position.city;
                     if(city == null){
-                        city = state.world.getMajorCity(state.player().position);
+                        city = state.world.getMajorCity(player.position);
                     }
                 }
 
@@ -211,7 +213,7 @@ public class HudFragment{
                     table.defaults().left();
                     table.margin(10f);
 
-                    boolean atCity = state.player().position.city == city || state.world.getMajorCity(state.player().position) == city;
+                    boolean atCity = player.position.city == city || state.world.getMajorCity(player.position) == city;
 
                     //build UI to display it
                     if(city != null){
@@ -222,13 +224,13 @@ public class HudFragment{
                         table.left();
                         for(String good : city.goods){
 
-                            if(atCity && state.player().local){
-                                if(state.canLoadUnload(state.player(), state.world.tile(city.x, city.y))){
+                            if(atCity && player.local){
+                                if(state.canLoadUnload(player, state.world.tile(city.x, city.y))){
                                     table.addImageTextButton(Strings.capitalize(good), "icon-export", 10*2, () -> {
                                         new LoadCargo(){{
                                             cargo = good;
                                         }}.act();
-                                    }).colspan(2).left().fillX().disabled(b -> !state.player().hasCargoSpace()).width(190f).height(45f);
+                                    }).colspan(2).left().fillX().disabled(b -> !player.hasCargoSpace()).width(190f).height(45f);
                                 }else{
                                     table.addImage("icon-trash").size(14*2).padRight(3).right().color(Color.SCARLET);
                                     table.add(Strings.capitalize(good)).color(Color.LIGHT_GRAY);
@@ -241,15 +243,15 @@ public class HudFragment{
                         }
 
                         City fcity = city;
-                        if(Structs.contains(state.player().demandCards, card -> Structs.contains(card.demands, d -> d.city == fcity))){
+                        if(Structs.contains(player.demandCards, card -> Structs.contains(card.demands, d -> d.city == fcity))){
                             table.addImage("white").color(Color.ROYAL).growX().pad(10f).colspan(2);
                             table.row();
 
-                            state.player().eachGoodByCity(city, d -> {
-                                boolean has = state.player().cargo.contains(d.good);
-                                if(has && atCity && state.player().local){
+                            player.eachGoodByCity(city, d -> {
+                                boolean has = player.cargo.contains(d.good);
+                                if(has && atCity && player.local){
                                     //make sure player is not event-blocked here
-                                    if(state.canLoadUnload(state.player(), state.world.tile(fcity.x, fcity.y))){
+                                    if(state.canLoadUnload(player, state.world.tile(fcity.x, fcity.y))){
                                         table.addImageTextButton(Strings.capitalize(d.good) + "[] for[coral] " + d.cost + "[] ECU",
                                                 "icon-project-open", 14 * 2, () -> {
                                                     new SellCargo(){{
@@ -280,8 +282,8 @@ public class HudFragment{
                 }
 
                 selectedCity[0] = city;
-                lastPlayer[0] = state.player();
-                lastPosition[0] = state.player().position;
+                lastPlayer[0] = player;
+                lastPosition[0] = player.position;
             });
         });
 

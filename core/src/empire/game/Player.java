@@ -36,7 +36,7 @@ public class Player{
     /** All the event cards this player drew this turn.*/
     public final Array<EventCard> eventCards = new Array<>();
     /** Tracks that this player has placed down.*/
-    public final ObjectMap<Tile, Array<Tile>> tracks = new ObjectMap<>();
+    public ObjectMap<Tile, Array<Tile>> tracks = new ObjectMap<>();
     /** Player color, used for display purposes.*/
     public Color color;
     /** Current cargo held.*/

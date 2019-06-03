@@ -1,5 +1,6 @@
 package empire.game;
 
+import empire.gfx.EmpireCore;
 import io.anuke.arc.collection.Array;
 import io.anuke.arc.collection.ObjectMap;
 import io.anuke.arc.function.Consumer;
@@ -225,6 +226,11 @@ public class World{
             }
         }
 
+        @Override
+        public String toString(){
+            return EmpireCore.state.world.index(this) + "";
+        }
+
         public int distanceTo(Tile other){
             return distanceTo(other.x, other.y);
         }
@@ -239,11 +245,6 @@ public class World{
                 }
             }
             return null;
-        }
-
-        @Override
-        public String toString(){
-            return x + "," + y + ",t=" + type;
         }
     }
 

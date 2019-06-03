@@ -182,7 +182,8 @@ public class State{
     }
 
     public Player localPlayer(){
-        return player().local ? player() : players.find(p -> p.local);
+        Player found = players.find(p -> p.local);
+        return player().local ? player() : (found == null ? player() : found);
     }
 
     public boolean canBeginTrack(Player player, Tile tile){

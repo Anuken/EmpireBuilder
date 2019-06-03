@@ -6,6 +6,7 @@ import empire.gfx.EmpireCore;
 import empire.io.CardIO;
 import io.anuke.arc.collection.Array;
 import io.anuke.arc.collection.IntArray;
+import io.anuke.arc.collection.ObjectMap;
 import io.anuke.arc.graphics.Color;
 import io.anuke.arc.util.Strings;
 
@@ -53,6 +54,17 @@ public class Actions{
 
             for(int i = 0; i < cards.size; i++){
                 state.cards.add(CardIO.cardsByID[cards.get(i)]);
+            }
+
+            //fix crappy serialization
+            for(Player player : players){
+                ObjectMap<Tile, Array<Tile>> out = new ObjectMap<>();
+                //oh my god
+                //it actually mangles it this badly
+                //how is this even possible
+                ObjectMap<String, Array<Float>> map = (ObjectMap)player.tracks;
+                map.each((str, tiles) -> out.put(state.world.tile(Integer.parseInt(str)), tiles.map(f -> state.world.tile((int)(float)f))));
+                player.tracks = out;
             }
         }
     }

@@ -75,10 +75,6 @@ public class Control implements ApplicationListener{
                 }}.act();
             }
         }
-
-        if(Core.input.keyTap(KeyCode.ESCAPE)){
-            Core.app.exit();
-        }
     }
 
     public Array<Tile> getTiles(Tile from, Tile to){

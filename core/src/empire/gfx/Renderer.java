@@ -244,12 +244,13 @@ public class Renderer implements ApplicationListener{
 
         Player player = state.localPlayer();
 
+        if(player == null) throw new IllegalArgumentException("Local player can't be null.");
+
         //draw cities
         for(City city : state.world.cities()){
             Vector2 world = control.toWorld(city.x, city.y);
             float tx = world.x, ty = world.y;
             TextureRegion region = Core.atlas.find("city-" + city.size.name());
-
 
             Draw.color();
             Draw.rect(region, tx, ty, region.getWidth() * tilesize/16f, region.getHeight() * tilesize/16f);
