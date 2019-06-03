@@ -168,23 +168,25 @@ public class Renderer implements ApplicationListener{
             }
         }
 
-        for(EventCard card : state.player().eventCards){
-            if(card instanceof HeavySnowEvent){
-                int dst = ((HeavySnowEvent) card).dst;
-                City city = ((HeavySnowEvent) card).city;
+        for(Player player : state.players){
+            for(EventCard card : player.eventCards){
+                if(card instanceof HeavySnowEvent){
+                    int dst = ((HeavySnowEvent) card).dst;
+                    City city = ((HeavySnowEvent) card).city;
 
-                Vector2 world = control.toWorld(city.x, city.y);
+                    Vector2 world = control.toWorld(city.x, city.y);
 
-                Lines.stroke(2f, Color.WHITE);
-                Lines.dashCircle(world.x, world.y, dst * tilesize);
-            }else if(card instanceof FogEvent){
-                int dst = ((FogEvent) card).dst;
-                City city = ((FogEvent) card).city;
+                    Lines.stroke(2f, Color.WHITE);
+                    Lines.dashCircle(world.x, world.y, dst * tilesize);
+                }else if(card instanceof FogEvent){
+                    int dst = ((FogEvent) card).dst;
+                    City city = ((FogEvent) card).city;
 
-                Vector2 world = control.toWorld(city.x, city.y);
+                    Vector2 world = control.toWorld(city.x, city.y);
 
-                Lines.stroke(2f, Color.LIGHT_GRAY);
-                Lines.dashCircle(world.x, world.y, dst * tilesize);
+                    Lines.stroke(2f, Color.LIGHT_GRAY);
+                    Lines.dashCircle(world.x, world.y, dst * tilesize);
+                }
             }
         }
     }
