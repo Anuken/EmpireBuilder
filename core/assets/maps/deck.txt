@@ -140,6 +140,6 @@
 135 FLOOD Rhein
 136 FLOOD Donau
 137 FLOOD Loire
-138 HEAVY_RAINS 6 English_Channel North_Sea Baltic_Sea Irish_Sea
-139 HEAVY_RAINS 4 Mediterranean_Sea Adriatic_Sea
-140 HEAVY_RAINS 4 Atlantic_Ocean
+138 HEAVY_RAINS 6 English_Channel North Baltic Irish
+139 HEAVY_RAINS 4 Mediterranean Adriatic
+140 HEAVY_RAINS 4 Atlantic

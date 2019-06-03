@@ -16,6 +16,7 @@ import io.anuke.arc.graphics.Color;
 public class EmpireCore extends ApplicationCore{
     /** Size of each hex tile in pixels. */
     public static final int tilesize = 16;
+    public static final boolean debug = true;
 
     public static Control control;
     public static UI ui;
@@ -44,11 +45,5 @@ public class EmpireCore extends ApplicationCore{
         add(control = new Control());
         add(renderer = new Renderer());
         add(ui = new UI());
-
-        state.onWin = player -> {
-            ui.showDialog(player.name + " is victorious!", dialog -> {
-                dialog.cont.add(player.name + " has won the game, as they have\nconnected 7 major cities and gotten " + State.winMoneyAmount + " ECU!");
-            });
-        };
     }
 }

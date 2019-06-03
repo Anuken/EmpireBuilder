@@ -234,7 +234,7 @@ public class ActionRelay implements NetListener{
                 ((PlayerAction) action).player = player;
             }
 
-            if(state.player() != player){
+            if(state.player() != player && !(action instanceof AnytimeAction)){
                 Log.err("Player '{0}' just attempted to do an action not in their turn!", player.name);
                 return;
             }

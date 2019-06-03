@@ -319,6 +319,32 @@ PARIS 3 29 31
 VENEZIA 1 44 45
 0
 
+#SEAS
+
+8
+Adriatic 50 6
+Mediterranean 31 5
+Atlantic 11 34
+North 38 52
+Baltic 59 45
+Irish 26 50
+English_Channel 27 37
+English_Channel 34 39
+
+9
+
+21 36
+21 37
+21 38
+21 39
+
+35 42
+36 42
+37 42
+
+22 46
+22 45
+
 #PORTS
 
 4

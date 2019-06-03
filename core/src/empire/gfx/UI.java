@@ -3,6 +3,7 @@ package empire.gfx;
 import empire.game.*;
 import empire.game.Actions.*;
 import empire.game.DemandCard.Demand;
+import empire.game.GameEvents.WinEvent;
 import empire.game.World.City;
 import empire.game.World.Tile;
 import empire.gfx.ui.ChatFragment;
@@ -12,6 +13,7 @@ import empire.net.Net;
 import io.anuke.arc.Application.ApplicationType;
 import io.anuke.arc.ApplicationListener;
 import io.anuke.arc.Core;
+import io.anuke.arc.Events;
 import io.anuke.arc.collection.Array;
 import io.anuke.arc.collection.ObjectSet;
 import io.anuke.arc.freetype.FreeTypeFontGenerator;
@@ -29,6 +31,7 @@ import io.anuke.arc.scene.actions.Actions;
 import io.anuke.arc.scene.event.Touchable;
 import io.anuke.arc.scene.ui.Dialog;
 import io.anuke.arc.scene.ui.Label;
+import io.anuke.arc.scene.ui.TextButton;
 import io.anuke.arc.scene.ui.layout.Table;
 import io.anuke.arc.scene.ui.layout.Unit;
 import io.anuke.arc.util.*;
@@ -49,6 +52,12 @@ public class UI implements ApplicationListener{
 
         Core.scene = new Scene(skin);
         Core.input.addProcessor(Core.scene);
+
+        Events.on(WinEvent.class, event -> {
+            ui.showDialog(event.player.name + " is victorious!", dialog -> {
+                dialog.cont.add(event.player.name + " has won the game, as they have\nconnected 7 major cities and gotten " + State.winMoneyAmount + " ECU!");
+            });
+        });
     }
 
     /** Generates bitmap fonts based on screen size.*/
@@ -336,6 +345,21 @@ public class UI implements ApplicationListener{
             });
         }});
 
+        //debug info
+        if(debug)
+        Core.scene.add(new Label(""){{
+            touchable(Touchable.disabled);
+            update(() -> {
+                setText("");
+                Tile tile = control.tileMouse();
+                if(tile != null){
+                    setText(tile.x + "," + tile.y);
+                }
+                pack();
+                setPosition(Core.input.mouseX(), Core.input.mouseY(), Align.bottomRight);
+            });
+        }});
+
         //chat
         Core.scene.add(chat  = new ChatFragment());
 
@@ -401,7 +425,7 @@ public class UI implements ApplicationListener{
                     }).growX().height(50f);
 
                     if(Core.app.getType() != ApplicationType.WebGL){
-                        buttons.addImageTextButton("Host", "icon-home", 14 * 2, () -> {
+                        TextButton b = buttons.addImageTextButton("Host", "icon-home", 14 * 2, () -> {
                             Player player = state.players.first();
                             player.local = true;
                             player.name = connect.name;
@@ -409,7 +433,11 @@ public class UI implements ApplicationListener{
                             player.position = connect.start;
                             net.host();
                             refreshCity();
-                        }).growX().height(50f);
+                        }).growX().height(50f).get();
+
+                        if(debug){
+                            b.fireClick();
+                        }
                     }
                 }).growX().padTop(20f).height(50f).colspan(2);
 

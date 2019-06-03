@@ -54,7 +54,7 @@ public class Control implements ApplicationListener{
             placeLoc = null;
         }
 
-        if(Core.input.keyTap(KeyCode.SPACE) && !state.isPreMovement() && !Core.scene.hasMouse()){
+        if(Core.input.keyTap(KeyCode.MOUSE_RIGHT) && !state.isPreMovement() && !Core.scene.hasMouse()){
             Tile tile = tileMouse();
             if(tile != null){
                 new Move(){{

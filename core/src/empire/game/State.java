@@ -1,7 +1,10 @@
 package empire.game;
 
 import empire.game.DemandCard.Demand;
+import empire.game.GameEvents.EndTurnEvent;
+import empire.game.GameEvents.WinEvent;
 import empire.game.World.*;
+import io.anuke.arc.Events;
 import io.anuke.arc.collection.*;
 import io.anuke.arc.function.Consumer;
 import io.anuke.arc.util.Structs;
@@ -29,8 +32,6 @@ public class State{
     public int currentPlayer;
     /** All the cards of this state. May be event or demand cards*/
     public Array<Card> cards;
-    /** Event listener for a player winning.*/
-    public Consumer<Player> onWin = p -> {};
 
     /** Tile collections for temporary usage.*/
     private static final ObjectSet<Tile> closedSet = new ObjectSet<>();
@@ -83,7 +84,7 @@ public class State{
 
                 if(city.size == CitySize.major){
                     if(countConnectedCities(player, world.tile(city.x, city.y)) >= winCityAmount){
-                        onWin.accept(player);
+                        Events.fire(new WinEvent(player));
                         return;
                     }
                 }
@@ -145,6 +146,7 @@ public class State{
             player().lostTurns --;
         }
         checkIfWon(player());
+        Events.fire(new EndTurnEvent(player()));
 
         //begin next player's turn
         currentPlayer ++;

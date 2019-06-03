@@ -3,26 +3,24 @@ package empire.gfx.gen;
 import empire.game.World;
 import empire.game.World.Lake;
 import empire.game.World.River;
+import empire.game.World.Sea;
 import empire.game.World.Tile;
 import io.anuke.arc.Core;
 import io.anuke.arc.graphics.Color;
 import io.anuke.arc.graphics.Texture;
 import io.anuke.arc.graphics.Texture.TextureFilter;
-import io.anuke.arc.graphics.g2d.CapStyle;
-import io.anuke.arc.graphics.g2d.Draw;
-import io.anuke.arc.graphics.g2d.Fill;
-import io.anuke.arc.graphics.g2d.Lines;
+import io.anuke.arc.graphics.g2d.*;
 import io.anuke.arc.graphics.glutils.FrameBuffer;
 import io.anuke.arc.math.geom.Geometry;
 import io.anuke.arc.math.geom.Vector2;
+import io.anuke.arc.util.Align;
 
-import static empire.gfx.EmpireCore.control;
-import static empire.gfx.EmpireCore.state;
+import static empire.gfx.EmpireCore.*;
 
-public class WaterRenderer{
+public class MapImageRenderer{
     private static final int gsize = 16;
 
-    public static Texture createWaterTexture(World world){
+    public static Texture createMapTexture(World world){
 
         //create a framebuffer to draw to, resize the projection matrix accordingly
         FrameBuffer buffer = new FrameBuffer(world.width * gsize, world.height * gsize);
@@ -30,6 +28,20 @@ public class WaterRenderer{
         Draw.flush();
         buffer.begin();
         Core.graphics.clear(Color.CLEAR);
+
+        Draw.color();
+
+        //draw tiles
+        for(int x = 0; x < state.world.width; x++){
+            for(int y = 0; y < state.world.height; y++){
+                Tile tile = state.world.tile(x, y);
+                Vector2 tworld = control.toWorld(x, y);
+                float tx = tworld.x, ty = tworld.y;
+                Draw.rect(Core.atlas.find("terrain-" + tile.type.name(), Core.atlas.find("terrain-plain")), tx, ty, tilesize, tilesize);
+            }
+        }
+
+        Draw.color();
 
         Runnable drawRivers = () -> {
             for(River river : world.rivers){
@@ -94,6 +106,17 @@ public class WaterRenderer{
                 }
             }
         }
+
+        BitmapFont font = Core.scene.skin.getFont("default");
+        font.getData().setScale(1f);
+        for(Sea sea : world.seas){
+            Vector2 v = control.toWorld(sea.x, sea.y);
+
+            font.setColor(Color.WHITE);
+            font.draw(sea.formalName(), v.x, v.y + tilesize, Align.center);
+        }
+        font.getData().setScale(2f);
+        font.setColor(Color.WHITE);
 
         //flush results, end buffer
         Draw.flush();

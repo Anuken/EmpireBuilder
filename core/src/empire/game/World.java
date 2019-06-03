@@ -37,14 +37,17 @@ public class World{
     public final Array<River> rivers;
     /** All the lakes of the map, as polygons.*/
     public final Array<Lake> lakes;
+    /** All the seas of the map.*/
+    public final Array<Sea> seas;
     /** Width and height of the world, in tiles.*/
     public final int width, height;
 
-    public World(Tile[][] tiles, Array<City> cities, Array<River> rivers, Array<Lake> lakes){
+    public World(Tile[][] tiles, Array<City> cities, Array<River> rivers, Array<Lake> lakes, Array<Sea> seas){
         this.tiles = tiles;
         this.cities = new ObjectMap<>();
         this.rivers = rivers;
         this.lakes = lakes;
+        this.seas = seas;
         width = tiles.length;
         height = tiles[0].length;
 
@@ -90,6 +93,15 @@ public class World{
     /** Returns a tile by index.*/
     public Tile tile(int index){
         return tile(index % width, index / width);
+    }
+
+    /** Returns a sea by name. Throws an exception if not found.*/
+    public Sea getSea(String name){
+        Sea river = seas.find(r -> r.name.equals(name));
+        if(river == null){
+            throw new IllegalArgumentException("No seas found with name: \"" + name + "\"");
+        }
+        return river;
     }
 
     /** Returns a city by name. Throws an exception if not found.*/
@@ -177,12 +189,14 @@ public class World{
         public City city;
         /** The port at this city's location. May be null.*/
         public Port port;
+        /** The sea area on this tile; may be null.*/
+        public Sea sea;
         /** Temporary search parent.*/
         public Tile searchParent;
         /** List of crossings to other tiles.*/
         public Array<WaterCrossing> crossings;
         /** Whether this tile is inland, e.g. 3 tiles from shore.*/
-        public boolean inland = true;
+        public boolean inland = true, border = false;
 
         public Tile(Terrain type, int x, int y){
             this.type = type;
@@ -190,10 +204,12 @@ public class World{
             this.y = y;
         }
 
+        /** Returns whether this tile is of type alpine or mountain. */
         public boolean isMountainous(){
             return type == Terrain.alpine || type == Terrain.mountain;
         }
 
+        /** Returns adjacent points to this tile. */
         public Point2[] getAdjacent(){
             return y % 2 == 0 ? adjacencyEven : adjacencyOdd;
         }
@@ -204,7 +220,7 @@ public class World{
             }else if(y == oy){
                 return Math.abs(x - ox);
             }else{
-                //TODO this is.. incorrect
+                //TODO this is incorrect
                 return (int)Mathf.dst(ox, oy);
             }
         }
@@ -214,7 +230,7 @@ public class World{
         }
 
         /** Returns the direction needed to travel from this tile to the other.
-         * May return null.*/
+         * Will return null if these tiles are not adjacent.*/
         public Direction directionTo(Tile other){
             Point2[] adjacent = getAdjacent();
             for(int i = 0; i < 6; i++){
@@ -291,6 +307,30 @@ public class World{
 
         public String formalName(){
             return Strings.capitalize(name);
+        }
+    }
+
+    /** Represents a sea area on the map.*/
+    public static class Sea{
+        /** This sea's short name.*/
+        public final String name;
+        /** The anchor position, i.e. where text should be displayed.*/
+        public final int x, y;
+        /** All expansion points from which this sea gets flood filled.*/
+        public Array<Point2> expansions = new Array<>();
+
+        public Sea(String name, int x, int y){
+            this.name = name;
+            this.x = x;
+            this.y = y;
+            expansions.add(new Point2(x, y));
+        }
+
+        /** Returns this sea's formal name.
+         * If the basic name is just one word, 'sea' is added to the end.
+         */
+        public String formalName(){
+            return name.contains("_") ? Strings.capitalize(name) : name + " Sea";
         }
     }
 

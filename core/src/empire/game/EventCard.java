@@ -2,8 +2,10 @@ package empire.game;
 
 import empire.game.World.City;
 import empire.game.World.River;
+import empire.game.World.Sea;
 import empire.game.World.Tile;
 import io.anuke.arc.collection.Array;
+import io.anuke.arc.math.geom.Geometry;
 import io.anuke.arc.util.Strings;
 
 import java.util.Scanner;
@@ -86,7 +88,6 @@ public abstract class EventCard extends Card{
         }
     }
 
-    /** General strike: no movement, building, pickup or delivery. basically skip a turn. */
     public static class GeneralRailStrikeEvent extends EventCard{
 
         @Override
@@ -115,7 +116,6 @@ public abstract class EventCard extends Card{
         }
     }
 
-    /** Excess profits tax: Player pays tax depending on their current money.*/
     public static class ExcessProfitsTaxEvent extends EventCard{
 
         @Override
@@ -237,20 +237,21 @@ public abstract class EventCard extends Card{
         public boolean apply(State state, Player player){
             //half rate applied to this player
             if(player.within(city.x, city.y, dst)){
-                player.moved += (player.loco.speed - player.moved) / 2;
+                player.applyHalfRate();
             }
             return false;
         }
     }
 
+    //TODO add no build zone near seas!
     public static class GaleEvent extends EventCard{
         public int dst;
-        public Array<String> waters;
+        public Array<Sea> seas;
 
         @Override
         public void load(Scanner scan, World world){
             dst = scan.nextInt();
-            waters = Array.with(scan.nextLine().split(" "));
+            seas = Array.with(scan.nextLine().substring(1).split(" ")).map(world::getSea);
         }
 
         @Override
@@ -260,7 +261,24 @@ public abstract class EventCard extends Card{
 
         @Override
         public String description(Player player){
-            return "This event isn't even implemented, how should I know where all the sea locations are without map data?";
+            return "All trains within " + dst + " mileposts of the following seas move at half rate:\n[lime]"
+                    + seas.toString(", ", Sea::formalName);
+        }
+
+        @Override
+        public boolean apply(State state, Player player){
+            //check if anything is in the player's circle, apply half rate if that is the case
+            boolean[] out = {false};
+            Geometry.circle(player.position.x, player.position.y,
+                    state.world.width, state.world.height, dst + 1, (x, y) -> {
+                if(seas.contains(state.world.tile(x, y).sea)){
+                    out[0] = true;
+                }
+            });
+            if(out[0]){
+                player.applyHalfRate();
+            }
+            return false;
         }
     }
 
@@ -293,7 +311,7 @@ public abstract class EventCard extends Card{
         public boolean apply(State state, Player player){
             //half rate applied to this player
             if(player.within(city.x, city.y, dst)){
-                player.moved += (player.loco.speed - player.moved) / 2;
+                player.applyHalfRate();
             }
             return false;
         }

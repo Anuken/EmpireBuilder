@@ -3,12 +3,14 @@ package empire.gfx;
 import empire.game.EventCard;
 import empire.game.EventCard.FogEvent;
 import empire.game.EventCard.HeavySnowEvent;
+import empire.game.GameEvents.EndTurnEvent;
 import empire.game.Player;
 import empire.game.World.City;
 import empire.game.World.Tile;
-import empire.gfx.gen.WaterRenderer;
+import empire.gfx.gen.MapImageRenderer;
 import io.anuke.arc.ApplicationListener;
 import io.anuke.arc.Core;
+import io.anuke.arc.Events;
 import io.anuke.arc.graphics.Blending;
 import io.anuke.arc.graphics.Camera;
 import io.anuke.arc.graphics.Color;
@@ -29,8 +31,9 @@ import static empire.gfx.EmpireCore.*;
 public class Renderer implements ApplicationListener{
     private float zoom = 4f;
     private Color clearColor = Color.valueOf("5d81e1");
-    private Texture riverTexture;
+    private Texture worldTexture;
     private FrameBuffer buffer;
+    private boolean doLerp = true;
 
     public Renderer(){
         Lines.setCircleVertices(30);
@@ -40,9 +43,17 @@ public class Renderer implements ApplicationListener{
         Core.camera.position.set(state.world.width * tilesize/2f, state.world.height*tilesize/2f);
         Core.atlas = new TextureAtlas("ui/uiskin.atlas");
 
-        riverTexture = WaterRenderer.createWaterTexture(state.world);
         buffer = new FrameBuffer(state.world.width * 16, state.world.height * 16);
         buffer.getTexture().setFilter(TextureFilter.Nearest, TextureFilter.Nearest);
+
+        Events.on(EndTurnEvent.class, event -> {
+            doLerp = true;
+        });
+    }
+
+    @Override
+    public void init(){
+        worldTexture = MapImageRenderer.createMapTexture(state.world);
     }
 
     @Override
@@ -89,7 +100,7 @@ public class Renderer implements ApplicationListener{
 
         float speed = 15f * Time.delta();
 
-        Vector2 movement = Tmp.v1.setZero();
+        Vector2 movement = Tmp.v2.setZero();
         if(Core.input.keyDown(KeyCode.W)) movement.y += speed;
         if(Core.input.keyDown(KeyCode.A)) movement.x -= speed;
         if(Core.input.keyDown(KeyCode.S)) movement.y -= speed;
@@ -97,10 +108,13 @@ public class Renderer implements ApplicationListener{
 
         if(!movement.isZero()){
             Core.camera.position.add(movement.limit(speed));
+            doLerp = false;
         }
 
         Vector2 v = control.toWorld(state.player().position);
-        Core.camera.position.lerpDelta(v, 0.09f);
+        if(doLerp){
+            Core.camera.position.lerpDelta(v, 0.06f);
+        }
     }
 
     /** Draw player names and such.*/
@@ -222,22 +236,8 @@ public class Renderer implements ApplicationListener{
     /** Draws the tiles of the world.*/
     void drawWorld(){
         Draw.color();
-
-        //draw tiles
-        for(int x = 0; x < state.world.width; x++){
-            for(int y = 0; y < state.world.height; y++){
-                Tile tile = state.world.tile(x, y);
-                Vector2 world = control.toWorld(x, y);
-                float tx = world.x, ty = world.y;
-
-                Draw.color();
-                Draw.rect(Core.atlas.find("terrain-" + tile.type.name(), Core.atlas.find("terrain-plain")), tx, ty, tilesize, tilesize);
-            }
-        }
-
-        Draw.color();
         float rwidth = state.world.width * tilesize, rheight = state.world.height * tilesize;
-        Draw.rect(Draw.wrap(riverTexture), rwidth/2f, rheight/2f, rwidth, -rheight);
+        Draw.rect(Draw.wrap(worldTexture), rwidth/2f, rheight/2f, rwidth, -rheight);
 
         //draw cities
         for(City city : state.world.cities()){

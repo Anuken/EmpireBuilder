@@ -2,19 +2,27 @@ package empire.io;
 
 import empire.game.World;
 import empire.game.World.*;
-import io.anuke.arc.collection.*;
+import io.anuke.arc.collection.Array;
+import io.anuke.arc.collection.FloatArray;
+import io.anuke.arc.collection.IntMap;
+import io.anuke.arc.collection.ObjectSet;
 import io.anuke.arc.files.FileHandle;
 import io.anuke.arc.function.Supplier;
 import io.anuke.arc.math.EarClippingTriangulator;
 import io.anuke.arc.math.Mathf;
-import io.anuke.arc.math.geom.*;
+import io.anuke.arc.math.geom.ConvexHull;
+import io.anuke.arc.math.geom.Geometry;
+import io.anuke.arc.math.geom.Point2;
+import io.anuke.arc.math.geom.Vector2;
 import io.anuke.arc.util.Log;
+import io.anuke.arc.util.Structs;
 
 import java.util.Scanner;
 
 /** Loads maps from text files.*/
 public class MapIO{
     private static final ConvexHull hull = new ConvexHull();
+    private static final Array<Tile> tilearr = new Array<>();
     /** Maps character to terrain type. */
     private static final IntMap<Terrain> terrainMap = IntMap.of(
         'o', Terrain.water,
@@ -95,6 +103,34 @@ public class MapIO{
             }
             cities.add(new City(name, x, y, CitySize.values()[size-1], goods));
             allgoods.addAll(goods);
+        }
+
+        expect(scan, "#SEAS");
+
+        Array<Sea> seas = new Array<>();
+
+        int seacount = scan.nextInt();
+        for(int i = 0; i < seacount; i++){
+            String name = scan.next();
+            int x = scan.nextInt(), y = scan.nextInt();
+            //duplicated may occur; this means that a sea exists in several places
+            if(seas.contains(s -> s.name.equals(name))){
+                seas.find(s -> s.name.equals(name)).expansions.add(new Point2(x, y));
+            }else{
+                seas.add(new Sea(name, x, y));
+            }
+        }
+
+        //read barriers now; these define borders between seas
+        int barriers = scan.nextInt();
+        for(int i = 0; i < barriers; i++){
+            tiles[scan.nextInt()][scan.nextInt()].border = true;
+        }
+
+        for(Sea sea : seas){
+            for(Point2 p : sea.expansions){
+                floodFill(tiles, sea, p);
+            }
         }
 
         expect(scan, "#PORTS");
@@ -208,8 +244,6 @@ public class MapIO{
             rivers.add(river);
         }
 
-        //TODO read lakes and inlets
-
         //read lakes
         Array<Lake> lakes = new Array<>();
         next = scan.next();
@@ -244,7 +278,26 @@ public class MapIO{
         //todo make icons for these and remove debugging statement
         Log.info("Total goods: {0}\n{1}", allgoods.size, allgoods);
 
-        return new World(tiles, cities, rivers, lakes);
+        return new World(tiles, cities, rivers, lakes, seas);
+    }
+
+    /** Flood-fills a sea by looking at water tiles.*/
+    private static void floodFill(Tile[][] tiles, Sea sea, Point2 point){
+        tilearr.clear();
+        tilearr.add(tiles[point.x][point.y]);
+        while(!tilearr.isEmpty()){
+            Tile next = tilearr.pop();
+            for(Point2 po : next.getAdjacent()){
+                int wx = next.x + po.x, wy = next.y + po.y;
+                if(Structs.inBounds(wx, wy, tiles)){
+                    Tile other = tiles[wx][wy];
+                    if(other.type == Terrain.water && other.sea != sea && !other.border){
+                        other.sea = sea;
+                        tilearr.add(other);
+                    }
+                }
+            }
+        }
     }
 
     /** Adds the appropriate water tile costs.*/

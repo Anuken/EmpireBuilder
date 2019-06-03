@@ -8,6 +8,7 @@ import io.anuke.arc.util.Log;
 import io.anuke.arc.util.Strings;
 import org.java_websocket.WebSocket;
 import org.java_websocket.client.WebSocketClient;
+import org.java_websocket.framing.CloseFrame;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.handshake.ServerHandshake;
 import org.java_websocket.server.WebSocketServer;
@@ -189,7 +190,7 @@ public class WebsocketNet extends Net{
 
         @Override
         public void onClose(int code, String reason, boolean remote){
-            Core.app.post(() -> error.accept(new IOException((reason == null || reason.isEmpty()) ? "Code " + code : reason)));
+            Core.app.post(() -> error.accept(new IOException((reason == null || reason.isEmpty()) ? parseCode(code) : reason)));
             Core.app.post(() -> listener.disconnected(new IOException(reason)));
             close();
         }
@@ -198,6 +199,13 @@ public class WebsocketNet extends Net{
         public void onError(Exception ex){
             //TODO add
             //handleError(ex);
+        }
+
+        String parseCode(int code){
+            if(code == CloseFrame.GOING_AWAY){
+                return "Server closed";
+            }
+            return "Code " + code;
         }
     }
 }

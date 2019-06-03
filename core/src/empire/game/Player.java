@@ -57,6 +57,11 @@ public class Player{
     /** Serialization use only. */
     protected Player(){}
 
+    /** Makes this player move at 'half rate' for the rest of the turn.*/
+    public void applyHalfRate(){
+        moved += (loco.speed - moved) / 2;
+    }
+
     /** @return whether this player is within distance of this tile.*/
     public boolean within(int x, int y, int dst){
         return position.distanceTo(x, y) <= dst;

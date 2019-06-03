@@ -25,6 +25,10 @@ public class Actions{
 
     }
 
+    public interface AnytimeAction{
+
+    }
+
     public abstract static class PlayerAction implements Action{
         public transient Player player;
     }
@@ -89,7 +93,7 @@ public class Actions{
         }
     }
 
-    public static class Chat extends PlayerAction{
+    public static class Chat extends PlayerAction implements AnytimeAction{
         public String message;
 
         @Override
