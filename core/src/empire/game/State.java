@@ -142,6 +142,8 @@ public class State{
         player().moved = 0;
         player().movedPlayers.clear();
         player().eventCards.clear();
+        player().eventCards.addAll(player().drawEventCards);
+        player().drawEventCards.clear();
         if(player().lostTurns > 0){
             player().lostTurns --;
         }
@@ -477,7 +479,7 @@ public class State{
     private void handleEvent(EventCard card, Player player, Consumer<EventCard> handler){
         cards.insert(0, card);
         if(!card.apply(this, player)){
-            player.eventCards.add(card);
+            player.drawEventCards.add(card);
         }
         handler.accept(card);
     }
