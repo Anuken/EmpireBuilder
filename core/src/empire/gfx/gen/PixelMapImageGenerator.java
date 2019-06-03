@@ -18,7 +18,7 @@ import io.anuke.arc.util.Log;
 import io.anuke.arc.util.ScreenUtils;
 import io.anuke.arc.util.Time;
 
-public class MapImageGenerator{
+public class PixelMapImageGenerator{
     /** Size of a single tile in pixels.*/
     private static final int gsize = 16;
     /** Base color of the terrain types, indexed by ordinal.*/

@@ -10,6 +10,7 @@ import io.anuke.arc.graphics.g2d.Draw;
 import io.anuke.arc.graphics.g2d.Fill;
 import io.anuke.arc.graphics.g2d.GlyphLayout;
 import io.anuke.arc.input.KeyCode;
+import io.anuke.arc.scene.Group;
 import io.anuke.arc.scene.ui.Label;
 import io.anuke.arc.scene.ui.Label.LabelStyle;
 import io.anuke.arc.scene.ui.TextField;
@@ -79,6 +80,10 @@ public class ChatFragment extends Table{
 
         history.insert(0, "");
         setup();
+    }
+
+    public void build(Group root){
+        root.addChild(this);
     }
 
     public void clearMessages(){

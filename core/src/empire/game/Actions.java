@@ -1,5 +1,6 @@
 package empire.game;
 
+import empire.game.World.City;
 import empire.game.World.Tile;
 import empire.gfx.EmpireCore;
 import empire.io.CardIO;
@@ -8,6 +9,7 @@ import io.anuke.arc.collection.IntArray;
 import io.anuke.arc.graphics.Color;
 import io.anuke.arc.util.Strings;
 
+import static empire.gfx.EmpireCore.renderer;
 import static empire.gfx.EmpireCore.ui;
 
 /** Just a class for storing a bunch of action classes.*/
@@ -30,7 +32,7 @@ public class Actions{
     }
 
     public abstract static class AnyPlayerAction implements Action{
-        public Player player;
+        public int playerID;
     }
 
     public static class WorldSend implements Action{
@@ -58,7 +60,6 @@ public class Actions{
     public static class Connect implements Action{
         public String name;
         public Color color;
-        public Tile start;
 
         @Override
         public void apply(State state){
@@ -69,11 +70,13 @@ public class Actions{
     public static class ConnectForward implements Action{
         public String name;
         public Color color;
-        public Tile start;
 
         @Override
         public void apply(State state){
-            state.players.add(new Player(name, start, color, state.grabCards()));
+            //doesn't matter what's selected here, as the city will be selected later anyway
+            City randomCity = state.world.cities().iterator().next();
+
+            state.players.add(new Player(name, state.world.tile(randomCity.x, randomCity.y), color, state.grabCards()));
 
             //must be local player if it's just sent and there's nothing local yet.
             if(!state.players.contains(p -> p.local)){
@@ -98,6 +101,7 @@ public class Actions{
 
         @Override
         public void apply(State state){
+            Player player = state.players.get(playerID);
             ui.chat.addMessage(message, "[#" + player.color + "]" + player.name);
         }
     }
@@ -107,6 +111,17 @@ public class Actions{
         @Override
         public void apply(State state){
             state.nextPlayer();
+        }
+    }
+
+    public static class ChooseStart extends PlayerAction{
+        public Tile location;
+
+        @Override
+        public void apply(State state){
+            player.position = location;
+            player.chosenLocation = true;
+            renderer.doLerp = true;
         }
     }
 
@@ -147,7 +162,7 @@ public class Actions{
         @Override
         public void apply(State state){
             state.sellGood(state.player(), player.position.city, cargo, ui.events::show);
-            ui.refreshCity();
+            ui.hud.refresh();
         }
     }
 

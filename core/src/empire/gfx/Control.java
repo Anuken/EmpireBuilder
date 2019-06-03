@@ -1,7 +1,9 @@
 package empire.gfx;
 
+import empire.game.Actions.ChooseStart;
 import empire.game.Actions.Move;
 import empire.game.Actions.PlaceTrack;
+import empire.game.World.City;
 import empire.game.World.Tile;
 import io.anuke.arc.ApplicationListener;
 import io.anuke.arc.Core;
@@ -25,8 +27,19 @@ public class Control implements ApplicationListener{
     @Override
     public void update(){
 
+        //choose start pos
+        if(Core.input.keyTap(KeyCode.MOUSE_LEFT) && EmpireCore.net.active() && state.player().local && !state.player().chosenLocation){
+            Tile tile = tileMouse();
+            if(tile != null && state.world.getCity(tile) != null){
+                City city = state.world.getCity(tile);
+                new ChooseStart(){{
+                    location = state.world.tile(city.x, city.y);
+                }}.act();
+            }
+        }
+
         //begin placing on mouse down
-        if(Core.input.keyTap(KeyCode.MOUSE_LEFT) && !Core.scene.hasMouse() && state.player().local){
+        if(Core.input.keyTap(KeyCode.MOUSE_LEFT) && !Core.scene.hasMouse() && state.player().local && state.player().chosenLocation){
             Tile tile = tileMouse();
             if(tile != null && state.canBeginTrack(state.player(), tile)){
                 placeLoc = tile;

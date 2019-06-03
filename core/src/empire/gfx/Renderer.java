@@ -33,7 +33,8 @@ public class Renderer implements ApplicationListener{
     private Color clearColor = Color.valueOf("5d81e1");
     private Texture worldTexture;
     private FrameBuffer buffer;
-    private boolean doLerp = true;
+
+    public boolean doLerp = true;
 
     public Renderer(){
         Lines.setCircleVertices(30);
@@ -89,8 +90,6 @@ public class Renderer implements ApplicationListener{
         float rwidth = state.world.width * tilesize, rheight = state.world.height * tilesize;
         Draw.rect(Draw.wrap(buffer.getTexture()), rwidth/2f, rheight/2f, rwidth, -rheight);
         Draw.blend();
-
-
     }
 
     void doMovement(){
@@ -101,10 +100,10 @@ public class Renderer implements ApplicationListener{
         float speed = 15f * Time.delta();
 
         Vector2 movement = Tmp.v2.setZero();
-        if(Core.input.keyDown(KeyCode.W)) movement.y += speed;
-        if(Core.input.keyDown(KeyCode.A)) movement.x -= speed;
-        if(Core.input.keyDown(KeyCode.S)) movement.y -= speed;
-        if(Core.input.keyDown(KeyCode.D)) movement.x += speed;
+        if(Core.input.keyDown(KeyCode.W) || Core.input.keyDown(KeyCode.UP)) movement.y += speed;
+        if(Core.input.keyDown(KeyCode.A) || Core.input.keyDown(KeyCode.LEFT)) movement.x -= speed;
+        if(Core.input.keyDown(KeyCode.S) || Core.input.keyDown(KeyCode.DOWN)) movement.y -= speed;
+        if(Core.input.keyDown(KeyCode.D) || Core.input.keyDown(KeyCode.RIGHT)) movement.x += speed;
 
         if(!movement.isZero()){
             Core.camera.position.add(movement.limit(speed));
@@ -112,7 +111,7 @@ public class Renderer implements ApplicationListener{
         }
 
         Vector2 v = control.toWorld(state.player().position);
-        if(doLerp){
+        if(doLerp && state.player().chosenLocation){
             Core.camera.position.lerpDelta(v, 0.06f);
         }
     }
@@ -122,6 +121,7 @@ public class Renderer implements ApplicationListener{
         BitmapFont font = Core.scene.skin.getFont("default");
         font.getData().setScale(1f);
         for(Player player : state.players){
+            if(!player.chosenLocation) continue;
             Vector2 v = control.toWorld(player.position);
 
             font.setColor(player.color);
@@ -147,13 +147,15 @@ public class Renderer implements ApplicationListener{
                 int cost = 0;
                 for(Tile tile : control.getTiles(control.placeLoc, other)){
                     if(tile != last){
+
                         Vector2 world = control.toWorld(last);
                         float fx = world.x, fy = world.y;
                         control.toWorld(tile);
 
-                        cost += state.getTrackCost(last, tile);
-
-                        if(state.isPassable(state.player(), tile) && state.canSpendRail(state.player(), cost)){
+                        if(state.isPassable(state.player(), tile) && state.canSpendRail(state.player(), cost)
+                        && !(state.world.getMajorCity(tile) == state.world.getMajorCity(last)
+                                && state.world.getMajorCity(tile) != null)){
+                            cost += state.getTrackCost(last, tile);
                             Draw.color(1f, 1f, 1f, 0.5f);
                         }else{
                             Draw.color(1f, 0.3f, 0.3f, 0.5f);
@@ -190,6 +192,7 @@ public class Renderer implements ApplicationListener{
     /** Draws all player icons on the board.*/
     void drawPlayers(){
         for(Player player : state.players){
+            if(!player.chosenLocation) continue;
             Vector2 world = control.toWorld(player.position.x, player.position.y);
 
             Draw.colorMul(player.color, 0.5f);
@@ -239,6 +242,8 @@ public class Renderer implements ApplicationListener{
         float rwidth = state.world.width * tilesize, rheight = state.world.height * tilesize;
         Draw.rect(Draw.wrap(worldTexture), rwidth/2f, rheight/2f, rwidth, -rheight);
 
+        Player player = state.localPlayer();
+
         //draw cities
         for(City city : state.world.cities()){
             Vector2 world = control.toWorld(city.x, city.y);
@@ -249,12 +254,12 @@ public class Renderer implements ApplicationListener{
             Draw.color();
             Draw.rect(region, tx, ty, region.getWidth() * tilesize/16f, region.getHeight() * tilesize/16f);
 
-            if(state.player().local){
-                if(state.player().hasGoodDelivery(city)){
+            if(player.chosenLocation){
+                if(player.hasGoodDelivery(city)){
                     icon("icon-export", tx, ty, 10f, 10f);
                 }
 
-                if(state.player().hasGoodDemand(city)){
+                if(player.hasGoodDemand(city)){
                     icon("icon-open", tx, ty, -10f, 10f);
                 }
             }

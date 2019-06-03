@@ -181,6 +181,10 @@ public class State{
         return players.get(currentPlayer);
     }
 
+    public Player localPlayer(){
+        return player().local ? player() : players.find(p -> p.local);
+    }
+
     public boolean canBeginTrack(Player player, Tile tile){
         return world.getMajorCity(tile) != null ||
                 player.position == tile ||
@@ -321,7 +325,8 @@ public class State{
         }
 
         //can't move backwards
-        if(player.position.directionTo(moves.get(1)).opposite(player.direction) &&
+        if(player.position.directionTo(moves.get(1)) != null &&
+                player.position.directionTo(moves.get(1)).opposite(player.direction) &&
                 world.getCity(player.position) == null){
             return null;
         }
@@ -370,7 +375,12 @@ public class State{
             player.moved += (moves.size - 1);
             player.money -= otherMoves.size*4;
             player.movedPlayers.addAll(otherMoves);
-            player.direction = moves.get(moves.size - 2).directionTo(moves.get(moves.size - 1));
+
+            Direction newDir = moves.get(moves.size - 2).directionTo(moves.get(moves.size - 1));
+
+            if(newDir != null){
+                player.direction = newDir;
+            }
             if(endTurn){
                 //go to the next player if there's a port in the way
                 nextPlayer();

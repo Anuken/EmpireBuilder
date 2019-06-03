@@ -41,6 +41,7 @@ public class EmpireCore extends ApplicationCore{
         City startCity = Array.with(state.world.cities()).random();
 
         state.players.add(new Player("Me", state.world.tile(startCity.x, startCity.y), Color.PINK, state.grabCards()));
+        state.players.peek().local = true;
 
         add(control = new Control());
         add(renderer = new Renderer());

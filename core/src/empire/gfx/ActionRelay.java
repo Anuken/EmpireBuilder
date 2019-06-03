@@ -114,7 +114,7 @@ public class ActionRelay implements NetListener{
         }
 
         if(action instanceof AnyPlayerAction){
-            ((AnyPlayerAction) action).player = state.player();
+            ((AnyPlayerAction) action).playerID = state.players.indexOf(state.localPlayer());
         }
 
         if(net.active()){
@@ -224,7 +224,6 @@ public class ActionRelay implements NetListener{
             //send forward message to everyone
             handle(new ConnectForward(){{
                 name = connect.name;
-                start = connect.start;
                 color = connect.color;
             }});
 
@@ -239,7 +238,7 @@ public class ActionRelay implements NetListener{
             }
 
             if(action instanceof AnyPlayerAction){
-                ((AnyPlayerAction) action).player = player;
+                ((AnyPlayerAction) action).playerID = state.players.indexOf(player);
             }
 
             if(state.player() != player && !(action instanceof AnyPlayerAction)){

@@ -91,6 +91,10 @@ public class MapImageRenderer{
             }
         }
 
+        BitmapFont font = Core.scene.skin.getFont("default");
+        font.getData().setScale(1f);
+        font.setColor(Color.CORAL);
+
         //draw ports
         for(int x = 0; x < state.world.width; x++){
             for(int y = 0; y < state.world.height; y++){
@@ -103,16 +107,15 @@ public class MapImageRenderer{
                     Lines.dashLine(tx, ty, to.x, to.y, (int)(to.dst(tx, ty) / 4));
                     Fill.circle(tx, ty, 3f);
                     Fill.circle(to.x, to.y, 3f);
+                    font.draw(tile.port.cost + "", (to.x + tx)/2f, (to.y + ty)/2f + 4, Align.center);
                 }
             }
         }
 
-        BitmapFont font = Core.scene.skin.getFont("default");
-        font.getData().setScale(1f);
+        font.setColor(Color.WHITE);
+
         for(Sea sea : world.seas){
             Vector2 v = control.toWorld(sea.x, sea.y);
-
-            font.setColor(Color.WHITE);
             font.draw(sea.formalName(), v.x, v.y + tilesize, Align.center);
         }
         font.getData().setScale(2f);

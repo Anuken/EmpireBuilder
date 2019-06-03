@@ -45,6 +45,8 @@ public class Player{
     public DemandCard[] demandCards;
     /** Name for this player, displayed on the board.*/
     public String name;
+    /** Whether this player has chosen a starting location.*/
+    public boolean chosenLocation = false;
 
     /** Creates a player at a position.*/
     public Player(String name, Tile position, Color color, DemandCard[] cards){
