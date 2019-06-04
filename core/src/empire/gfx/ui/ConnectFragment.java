@@ -24,7 +24,7 @@ public class ConnectFragment{
 
             Connect connect = new Connect();
             connect.name = System.getProperty("user.name");
-            connect.color = new Color().rand();
+            connect.color = Colors.getColors().values().toArray().select(c -> c.a > 0.1f && c != Color.BLACK).random().cpy();
             t.visible(() -> !EmpireCore.net.active());
             t.touchable(Touchable.enabled);
 

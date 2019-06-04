@@ -16,7 +16,7 @@ import io.anuke.arc.graphics.Color;
 public class EmpireCore extends ApplicationCore{
     /** Size of each hex tile in pixels. */
     public static final int tilesize = 16;
-    public static final boolean debug = false;
+    public static final boolean debug = true;
 
     public static Control control;
     public static UI ui;

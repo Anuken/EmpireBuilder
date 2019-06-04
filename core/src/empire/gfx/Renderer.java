@@ -1,5 +1,7 @@
 package empire.gfx;
 
+import empire.game.DemandCard;
+import empire.game.DemandCard.Demand;
 import empire.game.EventCard;
 import empire.game.EventCard.FogEvent;
 import empire.game.EventCard.HeavySnowEvent;
@@ -19,6 +21,7 @@ import io.anuke.arc.graphics.Texture.TextureFilter;
 import io.anuke.arc.graphics.g2d.*;
 import io.anuke.arc.graphics.glutils.FrameBuffer;
 import io.anuke.arc.input.KeyCode;
+import io.anuke.arc.math.Angles;
 import io.anuke.arc.math.Mathf;
 import io.anuke.arc.math.geom.Vector2;
 import io.anuke.arc.util.Align;
@@ -272,13 +275,54 @@ public class Renderer implements ApplicationListener{
 
         if(selected != null && state.world.getCity(selected) != null){
             City city = state.world.getCity(selected);
-            Vector2 world = control.toWorld(city.x, city.y);
-            Draw.colorMul(Color.CORAL, 0.6f);
-            Draw.rect("city-" + city.size.name() + "-select", world.x, world.y);
-            Draw.color(Color.CORAL);
-            Draw.rect("city-" + city.size.name() + "-select", world.x, world.y + 1);
+            drawCitySelect(city);
+
+            Lines.stroke(2f, Color.WHITE);
+            if(player.hasGoodDelivery(city)){
+                for(DemandCard card : player.demandCards){
+                    for(Demand demand : card.demands){
+                        if(demand.city == city){
+                            String good = demand.good;
+                            for(City provider : state.world.cities()){
+                                if(provider.goods.contains(good)){
+                                    drawCitySelect(provider);
+                                    Vector2 world = control.toWorld(city.x, city.y);
+                                    float sx = world.x, sy = world.y;
+                                    control.toWorld(provider.x, provider.y);
+                                    float ex = world.x, ey = world.y;
+
+                                    int divisions = (int)(Mathf.dst(sx, sy, ex, ey) / 5);
+                                    float angle = Angles.angle(sx, sy, ex, ey);
+                                    Vector2 trns = Tmp.v2.trns(angle, 16f);
+                                    sx += trns.x;
+                                    sy += trns.y;
+                                    ex -= trns.x;
+                                    ey -= trns.y;
+
+                                    Draw.colorMul(Color.CORAL, 0.6f);
+                                    Lines.dashLine(sx, sy - 1, ex, ey - 1, divisions);
+                                    Draw.rect("icon-open", sx, sy - 1, angle - 90 + 180);
+                                    Draw.color(Color.CORAL);
+                                    Lines.dashLine(sx, sy, ex, ey, divisions);
+                                    Draw.rect("icon-open", sx, sy, angle - 90 + 180);
+                                }
+                            }
+                        }
+                    }
+                }
+                //Structs.contains(demandCards, card -> Structs.contains(card.demands, d -> d.city == city ));
+            }
         }
     }
+
+    private void drawCitySelect(City city){
+        Vector2 world = control.toWorld(city.x, city.y);
+        Draw.colorMul(Color.CORAL, 0.6f);
+        Draw.rect("city-" + city.size.name() + "-select", world.x, world.y);
+        Draw.color(Color.CORAL);
+        Draw.rect("city-" + city.size.name() + "-select", world.x, world.y + 1);
+    }
+
 
     private void icon(String name, float x, float y, float offsetx, float offsety){
         float scale = tilesize / 16f;

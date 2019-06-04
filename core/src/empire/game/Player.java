@@ -117,7 +117,7 @@ public class Player{
 
     /** Whether this city has a good that can be sold there.*/
     public boolean hasGoodDelivery(City city){
-        return Structs.contains(demandCards, card -> Structs.contains(card.demands, d -> d.city == city ));
+        return Structs.contains(demandCards, card -> Structs.contains(card.demands, d -> d.city == city));
     }
 
     /** Whether this city has a good that this player can sell somewhere else.*/
