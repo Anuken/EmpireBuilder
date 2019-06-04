@@ -142,8 +142,16 @@ public class Actions{
 
         @Override
         public void apply(State state){
+            if(player.position == to) return;
+
             //TODO animation
             Array<Tile> path = state.movePlayer(player, to);
+            if(path == null || path.isEmpty()){
+                throw new IllegalArgumentException(Strings.format(
+                        "Invalid move!\nFrom {0},{1} to {2},{3}",
+                        player.position.x, player.position.y,
+                        to.x, to.y));
+            }
         }
     }
 
@@ -161,6 +169,13 @@ public class Actions{
 
         @Override
         public void apply(State state){
+            if(state.world.getCity(player.position) == null){
+                throw new IllegalArgumentException("No city at player's position!");
+            }
+            if(!state.world.getCity(player.position).goods.contains(cargo)){
+                throw new IllegalArgumentException("Good '" + cargo + "' found at city: " + state.world.getCity(player.position).name);
+            }
+
             player.addCargo(cargo);
             if(player.local){
                 ui.showFade(Strings.capitalize(cargo) + " obtained.");

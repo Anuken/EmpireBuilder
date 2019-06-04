@@ -5,7 +5,9 @@ import empire.game.GameEvents.EndTurnEvent;
 import empire.game.GameEvents.WinEvent;
 import empire.game.World.*;
 import io.anuke.arc.Events;
-import io.anuke.arc.collection.*;
+import io.anuke.arc.collection.Array;
+import io.anuke.arc.collection.ObjectSet;
+import io.anuke.arc.collection.Queue;
 import io.anuke.arc.function.Consumer;
 import io.anuke.arc.util.Structs;
 
@@ -137,18 +139,18 @@ public class State{
     /** Switches turns to the next player.
      * Increments total turn if needed.*/
     public void nextPlayer(){
+        Player last = player();
         //reset turn-specific data
-        player().moneySpent = 0;
-        player().moved = 0;
-        player().movedPlayers.clear();
-        player().eventCards.clear();
-        player().eventCards.addAll(player().drawEventCards);
-        player().drawEventCards.clear();
-        if(player().lostTurns > 0){
-            player().lostTurns --;
+        last.moneySpent = 0;
+        last.moved = 0;
+        last.movedPlayers.clear();
+        last.eventCards.clear();
+        last.eventCards.addAll(last.drawEventCards);
+        last.drawEventCards.clear();
+        if(last.lostTurns > 0){
+            last.lostTurns --;
         }
-        checkIfWon(player());
-        Events.fire(new EndTurnEvent(player()));
+        checkIfWon(last);
 
         //begin next player's turn
         currentPlayer ++;
@@ -156,6 +158,8 @@ public class State{
             currentPlayer = 0;
             turn ++;
         }
+
+        Events.fire(new EndTurnEvent(last, player()));
 
         //recursively advance the next player until there are no lost turns left.
         if(player().lostTurns > 0){
@@ -306,14 +310,8 @@ public class State{
         if(!canPlaceOn(tile.type)){
             return false;
         }
-        //large cities cannot be tracked into, but they can be tracked out of, if the player starts there
-        if(player.position != tile && tile.city != null && tile.city.size == CitySize.major){
-            return false;
-        }
-        //TODO add limits for other cities:
-        //- some cities only have 2 or 3 max connections
-        //- can't block players from accessing major cities, there's a limit
-        return true;
+        //large cities cannot be placed in
+        return tile.city == null || tile.city.size != CitySize.major;
     }
 
     /** Returns whether a rail can be placed on this terrain.*/

@@ -11,10 +11,11 @@ public class GameEvents{
     }
 
     public static class EndTurnEvent{
-        public final Player player;
+        public final Player player, nextPlayer;
 
-        public EndTurnEvent(Player player){
+        public EndTurnEvent(Player player, Player nextPlayer){
             this.player = player;
+            this.nextPlayer = nextPlayer;
         }
     }
 }

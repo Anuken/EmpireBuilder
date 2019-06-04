@@ -61,6 +61,15 @@ public class Player{
     /** Serialization use only. */
     protected Player(){}
 
+    /** Returns an array of all the demands.*/
+    public Array<Demand> allDemands(){
+        Array<Demand> out = new Array<>();
+        for(DemandCard card : demandCards){
+            out.addAll(card.demands);
+        }
+        return out;
+    }
+
     /** Makes this player move at 'half rate' for the rest of the turn.*/
     public void applyHalfRate(){
         moved += (loco.speed - moved) / 2;

@@ -11,6 +11,8 @@ public class EventDialog extends Dialog{
     }
 
     public void show(EventCard card){
+        if(EmpireCore.debug) return;
+
         title.setText("Event:[coral] " + card.name() + "!");
         cont.clearChildren();
         buttons.clearChildren();

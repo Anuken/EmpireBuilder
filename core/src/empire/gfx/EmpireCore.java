@@ -1,5 +1,7 @@
 package empire.gfx;
 
+import empire.ai.AI;
+import empire.game.GameEvents.EndTurnEvent;
 import empire.game.Player;
 import empire.game.State;
 import empire.game.World.City;
@@ -9,14 +11,16 @@ import empire.net.Net;
 import empire.net.WebsocketNet;
 import io.anuke.arc.ApplicationCore;
 import io.anuke.arc.Core;
+import io.anuke.arc.Events;
 import io.anuke.arc.collection.Array;
 import io.anuke.arc.graphics.Color;
+import io.anuke.arc.util.Time;
 
 /** Main class for graphical renderer. Initializes state and its renderers.*/
 public class EmpireCore extends ApplicationCore{
     /** Size of each hex tile in pixels. */
     public static final int tilesize = 16;
-    public static final boolean debug = true;
+    public static final boolean debug = true, isAI = false;
 
     public static Control control;
     public static UI ui;
@@ -38,13 +42,33 @@ public class EmpireCore extends ApplicationCore{
         state.cards = CardIO.loadCards(state.world, Core.files.internal("maps/deck.txt"));
         state.cards.shuffle(); //shuffle cards when inputted
 
-        City startCity = Array.with(state.world.cities()).random();
-
-        state.players.add(new Player("Me", state.world.tile(startCity.x, startCity.y), Color.PINK, state.grabCards()));
-        state.players.peek().local = true;
-
         add(control = new Control());
         add(renderer = new Renderer());
         add(ui = new UI());
+
+        if(isAI){
+            for(int i = 0; i < 3; i++){
+                City startCity = Array.with(state.world.cities()).random();
+                Player player;
+                state.players.add(player = new Player("AI " + (i + 1),
+                        state.world.tile(startCity.x, startCity.y), new Color().rand(), state.grabCards()));
+                player.local = true;
+                AI ai = new AI(player, state);
+
+                Events.on(EndTurnEvent.class, event -> {
+                    if(event.nextPlayer == player){
+                        Time.run(60f, () -> {
+                            ai.act();
+                        });
+                    }
+                });
+            }
+
+            Events.fire(new EndTurnEvent(state.player(), state.player()));
+        }else{
+            City startCity = Array.with(state.world.cities()).random();
+            state.players.add(new Player("Loading...", state.world.tile(startCity.x, startCity.y), Color.PINK, state.grabCards()));
+            state.players.peek().local = true;
+        }
     }
 }

@@ -276,7 +276,7 @@ public class MapIO{
         scan.close();
 
         //todo make icons for these and remove debugging statement
-        Log.info("Total goods: {0}\n{1}", allgoods.size, allgoods);
+        //Log.info("Total goods: {0}\n{1}", allgoods.size, allgoods);
 
         return new World(tiles, cities, rivers, lakes, seas);
     }

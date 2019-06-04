@@ -79,10 +79,12 @@ public class ConnectFragment{
 
                     if(Core.app.getType() != ApplicationType.WebGL){
                         TextButton b = buttons.addImageTextButton("Host", "icon-home", 14 * 2, () -> {
-                            Player player = state.players.first();
-                            player.local = true;
-                            player.name = connect.name;
-                            player.color = connect.color;
+                            if(!isAI){
+                                Player player = state.players.first();
+                                player.local = true;
+                                player.name = connect.name;
+                                player.color = connect.color;
+                            }
                             net.host();
                             ui.hud.refresh();
                         }).growX().height(50f).get();

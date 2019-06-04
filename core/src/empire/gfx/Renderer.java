@@ -114,7 +114,7 @@ public class Renderer implements ApplicationListener{
         }
 
         Vector2 v = control.toWorld(state.player().position);
-        if(doLerp && state.player().chosenLocation){
+        if(doLerp && !isAI && state.player().chosenLocation){
             Core.camera.position.lerpDelta(v, 0.06f);
         }
     }
@@ -241,7 +241,7 @@ public class Renderer implements ApplicationListener{
         Lines.line(Core.atlas.find("track"), fromX, fromY, toX, toY, CapStyle.none, 0f);
     }
 
-    /** Draws the tiles of the world.*/
+    /** Draws the cities of the world.*/
     void drawWorld(){
         Draw.color();
         float rwidth = state.world.width * tilesize, rheight = state.world.height * tilesize;
@@ -260,14 +260,12 @@ public class Renderer implements ApplicationListener{
             Draw.color();
             Draw.rect(region, tx, ty, region.getWidth() * tilesize/16f, region.getHeight() * tilesize/16f);
 
-            if(player.chosenLocation){
-                if(player.hasGoodDelivery(city)){
-                    icon("icon-export", tx, ty, 10f, 10f);
-                }
+            if(player.hasGoodDelivery(city)){
+                icon("icon-export", tx, ty, 10f, 10f);
+            }
 
-                if(player.hasGoodDemand(city)){
-                    icon("icon-open", tx, ty, -10f, 10f);
-                }
+            if(player.hasGoodDemand(city)){
+                icon("icon-open", tx, ty, -10f, 10f);
             }
         }
 
@@ -278,6 +276,7 @@ public class Renderer implements ApplicationListener{
             drawCitySelect(city);
 
             Lines.stroke(2f, Color.WHITE);
+            //draw good delivery line based on cities who can supply this good
             if(player.hasGoodDelivery(city)){
                 for(DemandCard card : player.demandCards){
                     for(Demand demand : card.demands){
@@ -299,6 +298,7 @@ public class Renderer implements ApplicationListener{
                                     ex -= trns.x;
                                     ey -= trns.y;
 
+                                    //dash line + arrow here
                                     Draw.colorMul(Color.CORAL, 0.6f);
                                     Lines.dashLine(sx, sy - 1, ex, ey - 1, divisions);
                                     Draw.rect("icon-open", sx, sy - 1, angle - 90 + 180);
@@ -310,11 +310,11 @@ public class Renderer implements ApplicationListener{
                         }
                     }
                 }
-                //Structs.contains(demandCards, card -> Structs.contains(card.demands, d -> d.city == city ));
             }
         }
     }
 
+    /** Draws the select box for a city.*/
     private void drawCitySelect(City city){
         Vector2 world = control.toWorld(city.x, city.y);
         Draw.colorMul(Color.CORAL, 0.6f);
@@ -323,7 +323,7 @@ public class Renderer implements ApplicationListener{
         Draw.rect("city-" + city.size.name() + "-select", world.x, world.y + 1);
     }
 
-
+    /** Draws a white icon with a gray shadow.*/
     private void icon(String name, float x, float y, float offsetx, float offsety){
         float scale = tilesize / 16f;
         float size = scale * Core.atlas.find(name).getWidth();

@@ -30,7 +30,7 @@ public class HudFragment{
 
     public void build(Group group){
         WidgetGroup controller = new WidgetGroup();
-        controller.visible(() -> state.localPlayer().chosenLocation);
+        controller.visible(() -> net.active());
         controller.touchable(Touchable.childrenOnly);
         controller.setFillParent(true);
         group.addChild(controller);
@@ -201,7 +201,7 @@ public class HudFragment{
                 Tile on = control.tileMouse();
                 City city = on == null ? null : state.world.getCity(on);
 
-                if(city == null){
+                if(city == null && player.chosenLocation){
                     city = player.position.city;
                     if(city == null){
                         city = state.world.getMajorCity(player.position);
