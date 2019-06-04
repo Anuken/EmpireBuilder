@@ -13,8 +13,9 @@ import io.anuke.arc.math.Mathf;
 import io.anuke.arc.math.geom.Intersector;
 import io.anuke.arc.math.geom.Point2;
 import io.anuke.arc.math.geom.Vector2;
-import io.anuke.arc.util.Log;
 import io.anuke.arc.util.Structs;
+import io.anuke.arc.util.Timer;
+import io.anuke.arc.util.Timer.Task;
 import io.anuke.arc.util.Tmp;
 
 import static empire.gfx.EmpireCore.state;
@@ -24,6 +25,21 @@ import static empire.gfx.EmpireCore.tilesize;
 public class Control implements ApplicationListener{
     private Array<Tile> outArray = new Array<>();
     public Tile placeLoc = null;
+
+    public Control(){
+        Timer.schedule(new Task(){
+            @Override
+            public void run(){
+                if(state.player().ai != null){
+                    try{
+                        if(!Core.input.keyDown(KeyCode.SPACE)) state.player().ai.act();
+                    }catch(Exception e){
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }, 0.2f, 0.004f);
+    }
 
     @Override
     public void update(){
@@ -80,6 +96,7 @@ public class Control implements ApplicationListener{
                         break;
                     }
 
+                    //actually call the move event
                     new Move(){{
                         to = next;
                     }}.act();

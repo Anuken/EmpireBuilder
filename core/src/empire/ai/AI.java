@@ -6,6 +6,7 @@ import empire.game.Player;
 import empire.game.State;
 import empire.game.World;
 import empire.game.World.City;
+import empire.game.World.CitySize;
 import empire.game.World.Tile;
 import io.anuke.arc.collection.Array;
 import io.anuke.arc.collection.GridBits;
@@ -50,6 +51,7 @@ public class AI{
 
     /** Acts on the AI's plan.*/
     void actPlan(){
+        if(false)
         Log.info(new Json(){{
             setSerializer(Tile.class, new Serializer<Tile>(){
                 @Override
@@ -76,7 +78,11 @@ public class AI{
                     continue;
                 }
 
-                if(!player.hasTrack(player.position, move.to)){
+                if(!player.hasTrack(player.position, move.to) &&
+                        //don't place track between ports, it's pointless
+                        state.world.isAdjacent(player.position, move.to) &&
+                        //don't overwrite other's tracks
+                        !state.players.contains(p -> p.hasTrack(player.position, move.to))){
                     int cost = state.getTrackCost(player.position, move.to);
                     if(state.canSpendRail(player, cost)){
                         //place a track if applicable
@@ -90,6 +96,12 @@ public class AI{
                     }
                 }
 
+                //can't move, stuck.
+                if(!state.canMove(player, move.to)){
+                    Log.info("{0}: can't move to {1}", player.name, move.to.str());
+                    break;
+                }
+
                 //can't move if no moves left.
                 if(player.moved + 1 > player.loco.speed){
                     break;
@@ -98,6 +110,7 @@ public class AI{
 
             plan.pop();
             action.act();
+            break;
         }
     }
 
@@ -120,6 +133,10 @@ public class AI{
                             astar(state.world.tile(city.x, city.y),
                                     state.world.tile(demand.city.x, demand.city.y), outArray);
 
+                if(city.size == CitySize.major){
+                //    dst -= 10f;
+                }
+
                 //if this source city is better, update things
                 if(dst < minBuyCost){
                     minBuyCost = dst;
@@ -128,7 +145,7 @@ public class AI{
             }
 
             //update cost to reflect the base good cost
-            minBuyCost -= demand.cost*1.5f;
+            minBuyCost -= demand.cost*2f;
 
             if(minBuyCost < bestCost){
                 bestCost = minBuyCost;
@@ -186,12 +203,14 @@ public class AI{
                         costs.get(world.index(b), 0f) + dh.cost(b.x, b.y, to.x, to.y)));
 
         queue.add(from);
+        Tile end = null;
         boolean found = false;
         while(!queue.isEmpty()){
             Tile next = queue.poll();
             float baseCost = costs.get(world.index(next), 0f);
-            if(next == to){
+            if(next == to || world.getMajorCity(next) == to.city){
                 found = true;
+                end = next;
                 break;
             }
             closed.set(next.x, next.y);
@@ -209,7 +228,7 @@ public class AI{
 
         if(!found) return Float.MAX_VALUE;
 
-        Tile current = to;
+        Tile current = end;
         while(current != from){
             out.add(current);
             current = current.searchParent;
@@ -224,7 +243,10 @@ public class AI{
         if(player.hasTrack(from, to)){
             return 0.5f;
         }
-        return state.getTrackCost(from, to) + 1;
+        if(state.players.contains(p -> p.hasTrack(from, to))){
+            return State.otherMoveTrackCost * 4;
+        }
+        return state.getTrackCost(from, to) * 4;
     }
 
     float tileDst(int x, int y, int x2, int y2){

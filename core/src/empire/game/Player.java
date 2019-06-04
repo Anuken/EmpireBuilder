@@ -1,5 +1,6 @@
 package empire.game;
 
+import empire.ai.AI;
 import empire.game.DemandCard.Demand;
 import empire.game.World.City;
 import empire.game.World.Tile;
@@ -30,6 +31,8 @@ public class Player{
     public Direction direction = Direction.right;
     /** Whether this player is local and controllable.*/
     public boolean local;
+    /** The AI that controls this player. May be null. */
+    public AI ai;
 
     /** Other players' tracks this player has moved on.*/
     public final ObjectSet<Player> movedPlayers = new ObjectSet<>();
