@@ -137,21 +137,14 @@ public class Actions{
         }
     }
 
-    public static class Move extends PlayerAction{
+    public static class Move extends PlayerAction implements LocalAction{
         public Tile to;
 
         @Override
         public void apply(State state){
             if(player.position == to) return;
 
-            //TODO animation
-            Array<Tile> path = state.movePlayer(player, to);
-            if(path == null || path.isEmpty()){
-                throw new IllegalArgumentException(Strings.format(
-                        "Invalid move!\nFrom {0},{1} to {2},{3}",
-                        player.position.x, player.position.y,
-                        to.x, to.y));
-            }
+            state.move(player, to);
         }
     }
 

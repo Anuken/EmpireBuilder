@@ -9,6 +9,7 @@ import io.anuke.arc.collection.Array;
 import io.anuke.arc.collection.ObjectSet;
 import io.anuke.arc.collection.Queue;
 import io.anuke.arc.function.Consumer;
+import io.anuke.arc.util.Strings;
 import io.anuke.arc.util.Structs;
 
 /** Holds the state of the entire game. */
@@ -16,13 +17,15 @@ public class State{
     /** Cost to upgrade a loco.*/
     public final static int locoCost = 20;
     /** Max amount of money to spend on rails per turn.*/
-    public final int maxRailSpend = 20;
+    public final static int maxRailSpend = 20;
     /** Amount of money needed to win.*/
     public final static int winMoneyAmount = 250;
     /** Number of turns with no movement at the start.*/
     public final static int preMovementTurns = 2;
     /** Number of cities connected needed to win.*/
     public final static int winCityAmount = 7;
+    /** How much it costs to move on someone else's track per turn.*/
+    public final static int otherMoveTrackCost = 4;
 
     /** The current world state.*/
     public World world;
@@ -319,76 +322,88 @@ public class State{
         return terrain != Terrain.water;
     }
 
-    public Array<Tile> movePlayer(Player player, Tile other){
-        Array<Tile> moves = calculateMovement(player, other);
-        if(moves.isEmpty()){
-            return null;
+    /** Returns whether or not this player can move to this adjacent tile.*/
+    public boolean canMove(Player player, Tile to){
+        //can't move nowhere, that would be pointless
+        if(to == player.position){
+            return false;
         }
 
-        //can't move backwards
-        if(player.position.directionTo(moves.get(1)) != null &&
-                player.position.directionTo(moves.get(1)).opposite(player.direction) &&
+        //out of moves
+        if(player.moved + moveCost(player, to) > player.loco.speed){
+            return false;
+        }
+
+        //moving backwards
+        if(player.position.directionTo(to) != null &&
+                player.position.directionTo(to).opposite(player.direction) &&
                 world.getCity(player.position) == null){
-            return null;
+            return false;
         }
 
-        //find a port in the path if one exists and stop if that is the case
-        int used = moves.size;
-        boolean endTurn = false;
-        for(int i = 1; i < moves.size; i++){
-            //find an instance of a port move
-            if(moves.get(i).port == moves.get(i - 1).port && moves.get(i).port != null){
-                used = i + 1;
-                endTurn = true;
-                break;
+        //player has a track here, so they can definitely move
+        if(player.hasTrack(player.position, to)){
+            return true;
+        }
+
+        //port connection
+        if(player.position.port == to.port && player.position.port != null){
+            return true;
+        }
+
+        //can move around major cities for free
+        if(world.getMajorCity(player.position) == world.getMajorCity(to) && world.getMajorCity(to) != null
+                && world.isAdjacent(player.position, to)){
+            return true;
+        }
+
+        //check if there's another player with a track here; if there is, and the player hasn't yet
+        //moved on that track, check the amount of money the player has to make sure they can move here
+        Player otherTrack = players.find(p -> p.hasTrack(player.position, to));
+        if(otherTrack != null){
+            return player.money >= (player.movedPlayers.contains(otherTrack) ? 0 : otherMoveTrackCost);
+        }
+
+        return false;
+    }
+
+    //TODO implement event move cost
+    public int moveCost(Player player, Tile to){
+        return 1;
+    }
+
+    /** Moves a player by a single tile.
+     * Adds movement cost as needed.*/
+    public void move(Player player, Tile to){
+        if(!canMove(player, to)){
+            throw new IllegalArgumentException(Strings.format("Illegal player movement of {0}: {1} to {2}",
+                        player.name, player.position.str(), to.str()));
+        }
+
+        //change player direction
+        if(player.position.directionTo(to) != null){
+            player.direction = player.position.directionTo(to);
+        }
+
+        //moving ports.
+        boolean endTurn = to.port != null && player.position.port != null;
+
+        //pay up for moving on other's tracks
+        Player otherTrack = players.find(p -> p.hasTrack(player.position, to));
+        if(otherTrack != player && otherTrack != null){
+            if(!player.movedPlayers.contains(otherTrack)){
+                player.money -= otherMoveTrackCost;
+                player.movedPlayers.add(otherTrack);
             }
         }
 
-        //find set of other tracks this player moved on
-        ObjectSet<Player> otherMoves = new ObjectSet<>();
-        for(int i = 0; i < moves.size - 1; i++){
-            Tile from = moves.get(i);
-            Tile to = moves.get(i + 1);
-            if(!player.hasTrack(from, to)){
-                for(Player op : players){
-                    if(op.hasTrack(from, to)){
-                        otherMoves.add(op);
-                        break;
-                    }
-                }
-            }
-        }
+        player.moved += moveCost(player, to);
+        player.position = to;
 
-        //remove already moved players so as not to offset calculations
-        for(Player already : player.movedPlayers){
-            otherMoves.remove(already);
-        }
-
-        //truncate moves
+        //end turn on port movement
         if(endTurn){
-            moves.truncate(used);
+            nextPlayer();
         }
-
-        //check costs
-        if(moves.size - 1 + player.moved <= player.loco.speed &&
-            player.money - otherMoves.size*4 >= 0){
-            player.position = moves.peek();
-            player.moved += (moves.size - 1);
-            player.money -= otherMoves.size*4;
-            player.movedPlayers.addAll(otherMoves);
-
-            Direction newDir = moves.get(moves.size - 2).directionTo(moves.get(moves.size - 1));
-
-            if(newDir != null){
-                player.direction = newDir;
-            }
-            if(endTurn){
-                //go to the next player if there's a port in the way
-                nextPlayer();
-            }
-            return moves;
-        }
-        return null;
     }
 
     /** Counts cities connected to a tile using only this player's track.*/
@@ -410,7 +425,7 @@ public class State{
             }
 
             //iterate through /connections/ of each tile
-            world.connectionsOf(this, player, tile, false, child -> {
+            world.trackConnectionsOf(this, player, tile, false, child -> {
                 if(!closedSet.contains(child)){
                     child.searchParent = tile;
                     queue.addFirst(child);
@@ -423,7 +438,8 @@ public class State{
     }
 
     /** Attempts to calculate in-between movement tiles for a player from a start point
-     * to a destination. Returns an empty array if impossible. */
+     * to a destination. Returns an empty array if impossible.
+     * This should be used to move from tile to tile and check each one for validity.*/
     public Array<Tile> calculateMovement(Player player, Tile other){
         moveArray.clear();
 
@@ -449,7 +465,7 @@ public class State{
             }
 
             //iterate through /connections/ of each tile
-            world.connectionsOf(this, player, tile, true, child -> {
+            world.trackConnectionsOf(this, player, tile, true, child -> {
                 if(!closedSet.contains(child)
                         //make sure player isn't blocked by event cards!
                         && player.isAllowed(e -> e.canMove(player, tile, child))){

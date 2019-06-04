@@ -18,6 +18,8 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.concurrent.TimeUnit;
 
+import static empire.gfx.EmpireCore.netDebug;
+
 public class WebsocketNet extends Net{
     InternalServer server;
     InternalClient client;
@@ -74,7 +76,7 @@ public class WebsocketNet extends Net{
     public void send(String text){
         if(!active()) throw new IllegalArgumentException("Net isn't ready yet!");
 
-        Log.info("{0}: SEND '{1}'", server() ? "SERVER" : "CLIENT", text);
+        if(netDebug) Log.info("{0}: SEND '{1}'", server() ? "SERVER" : "CLIENT", text);
 
         if(client()){
             client.send(text);
@@ -115,7 +117,7 @@ public class WebsocketNet extends Net{
     public void send(int connection, String text){
         if(server == null) throw new IllegalArgumentException("Server isn't ready yet!");
 
-        Log.info("SERVER: SEND TO {0}: '{1}'", connection, text);
+        if(netDebug) Log.info("SERVER: SEND TO {0}: '{1}'", connection, text);
 
         clients.get(connection).send(text);
     }

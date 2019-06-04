@@ -13,6 +13,7 @@ import io.anuke.arc.math.Mathf;
 import io.anuke.arc.math.geom.Intersector;
 import io.anuke.arc.math.geom.Point2;
 import io.anuke.arc.math.geom.Vector2;
+import io.anuke.arc.util.Log;
 import io.anuke.arc.util.Structs;
 import io.anuke.arc.util.Tmp;
 
@@ -47,7 +48,7 @@ public class Control implements ApplicationListener{
         }
 
         //place lines on mouse up
-        if(Core.input.keyRelease(KeyCode.MOUSE_LEFT)){
+        if(Core.input.keyRelease(KeyCode.MOUSE_LEFT) && state.player().local){
             Tile other = tileMouse();
             if(placeLoc != null && other != null && canPlaceLine(placeLoc, other)){
                 for(Tile tile : getTiles(placeLoc, other)){
@@ -67,12 +68,22 @@ public class Control implements ApplicationListener{
             placeLoc = null;
         }
 
-        if(Core.input.keyTap(KeyCode.MOUSE_RIGHT) && !state.isPreMovement() && !Core.scene.hasMouse()){
+        if(Core.input.keyTap(KeyCode.MOUSE_RIGHT) && state.player().local && !state.isPreMovement() && !Core.scene.hasMouse()){
             Tile tile = tileMouse();
             if(tile != null){
-                new Move(){{
-                    to = tile;
-                }}.act();
+                Array<Tile> tiles = state.calculateMovement(state.player(), tile);
+                for(Tile next : tiles){
+                    //skip duplicates
+                    if(next == state.player().position) continue;;
+                    //move until the player can't
+                    if(!state.canMove(state.player(), next)){
+                        break;
+                    }
+
+                    new Move(){{
+                        to = next;
+                    }}.act();
+                }
             }
         }
     }

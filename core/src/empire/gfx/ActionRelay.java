@@ -15,8 +15,7 @@ import io.anuke.arc.util.serialization.Json;
 import io.anuke.arc.util.serialization.Json.Serializer;
 import io.anuke.arc.util.serialization.JsonValue;
 
-import static empire.gfx.EmpireCore.net;
-import static empire.gfx.EmpireCore.state;
+import static empire.gfx.EmpireCore.*;
 
 /** Relays and handles actions.*/
 public class ActionRelay implements NetListener{
@@ -158,7 +157,7 @@ public class ActionRelay implements NetListener{
 
     @Override
     public void message(String txt){
-        Log.info("Client: received {0}", txt);
+        if(netDebug) Log.info("Client: received {0}", txt);
         Action action = read(txt);
 
         //assign player to action
@@ -230,7 +229,7 @@ public class ActionRelay implements NetListener{
             //last player must always be the one that was just added
             state.players.peek().local = false;
             players.put(connection, state.players.peek());
-            Log.info("Connection success: {0}//'{1}'", connection, connect.name);
+            if(netDebug) Log.info("Connection success: {0}//'{1}'", connection, connect.name);
         }else{
             Player player = players.get(connection);
             if(action instanceof PlayerAction){
@@ -249,7 +248,7 @@ public class ActionRelay implements NetListener{
             //apply action and send it out
             action.apply(state);
             net.send(write(action));
-            Log.info("Received packet from {0}: \n{1}", connection, json.prettyPrint(action));
+            if(netDebug) Log.info("Received packet from {0}: \n{1}", connection, json.prettyPrint(action));
         }
     }
 }

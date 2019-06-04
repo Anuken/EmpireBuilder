@@ -141,34 +141,49 @@ public class World{
         return tiles[x][y];
     }
 
-    /** Iterates through the connections of a tile, taking into account ports.
+    /** Iterates through the movable track connections of a tile, taking into account ports.
      * Also takes into account tracks of this player.*/
-    public void connectionsOf(State state, Player player, Tile tile, boolean otherPlayers, Consumer<Tile> adjacent){
+    public void trackConnectionsOf(State state, Player player, Tile tile, boolean otherPlayers, Consumer<Tile> adjacent){
+        City city = getMajorCity(tile);
+
+        adjacentsOf(tile, other -> {
+            if(city != null && getMajorCity(other) == city){
+                adjacent.accept(other);
+                //case 2: tracks between these two points
+            }else if(player.tracks.containsKey(tile) && player.tracks.get(tile).contains(other)){
+                adjacent.accept(other);
+            }else if(otherPlayers){
+                //TODO this is laughably inefficient
+                for(Player otherplayer : state.players){
+                    if(otherplayer.hasTrack(tile, other)){
+                        adjacent.accept(other);
+                        break;
+                    }
+                }
+            }
+        });
+
+        //ports work both ways like rails
+        if(tile.port != null && (tile.port.from == tile)){
+            adjacent.accept(tile.port.to);
+        }
+
+        if(tile.port != null && (tile.port.to == tile)){
+            adjacent.accept(tile.port.from);
+        }
+    }
+
+    /** Iterates adjacent tiles to this tile, ignoring water and tiles that are out of bounds.*/
+    public void adjacentsOf(Tile tile, Consumer<Tile> adjacent){
         //water has no connections
         if(tile.type == Terrain.water){
             return;
         }
 
-        City city = getMajorCity(tile);
-
         for(Point2 point : tile.getAdjacent()){
             Tile other = tileOpt(tile.x + point.x, tile.y + point.y);
-            if(other != null){
-                //case 1: same major city
-                if(city != null && getMajorCity(other) == city){
-                    adjacent.accept(other);
-                    //case 2: tracks between these two points
-                }else if(player.tracks.containsKey(tile) && player.tracks.get(tile).contains(other)){
-                    adjacent.accept(other);
-                }else if(otherPlayers){
-                    //TODO this is laughably inefficient
-                    for(Player otherplayer : state.players){
-                        if(otherplayer.tracks.containsKey(tile) && otherplayer.tracks.get(tile).contains(other)){
-                            adjacent.accept(other);
-                            break;
-                        }
-                    }
-                }
+            if(other != null && other.type != Terrain.water){
+                adjacent.accept(other);
             }
         }
 
@@ -226,11 +241,6 @@ public class World{
             }
         }
 
-        @Override
-        public String toString(){
-            return EmpireCore.state.world.index(this) + "";
-        }
-
         public int distanceTo(Tile other){
             return distanceTo(other.x, other.y);
         }
@@ -245,6 +255,16 @@ public class World{
                 }
             }
             return null;
+        }
+
+        /** Returns a basic string representation of this object.*/
+        public String str(){
+            return "[" + x + "," + y + "]";
+        }
+
+        @Override
+        public String toString(){
+            return EmpireCore.state.world.index(this) + "";
         }
     }
 

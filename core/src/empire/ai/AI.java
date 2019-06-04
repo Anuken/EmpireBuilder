@@ -11,9 +11,7 @@ import io.anuke.arc.collection.Array;
 import io.anuke.arc.collection.GridBits;
 import io.anuke.arc.collection.IntFloatMap;
 import io.anuke.arc.math.Mathf;
-import io.anuke.arc.math.geom.Point2;
 import io.anuke.arc.util.Log;
-import io.anuke.arc.util.Structs;
 import io.anuke.arc.util.serialization.Json;
 import io.anuke.arc.util.serialization.JsonValue;
 
@@ -197,19 +195,14 @@ public class AI{
                 break;
             }
             closed.set(next.x, next.y);
-            for(Point2 point : next.getAdjacent()){
-                int newx = next.x + point.x, newy = next.y + point.y;
-                if(Structs.inBounds(newx, newy, world.width, world.height)){
-                    Tile child = state.world.tile(newx, newy);
-
-                    if(state.isPassable(player, child) && !closed.get(child.x, child.y)){
-                        closed.set(child.x, child.y);
-                        child.searchParent = next;
-                        costs.put(world.index(child), th.cost(next, child) + baseCost);
-                        queue.add(child);
-                    }
+            world.adjacentsOf(next, child -> {
+                if(state.isPassable(player, child) && !closed.get(child.x, child.y)){
+                    closed.set(child.x, child.y);
+                    child.searchParent = next;
+                    costs.put(world.index(child), th.cost(next, child) + baseCost);
+                    queue.add(child);
                 }
-            }
+            });
         }
 
         out.clear();
