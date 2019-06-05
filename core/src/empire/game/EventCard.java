@@ -4,6 +4,7 @@ import empire.game.World.City;
 import empire.game.World.River;
 import empire.game.World.Sea;
 import empire.game.World.Tile;
+import empire.gfx.EmpireCore;
 import io.anuke.arc.collection.Array;
 import io.anuke.arc.math.geom.Geometry;
 import io.anuke.arc.util.Strings;
@@ -22,7 +23,7 @@ public abstract class EventCard extends Card{
     public abstract String description(Player player);
 
     /** Applies the card's effects. Optional.
-     * @return true if this card was discarded.*/
+     * @return true if this card was discarded. */
     public boolean apply(State state, Player player){
         return false;
     }
@@ -40,6 +41,11 @@ public abstract class EventCard extends Card{
     /** @return whether the player can load cargo with this card drawn. */
     public boolean canLoadOrUnload(Player player, Tile tile){
         return true;
+    }
+
+    /** @return whether this position is in an area with half rate. */
+    public boolean isHalfRate(Player player, Tile tile){
+        return false;
     }
 
     public static class InlandStrikeEvent extends EventCard{
@@ -234,12 +240,8 @@ public abstract class EventCard extends Card{
         }
 
         @Override
-        public boolean apply(State state, Player player){
-            //half rate applied to this player
-            if(player.within(city.x, city.y, dst)){
-                player.applyHalfRate();
-            }
-            return false;
+        public boolean isHalfRate(Player player, Tile tile){
+            return tile.distanceTo(city.x, city.y) <= dst;
         }
     }
 
@@ -247,6 +249,8 @@ public abstract class EventCard extends Card{
     public static class GaleEvent extends EventCard{
         public int dst;
         public Array<Sea> seas;
+
+        private boolean out = false;
 
         @Override
         public void load(Scanner scan, World world){
@@ -266,19 +270,23 @@ public abstract class EventCard extends Card{
         }
 
         @Override
-        public boolean apply(State state, Player player){
-            //check if anything is in the player's circle, apply half rate if that is the case
-            boolean[] out = {false};
+        public boolean isHalfRate(Player player, Tile tile){
+            State state = EmpireCore.state;
+            out = false;
+
             Geometry.circle(player.position.x, player.position.y,
-                    state.world.width, state.world.height, dst + 1, (x, y) -> {
+                    state.world.width, state.world.height, dst, (x, y) -> {
                 if(seas.contains(state.world.tile(x, y).sea)){
-                    out[0] = true;
+                    out = true;
                 }
             });
-            if(out[0]){
-                player.applyHalfRate();
-            }
-            return false;
+
+            return out;
+        }
+
+        @Override
+        public boolean canPlaceTrack(Player player, Tile from, Tile to){
+            return !isHalfRate(player, to);
         }
     }
 
@@ -299,21 +307,17 @@ public abstract class EventCard extends Card{
 
         @Override
         public String description(Player player){
-            return "Can't place track within " + dst + " mileposts of " + city.formalName() + ".";
+            return "Can't place track within " + dst + " mileposts of " + city.formalName() + ".\nPlayer moves at half rate here.";
         }
 
         @Override
         public boolean canPlaceTrack(Player player, Tile from, Tile to){
-            return to.distanceTo(city.x, city.y) > dst;
+            return !isHalfRate(player, to);
         }
 
         @Override
-        public boolean apply(State state, Player player){
-            //half rate applied to this player
-            if(player.within(city.x, city.y, dst)){
-                player.applyHalfRate();
-            }
-            return false;
+        public boolean isHalfRate(Player player, Tile tile){
+            return tile.distanceTo(city.x, city.y) > dst;
         }
     }
 
@@ -332,7 +336,7 @@ public abstract class EventCard extends Card{
 
         @Override
         public String description(Player player){
-            return "All tracks crossing the[lime] " + Strings.capitalize(river.name) + "[] have been destroyed.";
+            return "All tracks crossing the[lime] " + Strings.capitalize(river.name) + "[] have been destroyed.\nNo tracks can be placed across this river.";
         }
 
         @Override
@@ -348,6 +352,15 @@ public abstract class EventCard extends Card{
 
             for(Tile[] pair : removals){
                 player.removeTrack(pair[0], pair[1]);
+            }
+            return false;
+        }
+
+        @Override
+        public boolean canPlaceTrack(Player player, Tile from, Tile to){
+            //prevent placing across rivers here
+            if(from.crossings != null && from.crossings.contains(p -> p.to == to && p.river == river)){
+                return false;
             }
             return true;
         }

@@ -226,8 +226,6 @@ public class State{
             }
         }
 
-        //TODO obstruction limits; right of building into a city
-
         return true;
     }
 
@@ -297,7 +295,6 @@ public class State{
             to.type == Terrain.mountain ? 2 :
             to.type == Terrain.alpine ? 5 : 0;
 
-        //TODO custom cost for inlets and lakes
         if(from.crossings != null){
             WaterCrossing cross = from.crossings.find(c -> c.to == to);
             if(cross != null){
@@ -367,8 +364,12 @@ public class State{
         return false;
     }
 
-    //TODO implement event move cost
     public int moveCost(Player player, Tile to){
+        for(EventCard card : player.eventCards){
+            if(card.isHalfRate(player, to)){
+                return 2;
+            }
+        }
         return 1;
     }
 

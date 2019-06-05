@@ -38,7 +38,7 @@ public class Control implements ApplicationListener{
                     }
                 }
             }
-        }, 0.2f, 0.004f);
+        }, 0.2f, 2f);
     }
 
     @Override

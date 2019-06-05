@@ -126,7 +126,7 @@ public class Renderer implements ApplicationListener{
         }
 
         Vector2 v = control.toWorld(state.player().position);
-        if(doLerp && !isAI && state.player().chosenLocation){
+        if(doLerp && state.player().chosenLocation){
             Core.camera.position.lerpDelta(v, 0.06f);
         }
     }

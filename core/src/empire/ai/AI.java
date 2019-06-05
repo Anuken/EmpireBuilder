@@ -110,7 +110,6 @@ public class AI{
 
             plan.pop();
             action.act();
-            break;
         }
     }
 
@@ -192,7 +191,7 @@ public class AI{
 
     float astar(Tile from, Tile to, Array<Tile> out){
         DistanceHeuristic dh = this::tileDst;
-        TileHueristic th = this::cost;
+        TileHeuristic th = this::cost;
         World world = state.world;
 
         GridBits closed = new GridBits(world.width, world.height);
@@ -275,7 +274,7 @@ public class AI{
         float cost(int x1, int y1, int x2, int y2);
     }
 
-    interface TileHueristic{
+    interface TileHeuristic{
         float cost(Tile from, Tile to);
     }
 }
