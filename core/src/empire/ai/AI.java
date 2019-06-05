@@ -7,11 +7,12 @@ import empire.game.State;
 import empire.game.World;
 import empire.game.World.City;
 import empire.game.World.Tile;
+import empire.gfx.EmpireCore;
 import io.anuke.arc.collection.Array;
 import io.anuke.arc.collection.GridBits;
 import io.anuke.arc.collection.IntFloatMap;
-import io.anuke.arc.math.Mathf;
 import io.anuke.arc.util.Log;
+import io.anuke.arc.util.Tmp;
 
 import java.util.PriorityQueue;
 
@@ -260,12 +261,13 @@ public class AI{
         }
     }
 
-    float astar(Tile from, Tile to, Array<Tile> out){
+    public float astar(Tile from, Tile to, Array<Tile> out){
         DistanceHeuristic dh = this::tileDst;
         TileHeuristic th = this::cost;
         World world = state.world;
 
         GridBits closed = new GridBits(world.width, world.height);
+        GridBits open = new GridBits(world.width, world.height);
         IntFloatMap costs = new IntFloatMap();
         PriorityQueue<Tile> queue = new PriorityQueue<>(100,
                 (a, b) -> Float.compare(
@@ -278,35 +280,49 @@ public class AI{
         while(!queue.isEmpty()){
             Tile next = queue.poll();
             float baseCost = costs.get(world.index(next), 0f);
-            if(next == to || world.getMajorCity(next) == to.city){
+            if(next == to || world.getMajorCity(next) == to.city && to.city != null){
                 found = true;
                 end = next;
                 break;
             }
             closed.set(next.x, next.y);
+            open.set(next.x, next.y, false);
             world.adjacentsOf(next, child -> {
-                if(state.isPassable(player, child) && !closed.get(child.x, child.y)){
-                    closed.set(child.x, child.y);
-                    child.searchParent = next;
-                    costs.put(world.index(child), th.cost(next, child) + baseCost);
-                    queue.add(child);
+                if(!closed.get(child.x, child.y) && state.isPassable(player, child) &&
+                    !(world.getCity(player.position) == null &&
+                            player.position == next && player.position.directionTo(child) != null &&
+                            player.position.directionTo(child).opposite(player.direction))
+                ){
+                    float newCost = th.cost(next, child) + baseCost;
+                    if(costs.get(world.index(child), Float.POSITIVE_INFINITY) > newCost){
+                        child.searchParent = next;
+                        costs.put(world.index(child), newCost);
+                    }
+                    if(!open.get(child.x, child.y)){
+                        queue.add(child);
+                    }
+                    open.set(child.x, child.y);
+                    //closed.set(child.x, child.y);
                 }
             });
         }
 
+
+
         out.clear();
 
         if(!found) return Float.MAX_VALUE;
-
+        float totalCost = 0;
         Tile current = end;
         while(current != from){
             out.add(current);
+            totalCost += cost(current.searchParent, current);
             current = current.searchParent;
         }
 
         out.reverse();
 
-        return costs.get(world.index(to), 0f);
+        return totalCost;
     }
 
     float cost(Tile from, Tile to){
@@ -314,13 +330,14 @@ public class AI{
             return 0.5f;
         }
         if(state.players.contains(p -> p.hasTrack(from, to))){
-            return State.otherMoveTrackCost * 4;
+            return State.otherMoveTrackCost * 500;
         }
-        return state.getTrackCost(from, to) * 4;
+        return state.getTrackCost(from, to) * 500;
     }
 
     float tileDst(int x, int y, int x2, int y2){
-        return Mathf.dst(x, y, x2, y2);
+        Tmp.v2.set(EmpireCore.control.toWorld(x, y));
+        return Tmp.v2.dst(EmpireCore.control.toWorld(x2, y2));
     }
 
     /** End the turn if necessary.*/

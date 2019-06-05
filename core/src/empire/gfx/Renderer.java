@@ -1,5 +1,6 @@
 package empire.gfx;
 
+import empire.ai.AI;
 import empire.game.DemandCard;
 import empire.game.DemandCard.Demand;
 import empire.game.EventCard;
@@ -13,6 +14,7 @@ import empire.gfx.gen.MapImageRenderer;
 import io.anuke.arc.ApplicationListener;
 import io.anuke.arc.Core;
 import io.anuke.arc.Events;
+import io.anuke.arc.collection.Array;
 import io.anuke.arc.graphics.Blending;
 import io.anuke.arc.graphics.Camera;
 import io.anuke.arc.graphics.Color;
@@ -202,6 +204,24 @@ public class Renderer implements ApplicationListener{
                     Lines.stroke(2f, Color.LIGHT_GRAY);
                     Lines.dashCircle(world.x, world.y, dst * tilesize);
                 }
+            }
+        }
+
+
+        if(state.player().ai != null){
+            AI ai = state.player().ai;
+
+            Array<Tile> out = new Array<>();
+            Tile to = control.tileMouse();
+            if(to != null){
+                float cost = ai.astar(state.player().position, to, out);
+                Draw.color(Color.RED, 0.5f);
+                for(Tile tile : out){
+                    Vector2 world = control.toWorld(tile.x, tile.y);
+                    Fill.square(world.x, world.y, 8f);
+                }
+                control.toWorld(state.player().position.x, state.player().position.y);
+                Core.scene.skin.getFont("default").draw(cost + "", Tmp.v1.x, Tmp.v1.y);
             }
         }
     }
