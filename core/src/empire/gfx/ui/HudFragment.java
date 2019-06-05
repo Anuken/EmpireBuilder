@@ -308,7 +308,7 @@ public class HudFragment{
                         last = other;
                     }
                     setText(totalCost + "[coral] ECU[]\n[lime]" + totalTiles + "[] rails");
-                    setColor(state.canSpendRail(state.player(), totalCost) ? Color.WHITE : Color.SCARLET);
+                    setColor(state.canSpendTrack(state.player(), totalCost) ? Color.WHITE : Color.SCARLET);
                 }
                 pack();
                 setPosition(Core.input.mouseX(), Core.input.mouseY(), Align.bottomRight);

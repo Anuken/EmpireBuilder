@@ -6,15 +6,12 @@ import empire.game.Player;
 import empire.game.State;
 import empire.game.World;
 import empire.game.World.City;
-import empire.game.World.CitySize;
 import empire.game.World.Tile;
 import io.anuke.arc.collection.Array;
 import io.anuke.arc.collection.GridBits;
 import io.anuke.arc.collection.IntFloatMap;
 import io.anuke.arc.math.Mathf;
 import io.anuke.arc.util.Log;
-import io.anuke.arc.util.serialization.Json;
-import io.anuke.arc.util.serialization.JsonValue;
 
 import java.util.PriorityQueue;
 
@@ -26,7 +23,7 @@ public class AI{
     public final State state;
 
     /** list of planned actions */
-    private Array<Action> plan = new Array<>();
+    //private Array<Action> plan = new Array<>();
 
     public AI(Player player, State state){
         this.player = player;
@@ -40,16 +37,16 @@ public class AI{
         }
 
         //update the plan if it's empty
-        if(plan.isEmpty()){
-            updatePlan();
-        }
+        //if(plan.isEmpty()){
+        //    updatePlan();
+        //}
 
-        actPlan();
+        move();
 
         end();
     }
 
-    /** Acts on the AI's plan.*/
+    /** Acts on the AI's plan.
     void actPlan(){
         if(false)
         Log.info(new Json(){{
@@ -111,82 +108,156 @@ public class AI{
             plan.pop();
             action.act();
         }
-    }
+    }*/
 
-    void updatePlan(){
-        City bestSellCity = null, bestLoadCity = null;
-        String bestGood = null;
-        float bestCost = Float.MAX_VALUE;
+    void move(){
+        Array<Tile> finalPath = new Array<>();
+        boolean shouldMove = !state.isPreMovement();
 
-        Array<Tile> outArray = new Array<>();
+        boolean moved = true;
 
-        //find best demand
-        for(Demand demand : player.allDemands()){
-            float minBuyCost = Float.MAX_VALUE;
-            City minBuyCity = null;
+        //keep attempting to move unless nothing happened
+        while(moved){
+            moved = false;
 
-            //find best city to get good from for this demand
-            for(City city : Array.with(state.world.cities()).select(s -> s.goods.contains(demand.good))){
-                //get a* cost: from the player to the city, then from the city to the final destination
-                float dst = astar(player.position, state.world.tile(city.x, city.y), outArray) +
-                            astar(state.world.tile(city.x, city.y),
-                                    state.world.tile(demand.city.x, demand.city.y), outArray);
+            //player already has some cargo to unload; find a city to unload to
+            if(!player.cargo.isEmpty()){
+                String good = player.cargo.peek();
+                Array<Tile> outArray = new Array<>();
+                float minBuyCost = Float.MAX_VALUE;
+                City minBuyCity = null;
 
-                if(city.size == CitySize.major){
-                //    dst -= 10f;
+                //find best city to sell good to
+                for(City city : Array.with(state.world.cities()).select(s -> player.canDeliverGood(s, good))){
+                    //get a* cost to this city
+                    float dst = astar(player.position, state.world.tile(city.x, city.y), outArray);
+
+                    //if this source city is better, update things
+                    if(dst < minBuyCost){
+                        minBuyCost = dst;
+                        minBuyCity = city;
+                        finalPath.clear();
+                        finalPath.addAll(outArray);
+                    }
                 }
 
-                //if this source city is better, update things
-                if(dst < minBuyCost){
-                    minBuyCost = dst;
-                    minBuyCity = city;
+                //check if player is at a city that they can deliver to right now
+                City atCity = state.world.getCity(player.position);
+                if(player.canDeliverGood(atCity, good)){
+                    //attempt to deliver if possible
+                    if(state.canLoadUnload(player, player.position)){
+                        SellCargo sell = new SellCargo();
+                        sell.cargo = good;
+                        sell.act();
+                        moved = true;
+                    }else{
+                        //if it's not possible, something's up with events, don't move
+                        Log.info("Can't sell {0} at {1}, waiting.", good, atCity.name);
+                        shouldMove = false;
+                    }
+                }
+            }else{
+
+                City bestSellCity = null, bestLoadCity = null;
+                String bestGood = null;
+                float bestCost = Float.MAX_VALUE;
+
+                Array<Tile> outArray = new Array<>();
+
+                //find best demand
+                for(Demand demand : player.allDemands()){
+                    float minBuyCost = Float.MAX_VALUE;
+                    City minBuyCity = null;
+
+                    //find best city to get good from for this demand
+                    for(City city : Array.with(state.world.cities()).select(s -> s.goods.contains(demand.good))){
+                        //get a* cost: from the player to the city, then from the city to the final destination
+                        float dst = astar(player.position, state.world.tile(city.x, city.y), outArray) +
+                                astar(state.world.tile(city.x, city.y),
+                                        state.world.tile(demand.city.x, demand.city.y), outArray);
+
+                        //if this source city is better, update things
+                        if(dst < minBuyCost){
+                            minBuyCost = dst;
+                            minBuyCity = city;
+                        }
+                    }
+
+                    //update cost to reflect the base good cost
+                    minBuyCost -= demand.cost * 2f;
+
+                    if(minBuyCost < bestCost){
+                        bestCost = minBuyCost;
+                        bestGood = demand.good;
+                        bestSellCity = demand.city;
+                        bestLoadCity = minBuyCity;
+                    }
+                }
+
+                if(bestLoadCity == null) throw new IllegalArgumentException("No city to load from found!");
+
+                //now the best source and destination has been found.
+                finalPath.clear();
+                //move from position to the city
+                astar(player.position, state.world.tile(bestLoadCity.x, bestLoadCity.y), finalPath);
+
+                //check if player is at a city that they can get cargo from right now
+                City atCity = state.world.getCity(player.position);
+                if(atCity == bestLoadCity && atCity.goods.contains(bestGood)){
+                    //attempt to deliver if possible
+                    if(state.canLoadUnload(player, player.position)){
+                        LoadCargo load = new LoadCargo();
+                        load.cargo = bestGood;
+                        load.act();
+                        moved = true;
+                    }else{
+                        //if it's not possible, something's up with events, don't move
+                        Log.info("Can't load {0} at {1}, waiting.", bestGood, atCity.name);
+                        shouldMove = false;
+                    }
                 }
             }
 
-            //update cost to reflect the base good cost
-            minBuyCost -= demand.cost*2f;
+            Tile last = player.position;
+            //now place all track if it can
+            for(Tile tile : finalPath){
+                if(!player.hasTrack(last, tile)){
+                    if(state.canPlaceTrack(player, last, tile)){
+                        PlaceTrack place = new PlaceTrack();
+                        place.from = last;
+                        place.to = tile;
+                        place.act();
+                        moved = true;
+                    }else{
+                        //can't move or place track, maybe due to an event
+                        Log.info("{0}: Can't place track {1} -> {2}", player.name, last.str(), tile.str());
+                        break;
+                    }
+                }
+                last = tile;
+            }
 
-            if(minBuyCost < bestCost){
-                bestCost = minBuyCost;
-                bestGood = demand.good;
-                bestSellCity = demand.city;
-                bestLoadCity = minBuyCity;
+            //if the AI should move, try to do so
+            if(shouldMove){
+                for(Tile tile : finalPath){
+                    if(state.canMove(player, tile)){
+                        Move move = new Move();
+                        move.to = tile;
+                        move.act();
+                        moved = true;
+
+                        //moves may skip turns; if that happens, break out of the whole thing
+                        if(state.player() != player){
+                            return;
+                        }
+                    }else{
+                        //can't move due to an event or something
+                        Log.info("{0}: Can't move {1} -> {2}", player.name, player.position.str(), tile.str());
+                        break;
+                    }
+                }
             }
         }
-
-        if(bestLoadCity == null) throw new IllegalArgumentException("No city to load from found!");
-
-        //now the best source and destination has been found.
-        outArray.clear();
-        //move from position to the city
-        astar(player.position, state.world.tile(bestLoadCity.x, bestLoadCity.y), outArray);
-        for(Tile tile : outArray){
-            Move move = new Move();
-            move.to = tile;
-            plan.add(move);
-        }
-
-        //load the cargo
-        LoadCargo load = new LoadCargo();
-        load.cargo = bestGood;
-        plan.add(load);
-
-        //move to the city to sell to
-        astar(state.world.tile(bestLoadCity.x, bestLoadCity.y),
-                state.world.tile(bestSellCity.x, bestSellCity.y), outArray);
-        for(Tile tile : outArray){
-            Move move = new Move();
-            move.to = tile;
-            plan.add(move);
-        }
-
-        //sell the cargo
-        SellCargo sell = new SellCargo();
-        sell.cargo = bestGood;
-        plan.add(sell);
-
-        //reverse it for easy access (pop)
-        plan.reverse();
     }
 
     float astar(Tile from, Tile to, Array<Tile> out){

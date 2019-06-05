@@ -31,14 +31,10 @@ public class Control implements ApplicationListener{
             @Override
             public void run(){
                 if(state.player().ai != null){
-                    try{
-                        if(!Core.input.keyDown(KeyCode.SPACE)) state.player().ai.act();
-                    }catch(Exception e){
-                        e.printStackTrace();
-                    }
+                    if(!Core.input.keyDown(KeyCode.SPACE)) state.player().ai.act();
                 }
             }
-        }, 0.2f, 2f);
+        }, 2f, 1f);
     }
 
     @Override
@@ -70,7 +66,7 @@ public class Control implements ApplicationListener{
                 for(Tile tile : getTiles(placeLoc, other)){
                     if(state.canPlaceTrack(state.player(), placeLoc, tile)){
                         int cost = state.getTrackCost(placeLoc, tile);
-                        if(state.canSpendRail(state.player(), cost)){
+                        if(state.canSpendTrack(state.player(), cost)){
                             //placing tracks is a special case, so it is executed locally as well
                             new PlaceTrack(){{
                                 from = placeLoc;

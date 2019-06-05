@@ -167,7 +167,7 @@ public class Renderer implements ApplicationListener{
                         float fx = world.x, fy = world.y;
                         control.toWorld(tile);
 
-                        if(state.isPassable(state.player(), tile) && state.canSpendRail(state.player(), cost)
+                        if(state.isPassable(state.player(), tile) && state.canSpendTrack(state.player(), cost)
                         && !(state.world.getMajorCity(tile) == state.world.getMajorCity(last)
                                 && state.world.getMajorCity(tile) != null)){
                             cost += state.getTrackCost(last, tile);

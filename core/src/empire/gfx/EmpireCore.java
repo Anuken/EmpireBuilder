@@ -17,7 +17,7 @@ import io.anuke.arc.graphics.Color;
 public class EmpireCore extends ApplicationCore{
     /** Size of each hex tile in pixels. */
     public static final int tilesize = 16;
-    public static final boolean debug = true, isAI = false, netDebug = false;
+    public static final boolean debug = true, isAI = true, netDebug = false;
 
     public static Control control;
     public static UI ui;
@@ -44,7 +44,7 @@ public class EmpireCore extends ApplicationCore{
         add(ui = new UI());
 
         if(isAI){
-            for(int i = 0; i < 3; i++){
+            for(int i = 0; i < 1; i++){
                 City startCity = Array.with(state.world.cities()).random();
                 Player player;
                 state.players.add(player = new Player("AI " + (i + 1),

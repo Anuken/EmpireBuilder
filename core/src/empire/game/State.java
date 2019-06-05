@@ -128,11 +128,6 @@ public class State{
         }
     }
 
-    /** @return whether this player can place this rail at the specified price.*/
-    public boolean canSpendRail(Player player, int amount){
-        return player.moneySpent + amount <= maxRailSpend && player.money - amount >= 0;
-    }
-
     /** Simulates a player purchasing a loco.*/
     public void purchaseLoco(Player player, Loco loco){
         player.loco = loco;
@@ -170,13 +165,14 @@ public class State{
         }
     }
 
+    /** Checks for lost turns. If the current player has a lost turn, skips to the next player. */
     public void checkLostTurns(){
         if(player().lostTurns > 0){
             nextPlayer();
         }
     }
 
-    /** Places a single track for a player and updates money for the player.*/
+    /** Places a single track for a player and updates money for the player. */
     public void placeTrack(Player player, Tile from, Tile to){
         player.tracks.getOr(from, Array::new).add(to);
         player.tracks.getOr(to, Array::new).add(from);
@@ -268,14 +264,25 @@ public class State{
             return false;
         }
 
-        //make sure that this track is not used by a player
+        //make sure that this track is not used by a different player
         for(Player other : players){
             if((other.tracks.containsKey(from) && other.tracks.get(from).contains(to))
                 || (other.tracks.containsKey(to) && other.tracks.get(to).contains(from))){
                 return false;
             }
         }
+
+        //make sure the player can spend the money
+        if(!canSpendTrack(player, getTrackCost(from, to))){
+            return false;
+        }
+
         return true;
+    }
+
+    /** @return whether this player can place this rail at the specified price.*/
+    public boolean canSpendTrack(Player player, int amount){
+        return player.moneySpent + amount <= maxRailSpend && player.money - amount >= 0;
     }
 
     public int getTrackCost(Tile from, Tile to){
@@ -364,6 +371,7 @@ public class State{
         return false;
     }
 
+    /** Returns move cost of getting to this tile. */
     public int moveCost(Player player, Tile to){
         for(EventCard card : player.eventCards){
             if(card.isHalfRate(player, to)){
