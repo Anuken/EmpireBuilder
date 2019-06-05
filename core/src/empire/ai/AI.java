@@ -23,8 +23,8 @@ public class AI{
     /** The game state.*/
     public final State state;
 
-    /** list of planned actions */
-    //private Array<Action> plan = new Array<>();
+    /** List of planned actions.*/
+    private Array<PlanAction> plan = new Array<>();
 
     public AI(Player player, State state){
         this.player = player;
@@ -38,80 +38,18 @@ public class AI{
         }
 
         //update the plan if it's empty
-        //if(plan.isEmpty()){
-        //    updatePlan();
-        //}
-
-        move();
+        if(plan.isEmpty()){
+            updatePlan();
+        }
 
         end();
     }
 
-    /** Acts on the AI's plan.
-    void actPlan(){
-        if(false)
-        Log.info(new Json(){{
-            setSerializer(Tile.class, new Serializer<Tile>(){
-                @Override
-                public void write(Json json, Tile object, Class knownType){
-                    json.writeValue("Tile[" + object.x + "," + object.y + "]");
-                }
+    void updatePlan(){
 
-                @Override
-                public Tile read(Json json, JsonValue jsonData, Class type){
-                    return null;
-                }
-            });
-        }}.prettyPrint(plan));
+    }
 
-        while(!plan.isEmpty()){
-            Action action = plan.peek();
-            //moves may require rail placement
-            if(action instanceof Move){
-                Move move = (Move)action;
-
-                //useless move
-                if(player.position == move.to){
-                    plan.pop();
-                    continue;
-                }
-
-                if(!player.hasTrack(player.position, move.to) &&
-                        //don't place track between ports, it's pointless
-                        state.world.isAdjacent(player.position, move.to) &&
-                        //don't overwrite other's tracks
-                        !state.players.contains(p -> p.hasTrack(player.position, move.to))){
-                    int cost = state.getTrackCost(player.position, move.to);
-                    if(state.canSpendRail(player, cost)){
-                        //place a track if applicable
-                        PlaceTrack place = new PlaceTrack();
-                        place.from = player.position;
-                        place.to = move.to;
-                        place.act();
-                    }else{
-                        //end the turn, out of money for this turn
-                        break;
-                    }
-                }
-
-                //can't move, stuck.
-                if(!state.canMove(player, move.to)){
-                    Log.info("{0}: can't move to {1}", player.name, move.to.str());
-                    break;
-                }
-
-                //can't move if no moves left.
-                if(player.moved + 1 > player.loco.speed){
-                    break;
-                }
-            }
-
-            plan.pop();
-            action.act();
-        }
-    }*/
-
-    void move(){
+    void moveWithoutPlan(){
         Array<Tile> finalPath = new Array<>();
         boolean shouldMove = !state.isPreMovement();
 
@@ -126,7 +64,6 @@ public class AI{
                 String good = player.cargo.peek();
                 Array<Tile> outArray = new Array<>();
                 float minBuyCost = Float.MAX_VALUE;
-                City minBuyCity = null;
 
                 //find best city to sell good to
                 for(City city : Array.with(state.world.cities()).select(s -> player.canDeliverGood(s, good))){
@@ -136,7 +73,6 @@ public class AI{
                     //if this source city is better, update things
                     if(dst < minBuyCost){
                         minBuyCost = dst;
-                        minBuyCity = city;
                         finalPath.clear();
                         finalPath.addAll(outArray);
                     }
@@ -159,7 +95,7 @@ public class AI{
                 }
             }else{
 
-                City bestSellCity = null, bestLoadCity = null;
+                City bestLoadCity = null;
                 String bestGood = null;
                 float bestCost = Float.MAX_VALUE;
 
@@ -190,7 +126,6 @@ public class AI{
                     if(minBuyCost < bestCost){
                         bestCost = minBuyCost;
                         bestGood = demand.good;
-                        bestSellCity = demand.city;
                         bestLoadCity = minBuyCity;
                     }
                 }
@@ -307,8 +242,6 @@ public class AI{
             });
         }
 
-
-
         out.clear();
 
         if(!found) return Float.MAX_VALUE;
@@ -364,5 +297,9 @@ public class AI{
 
     interface TileHeuristic{
         float cost(Tile from, Tile to);
+    }
+
+    abstract class PlanAction{
+
     }
 }
