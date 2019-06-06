@@ -1,7 +1,7 @@
 package empire.gfx;
 
 import empire.ai.AI;
-import empire.ai.PlannedAI;
+import empire.ai.UnplannedAI;
 import empire.game.Player;
 import empire.game.State;
 import empire.game.World.City;
@@ -14,9 +14,12 @@ import io.anuke.arc.Core;
 import io.anuke.arc.collection.Array;
 import io.anuke.arc.function.BiFunction;
 import io.anuke.arc.graphics.Color;
+import io.anuke.arc.graphics.g2d.Draw;
+import io.anuke.arc.graphics.glutils.FrameBuffer;
 import io.anuke.arc.input.KeyCode;
 import io.anuke.arc.math.Mathf;
 import io.anuke.arc.util.Log;
+import io.anuke.arc.util.ScreenUtils;
 import io.anuke.arc.util.Timer;
 import io.anuke.arc.util.Timer.Task;
 
@@ -28,7 +31,7 @@ public class EmpireCore extends ApplicationCore{
     public static final int testTurns = 100;
     public static final boolean debug = true, isAI = true, netDebug = false,
                                 seeded = true, testEfficiency = true;
-    public static final BiFunction<Player, State, AI> aiType = PlannedAI::new;
+    public static final BiFunction<Player, State, AI> aiType = UnplannedAI::new;
 
     public static Control control;
     public static UI ui;
@@ -61,7 +64,11 @@ public class EmpireCore extends ApplicationCore{
 
         if(isAI){
             for(int i = 0; i < totalAI; i++){
-                City startCity = Array.with(state.world.cities()).random();
+                if(seeded){
+                    Mathf.random.setSeed(1);
+                }
+                City startCity = state.world.getCity("bern");
+                Log.info("Picked start city {0}", startCity.name);
                 Player player;
                 state.players.add(player = new Player("AI " + (i + 1),
                         state.world.tile(startCity.x, startCity.y), new Color().randHue(), state.grabCards()));
@@ -84,7 +91,21 @@ public class EmpireCore extends ApplicationCore{
                         state.player().ai.act();
                     }
                     Log.info("Final profit in {0} turns: {1}", testTurns, state.player().money);
-                    Core.app.exit();
+
+                    Core.app.post(() -> {
+                        FrameBuffer buffer = new FrameBuffer(state.world.width * tilesize, state.world.height * tilesize);
+
+                        buffer.begin();
+                        Core.graphics.clear(Color.BLACK);
+                        Draw.proj().setOrtho(0, 0, buffer.getWidth(), buffer.getHeight());
+                        renderer.drawBuffered();
+                        Draw.flush();
+                        ScreenUtils.saveScreenshot(Core.files.local("screenshot_" + state.player().ai.getClass().getSimpleName() + ".png"),
+                                0, 0, buffer.getWidth(), buffer.getHeight());
+                        buffer.end();
+
+                        Core.app.exit();
+                    });
                 });
             }else{
                 Timer.schedule(new Task(){

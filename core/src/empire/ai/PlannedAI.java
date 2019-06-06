@@ -233,7 +233,7 @@ public class PlannedAI extends AI{
         }
 
         //update cost to reflect the base good cost
-        minBuyCost -= demand.cost * 2f;
+        minBuyCost -= demand.cost * 500f;
 
         return minBuyCost;
     }

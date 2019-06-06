@@ -75,16 +75,9 @@ public class Renderer implements ApplicationListener{
         Draw.flush();
 
         buffer.begin();
-
         Core.graphics.clear(clearColor);
         Draw.proj().setOrtho(0, 0, buffer.getWidth(), buffer.getHeight());
-
-        drawWorld();
-        drawRails();
-        drawPlayers();
-        drawControl();
-        drawOver();
-
+        drawBuffered();
         Draw.flush();
         buffer.end();
 
@@ -107,6 +100,15 @@ public class Renderer implements ApplicationListener{
 
         //Core.camera.width = pw;
         //Core.camera.height = ph;
+    }
+
+    /** Draws everything in the world that goes in the pixel buffer.*/
+    public void drawBuffered(){
+        drawWorld();
+        drawRails();
+        drawPlayers();
+        drawControl();
+        drawOver();
     }
 
     void doMovement(){
