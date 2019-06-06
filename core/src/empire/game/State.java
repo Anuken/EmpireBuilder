@@ -2,6 +2,7 @@ package empire.game;
 
 import empire.game.DemandCard.Demand;
 import empire.game.GameEvents.EndTurnEvent;
+import empire.game.GameEvents.EventEvent;
 import empire.game.GameEvents.WinEvent;
 import empire.game.World.*;
 import io.anuke.arc.Events;
@@ -119,12 +120,13 @@ public class State{
     }
 
     /** Discards this player's demand cards and replaces them with new ones.*/
-    public void discardCards(Player player, Consumer<EventCard> eventHandler){
+    public void discardCards(Player player){
         for(int i = 2; i >= 0; i--){
             cards.insert(0, player.demandCards[i]);
         }
         for(int i = 0; i < 3; i++){
-            player.demandCards[i] = drawDemandCard(event -> handleEvent(event, player, eventHandler));
+            player.demandCards[i] = drawDemandCard(event ->
+                    handleEvent(event, player, card -> Events.fire(new EventEvent(card))));
         }
     }
 

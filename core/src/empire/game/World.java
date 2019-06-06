@@ -96,6 +96,11 @@ public class World{
         return tile(index % width, index / width);
     }
 
+    /** Returns a city's tile position.*/
+    public Tile tile(City city){
+        return tile(city.x, city.y);
+    }
+
     /** Returns a sea by name. Throws an exception if not found.*/
     public Sea getSea(String name){
         Sea river = seas.find(r -> r.name.equals(name));

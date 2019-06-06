@@ -1,5 +1,6 @@
 package empire.gfx;
 
+import empire.game.GameEvents.EventEvent;
 import empire.game.GameEvents.WinEvent;
 import empire.game.State;
 import empire.gfx.ui.*;
@@ -27,7 +28,6 @@ import static empire.gfx.EmpireCore.*;
 
 /** Handles all overlaid UI for the game. */
 public class UI implements ApplicationListener{
-    public EventDialog events;
     public ChatFragment chat;
     public HudFragment hud;
     public ConnectFragment connect;
@@ -44,6 +44,10 @@ public class UI implements ApplicationListener{
             ui.showDialog(event.player.name + " is victorious!", dialog -> {
                 dialog.cont.add(event.player.name + " has won the game, as they have\nconnected 7 major cities and gotten " + State.winMoneyAmount + " ECU!");
             });
+        });
+
+        Events.on(EventEvent.class, event -> {
+            new EventDialog().show(event.card);
         });
     }
 
@@ -76,8 +80,6 @@ public class UI implements ApplicationListener{
 
     @Override
     public void init(){
-        events = new EventDialog();
-
         net.setErrorHandler(ex -> {
             net.close();
 

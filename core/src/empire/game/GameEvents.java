@@ -10,6 +10,14 @@ public class GameEvents{
         }
     }
 
+    public static class EventEvent{
+        public final EventCard card;
+
+        public EventEvent(EventCard card){
+            this.card = card;
+        }
+    }
+
     public static class EndTurnEvent{
         public final Player player, nextPlayer;
 

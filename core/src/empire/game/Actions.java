@@ -191,7 +191,7 @@ public class Actions{
 
         @Override
         public void apply(State state){
-            state.discardCards(player, ui.events::show);
+            state.discardCards(player);
             state.nextPlayer();
         }
     }

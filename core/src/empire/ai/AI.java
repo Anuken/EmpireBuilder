@@ -16,6 +16,8 @@ import java.util.PriorityQueue;
 
 /** Handles the AI for a specific player.*/
 public abstract class AI{
+    /** A temporary discarded array.*/
+    protected final Array<Tile> tmpArray = new Array<>();
     /** The player this AI controls.*/
     public final Player player;
     /** The game state.*/
