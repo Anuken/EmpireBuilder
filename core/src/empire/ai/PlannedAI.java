@@ -75,6 +75,7 @@ public class PlannedAI extends AI{
                         sell.cargo = good;
                         sell.act();
                         moved = true;
+                        plan.pop();
                         updatePlan();
                     }else{
                         //if it's not possible, something's up with events, don't move
@@ -97,6 +98,7 @@ public class PlannedAI extends AI{
                         LoadCargo load = new LoadCargo();
                         load.cargo = good;
                         load.act();
+                        plan.pop();
                         moved = true;
                     }else{
                         //if it's not possible, something's up with events, don't move
@@ -146,8 +148,6 @@ public class PlannedAI extends AI{
                     }
                 }
             }
-
-            plan.pop();
         }
     }
 

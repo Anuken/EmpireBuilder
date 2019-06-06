@@ -105,14 +105,14 @@ public class State{
     }
 
     /** Simulates a 'sell good' event.*/
-    public void sellGood(Player player, City city, String good, Consumer<EventCard> eventHandler){
+    public void sellGood(Player player, City city, String good){
         DemandCard card = Structs.find(player.demandCards, f -> Structs.contains(f.demands, res -> res.city == city && res.good.equals(good)));
         if(card != null){
             Demand demand = Structs.find(card.demands, res -> res.city == city && res.good.equals(good));
             player.money += demand.cost;
             player.cargo.remove(good);
             int idx = Structs.indexOf(player.demandCards, card);
-            player.demandCards[idx] = drawDemandCard(event -> handleEvent(event, player, eventHandler));
+            player.demandCards[idx] = drawDemandCard(event -> handleEvent(event, player, e -> Events.fire(new EventEvent(e))));
             this.cards.insert(0, card);
         }else{
             throw new IllegalArgumentException("Incorrect usage. No matching city/good combination found.");

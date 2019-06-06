@@ -182,7 +182,7 @@ public class Actions{
 
         @Override
         public void apply(State state){
-            state.sellGood(state.player(), state.world.getCity(player.position), cargo, ui.events::show);
+            state.sellGood(state.player(), state.world.getCity(player.position), cargo);
             ui.hud.refresh();
         }
     }
