@@ -14,6 +14,7 @@ public class PlannedAI extends AI{
 
     @Override
     public void act(){
+        //select a random start location if not chosen already
         if(!player.chosenLocation){
             selectLocation();
         }

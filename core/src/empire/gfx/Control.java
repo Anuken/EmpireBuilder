@@ -26,17 +26,6 @@ public class Control implements ApplicationListener{
     private Array<Tile> outArray = new Array<>();
     public Tile placeLoc = null;
 
-    public Control(){
-        Timer.schedule(new Task(){
-            @Override
-            public void run(){
-                if(state.player().ai != null){
-                    if(!Core.input.keyDown(KeyCode.SPACE)) state.player().ai.act();
-                }
-            }
-        }, 2f, 1f);
-    }
-
     @Override
     public void update(){
 

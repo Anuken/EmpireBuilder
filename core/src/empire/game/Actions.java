@@ -62,6 +62,7 @@ public class Actions{
                 //oh my god
                 //it actually mangles it this badly
                 //how is this even possible
+                @SuppressWarnings("unchecked")
                 ObjectMap<String, Array<Float>> map = (ObjectMap)player.tracks;
                 map.each((str, tiles) -> out.put(state.world.tile(Integer.parseInt(str)), tiles.map(f -> state.world.tile((int)(float)f))));
                 player.tracks = out;
