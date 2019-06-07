@@ -58,6 +58,8 @@ public class PlannedAI extends AI{
 
             PlanAction action = plan.peek();
 
+            Log.info("Execute action {0}", action.getClass().getSimpleName());
+
             //player already has some cargo to unload; find a city to unload to
             if(action instanceof UnloadPlan){
                 UnloadPlan u = (UnloadPlan) action;
@@ -70,7 +72,7 @@ public class PlannedAI extends AI{
                 City atCity = state.world.getCity(player.position);
                 if(atCity == u.city && player.canDeliverGood(atCity, good)){
                     //attempt to deliver if possible
-                    if(state.canLoadUnload(player, player.position)){
+                    if(state.canLoadUnload(player, player.position) && player.cargo.contains(good)){
                         SellCargo sell = new SellCargo();
                         sell.cargo = good;
                         sell.act();
@@ -191,23 +193,25 @@ public class PlannedAI extends AI{
     }
 
     void makePlan(Demand[] demands){
+
         City load1 = getBestCity(player.position, demands[0]);
-        City load2 = getBestCity(returnTile, demands[1]);
-        City load3 = getBestCity(returnTile, demands[2]);
+        City load2 = getBestCity(state.world.tile(demands[0].city), demands[1]);
+        City load3 = getBestCity(state.world.tile(demands[1].city), demands[2]);
 
         for(int i = 0; i < 3; i++){
             if(!player.cargo.contains(demands[i].good)) plan.add(new LoadPlan(
                     i == 0 ? load1 : i == 1 ? load2 : load3, demands[i].good));
             plan.add(new UnloadPlan(demands[i].city, demands[i].good));
         }
+        plan.reverse();
     }
 
     /** Evaluates the relative cost of doing all of these demands in sequence.
      * Currently does not chain together loading at all.*/
     float evaulateDemands(Demand first, Demand second, Demand third){
          return getDemandCost(player.position, first) +
-                getDemandCost(returnTile, second) +
-                getDemandCost(returnTile, third);
+                getDemandCost(state.world.tile(first.city), second) +
+                getDemandCost(state.world.tile(second.city), third);
     }
 
     /** Returns the cost to satisfy this demand, given the specified starting position.
@@ -233,7 +237,7 @@ public class PlannedAI extends AI{
         }
 
         //update cost to reflect the base good cost
-        minBuyCost -= demand.cost * 500f;
+        minBuyCost -= demand.cost * 250f;
 
         return minBuyCost;
     }
@@ -273,14 +277,6 @@ public class PlannedAI extends AI{
 
     abstract class PlanAction{
 
-    }
-
-    class MovePlan extends PlanAction{
-        final City to;
-
-        public MovePlan(City to){
-            this.to = to;
-        }
     }
 
     class LoadPlan extends PlanAction{

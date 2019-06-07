@@ -101,7 +101,7 @@ public class UnplannedAI extends AI{
                     }
 
                     //update cost to reflect the base good cost
-                    minBuyCost -= demand.cost * 2f;
+                    minBuyCost -= demand.cost * 250f;
 
                     if(minBuyCost < bestCost){
                         bestCost = minBuyCost;

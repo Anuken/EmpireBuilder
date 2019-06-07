@@ -1,7 +1,6 @@
 package empire.gfx;
 
-import empire.ai.AI;
-import empire.ai.UnplannedAI;
+import empire.ai.*;
 import empire.game.Player;
 import empire.game.State;
 import empire.game.World.City;
@@ -31,7 +30,7 @@ public class EmpireCore extends ApplicationCore{
     public static final int testTurns = 100;
     public static final boolean debug = true, isAI = true, netDebug = false,
                                 seeded = true, testEfficiency = true;
-    public static final BiFunction<Player, State, AI> aiType = UnplannedAI::new;
+    public static final BiFunction<Player, State, AI> aiType = PlannedAI::new;
 
     public static Control control;
     public static UI ui;
@@ -108,11 +107,18 @@ public class EmpireCore extends ApplicationCore{
                     });
                 });
             }else{
+                boolean[] cancelled = {false};
                 Timer.schedule(new Task(){
                     @Override
                     public void run(){
                         if(state.player().ai != null){
-                            if(!Core.input.keyDown(KeyCode.SPACE)) state.player().ai.act();
+                            if(Core.input.keyDown(KeyCode.SPACE)){
+                                cancelled[0] = true;
+                            }
+                            if(!cancelled[0]){
+                                state.player().ai.act();
+                            }
+
                         }
                     }
                 }, 2f, 1f);
