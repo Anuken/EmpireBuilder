@@ -1,13 +1,9 @@
 package empire.ai;
 
-import empire.game.Actions.LoadCargo;
-import empire.game.Actions.Move;
-import empire.game.Actions.PlaceTrack;
-import empire.game.Actions.SellCargo;
+import empire.game.*;
+import empire.game.Actions.*;
 import empire.game.DemandCard.Demand;
 import empire.game.GameEvents.EventEvent;
-import empire.game.Player;
-import empire.game.State;
 import empire.game.World.City;
 import empire.game.World.Tile;
 import io.anuke.arc.Events;
@@ -16,6 +12,8 @@ import io.anuke.arc.util.Log;
 import io.anuke.arc.util.Structs;
 
 public class PlannedAI extends AI{
+    /** Money after which the AI will consider upgrading their loco.*/
+    private static final int upgradeAfterMoney = 60;
     /** List of planned actions.*/
     private Array<PlanAction> plan = new Array<>();
     /** Tmp return tile.*/
@@ -151,6 +149,14 @@ public class PlannedAI extends AI{
                 }
             }
         }
+
+        //upgrade if the player can do it now; only happens after a money threshold
+        if(state.player() == player &&
+                player.money > upgradeAfterMoney && player.loco != Loco.superFreight){
+            new UpgradeLoco(){{
+                type = 0;
+            }}.act();
+        }
     }
 
     /**
@@ -169,6 +175,12 @@ public class PlannedAI extends AI{
      */
     void updatePlan(){
         plan.clear(); //clear old data, it's not useful anymore
+
+        //player can win if they place track and connect cities
+        if(player.money > State.winMoneyAmount){
+            //TODO attempt to connect track
+        }
+
         Demand[] bestCombination = new Demand[3];
         float bestCost = Float.POSITIVE_INFINITY;
 
@@ -176,7 +188,7 @@ public class PlannedAI extends AI{
         for(Demand first : allDemands()){
             for(Demand second : allDemands(first)){
                 for(Demand third : allDemands(first, second)){
-                    float cost = evaulateDemands(first, second, third);
+                    float cost = evaluateDemands(first, second, third);
                     if(cost < bestCost){
                         bestCost = cost;
                         bestCombination[0] = first;
@@ -193,7 +205,6 @@ public class PlannedAI extends AI{
     }
 
     void makePlan(Demand[] demands){
-
         City load1 = getBestCity(player.position, demands[0]);
         City load2 = getBestCity(state.world.tile(demands[0].city), demands[1]);
         City load3 = getBestCity(state.world.tile(demands[1].city), demands[2]);
@@ -208,8 +219,14 @@ public class PlannedAI extends AI{
 
     /** Evaluates the relative cost of doing all of these demands in sequence.
      * Currently does not chain together loading at all.*/
-    float evaulateDemands(Demand first, Demand second, Demand third){
-         return getDemandCost(player.position, first) +
+    float evaluateDemands(Demand first, Demand second, Demand third){
+        //possibilities:
+
+        //l1 l2 l3 u1 u2 u3 (cargo size 3 only)
+        //l1 u1 l2 l3 u2 u3
+        //l1 l2 u1 u2 l3 u3
+
+        return getDemandCost(player.position, first) +
                 getDemandCost(state.world.tile(first.city), second) +
                 getDemandCost(state.world.tile(second.city), third);
     }
