@@ -11,9 +11,30 @@ import io.anuke.arc.collection.Array;
 import io.anuke.arc.util.Log;
 import io.anuke.arc.util.Structs;
 
+import java.util.Arrays;
+
 public class PlannedAI extends AI{
     /** Money after which the AI will consider upgrading their loco.*/
-    private static final int upgradeAfterMoney = 60;
+    private static final int upgradeAfterMoney = 40;
+    /** Demand cost scale: how many units to reduce a score by, per ECU.*/
+    private static final float demandCostScale = 250f;
+    /** All the action combinations of 3 ordered demand cards with cargo space 2.*/
+    private static final int[][] combinations = {
+            //{1, -1, 2, 3, -2, -3},
+           // {1, -1, 2, 3, -3, -2},
+            //{1, 2, -1, -2, 3, -3},
+            {1, 2, -2, -1, 3, -3},
+            {1, -1, 2, -2, 3, -3}
+    };
+    /** All the action combinations of 3 ordered demand cards with cargo space 3.*/
+    private static final int[][] cargo3Combinations = {
+            /*{1, 2, 3, -1, -2, -3},
+            {1, 2, 3, -1, -3, -2},
+            {1, 2, 3, -2, -1, -3},
+            {1, 2, 3, -2, -3, -1},
+            {1, 2, 3, -3, -1, -2},
+            {1, 2, 3, -3, -2, -1},*/
+    };
     /** List of planned actions.*/
     private Array<PlanAction> plan = new Array<>();
     /** Tmp return tile.*/
@@ -45,6 +66,7 @@ public class PlannedAI extends AI{
     }
 
     void executePlan(){
+        Log.info("| Turn {0}", state.turn);
         Array<Tile> finalPath = new Array<>();
         boolean shouldMove = !state.isPreMovement();
 
@@ -56,7 +78,7 @@ public class PlannedAI extends AI{
 
             PlanAction action = plan.peek();
 
-            Log.info("Execute action {0}", action.getClass().getSimpleName());
+            Log.info("Execute action {0}", action.getClass().getSimpleName() + action.toString());
 
             //player already has some cargo to unload; find a city to unload to
             if(action instanceof UnloadPlan){
@@ -174,6 +196,7 @@ public class PlannedAI extends AI{
      *
      */
     void updatePlan(){
+        Log.info("Updating plan. Money: {0}", player.money);
         plan.clear(); //clear old data, it's not useful anymore
 
         //player can win if they place track and connect cities
@@ -182,53 +205,125 @@ public class PlannedAI extends AI{
         }
 
         Demand[] bestCombination = new Demand[3];
+        Demand[] inDemands = new Demand[3];
+        int[] bestPlan = null;
         float bestCost = Float.POSITIVE_INFINITY;
 
         //find the best sequence of demands possible
         for(Demand first : allDemands()){
             for(Demand second : allDemands(first)){
                 for(Demand third : allDemands(first, second)){
-                    float cost = evaluateDemands(first, second, third);
-                    if(cost < bestCost){
-                        bestCost = cost;
-                        bestCombination[0] = first;
-                        bestCombination[1] = second;
-                        bestCombination[2] = third;
+                    inDemands[0] = first;
+                    inDemands[1] = second;
+                    inDemands[2] = third;
+
+                    //check all plan combinations
+                    for(int[] plan : combinations){
+                        float cost = evaluatePlan(inDemands, plan);
+                        if(cost < bestCost){
+                            Log.info("Plan '{0}' is better than plan '{1}'" +
+                                    " with scores {2} > {3}.", Arrays.toString(plan), Arrays.toString(bestPlan), bestCost, cost);
+                            bestCost = cost;
+                            bestPlan = plan;
+                            bestCombination[0] = first;
+                            bestCombination[1] = second;
+                            bestCombination[2] = third;
+                        }
+                    }
+
+                    //check 3-cargo plans if applicable
+                    if(player.loco.loads - player.cargo.size == 3){
+                        for(int[] plan : cargo3Combinations){
+                            float cost = evaluatePlan(inDemands, plan);
+                            if(cost < bestCost){
+                                bestCost = cost;
+                                bestPlan = plan;
+                                bestCombination[0] = first;
+                                bestCombination[1] = second;
+                                bestCombination[2] = third;
+                            }
+                        }
                     }
                 }
             }
         }
 
-        makePlan(bestCombination);
+        makePlan(bestCombination, bestPlan);
 
         Log.info(Array.with(bestCombination).toString(", ", d -> d.good + " to " + d.city.name));
     }
 
-    void makePlan(Demand[] demands){
-        City load1 = getBestCity(player.position, demands[0]);
-        City load2 = getBestCity(state.world.tile(demands[0].city), demands[1]);
-        City load3 = getBestCity(state.world.tile(demands[1].city), demands[2]);
+    void makePlan(Demand[] demands, int[] inPlan){
+        Tile currentTile = player.position;
 
-        for(int i = 0; i < 3; i++){
-            if(!player.cargo.contains(demands[i].good)) plan.add(new LoadPlan(
-                    i == 0 ? load1 : i == 1 ? load2 : load3, demands[i].good));
-            plan.add(new UnloadPlan(demands[i].city, demands[i].good));
+        for(int value : inPlan){
+            boolean unload = value < 0;
+            //demand that is being evaluated
+            Demand demand = demands[Math.abs(value) - 1];
+
+            if(unload){
+                plan.add(new UnloadPlan(demand.city, demand.good));
+                //update new position
+                currentTile = state.world.tile(demand.city);
+            }else if(!player.cargo.contains(demand.good)){ //only plan to load if you don't have this good
+                Tile position = currentTile;
+                //find best city to get load from
+                City loadFrom = Array.with(state.world.cities())
+                        .select(s -> s.goods.contains(demand.good))
+                        .min(city -> astar(position, state.world.tile(city), tmpArray));
+                plan.add(new LoadPlan(loadFrom, demand.good));
+                //update new position since you have to go to this city to load from it
+                currentTile = state.world.tile(loadFrom);
+            }
         }
+
+        Log.info("Created plan:\n| | {0}", plan.toString("\n| | ",
+                s -> s.getClass().getSimpleName() + s.toString()));
+
         plan.reverse();
     }
 
     /** Evaluates the relative cost of doing all of these demands in sequence.
      * Currently does not chain together loading at all.*/
     float evaluateDemands(Demand first, Demand second, Demand third){
-        //possibilities:
-
-        //l1 l2 l3 u1 u2 u3 (cargo size 3 only)
-        //l1 u1 l2 l3 u2 u3
-        //l1 l2 u1 u2 l3 u3
-
         return getDemandCost(player.position, first) +
                 getDemandCost(state.world.tile(first.city), second) +
                 getDemandCost(state.world.tile(second.city), third);
+    }
+
+    /** Evaluates a plan of action for 3 demands.
+     * The action sequence's format is [demand index + 1] * (unload ? -1 : 1).
+     */
+    float evaluatePlan(Demand[] demands, int[] sequence){
+
+        Tile currentTile = player.position;
+        float finalCost = 0f;
+        for(int value : sequence){
+            //whether this is a load or unload action
+            boolean unload = value < 0;
+            //demand that is being evaluated
+            Demand demand = demands[Math.abs(value) - 1];
+
+            if(unload){
+                //unload: just pathfind to the sell city, add cost
+                finalCost += astar(currentTile, state.world.tile(demand.city), tmpArray);
+                currentTile = state.world.tile(demand.city);
+
+                //factor in demand cost
+                finalCost -= demand.cost * demandCostScale;
+            }else{
+                Tile position = currentTile;
+                //load: find the closest city to load up this good (to the current tile)
+                City min = Array.with(state.world.cities())
+                        .select(s -> s.goods.contains(demand.good))
+                        .min(city -> astar(position, state.world.tile(city), tmpArray));
+
+                //update the final cost and position based on this
+                finalCost += astar(position, state.world.tile(min), tmpArray);
+                currentTile = state.world.tile(min);
+            }
+        }
+        return finalCost;
     }
 
     /** Returns the cost to satisfy this demand, given the specified starting position.
@@ -241,9 +336,9 @@ public class PlannedAI extends AI{
         for(City city : Array.with(state.world.cities()).select(s -> s.goods.contains(demand.good))){
             //get a* cost: from the player to the city, then from the city to the final destination
             float dst = (player.cargo.contains(demand.good) ? 0f : //movement to the city is free if
-                    astar(position, state.world.tile(city.x, city.y), tmpArray)) +
-                    astar(state.world.tile(city.x, city.y),
-                            state.world.tile(demand.city.x, demand.city.y), tmpArray);
+                    astar(position, state.world.tile(city), tmpArray)) +
+                    astar(state.world.tile(city),
+                            state.world.tile(demand.city), tmpArray);
 
             //if this source city is better, update things
             if(dst < minBuyCost){
@@ -304,6 +399,10 @@ public class PlannedAI extends AI{
             this.good = good;
             this.city = city;
         }
+
+        public String toString(){
+            return "{"+good + " from " + city.name+"}";
+        }
     }
 
     class UnloadPlan extends PlanAction{
@@ -314,6 +413,10 @@ public class PlannedAI extends AI{
         public UnloadPlan(City city, String good){
             this.good = good;
             this.city = city;
+        }
+
+        public String toString(){
+            return "{"+good + " to " + city.name+"}";
         }
     }
 }
