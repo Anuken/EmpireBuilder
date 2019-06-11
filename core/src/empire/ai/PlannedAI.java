@@ -22,6 +22,7 @@ public class PlannedAI extends AI{
             //{1, -1, 2, 3, -3, -2},
             //{1, 2, -1, -2, 3, -3},
             //{1, 2, -2, -1, 3, -3},
+            //apparently this is the only reasonable combination
             {1, -1, 2, -2, 3, -3}
     };
     /** All the action combinations of 3 ordered demand cards with cargo space 3.*/
@@ -67,6 +68,7 @@ public class PlannedAI extends AI{
         boolean shouldMove = !state.isPreMovement();
 
         boolean moved = true;
+        Tile startTile = player.position;
 
         //keep attempting to move unless nothing happened
         while(moved){
@@ -131,12 +133,27 @@ public class PlannedAI extends AI{
                         shouldMove = false;
                     }
                 }
+            }else if(action instanceof LinkCities){
+                LinkCities l = (LinkCities) action;
+
+                //a-star from the start to the end, add all the tiles
+                ObjectSet<Tile> connected = state.connectedTiles(player, state.world.tile(l.to));
+                //finish plan when the city gets connected
+                if(connected.contains(state.world.tile(l.from))){
+                    plan.pop();
+                    moved = true;
+                }else{
+                    astar(state.world.tile(l.from), state.world.tile(l.to), connected::contains);
+                    finalPath.clearAdd(astarTiles);
+                    shouldMove = false;
+                    startTile = state.world.tile(l.from);
+                }
             }
 
-            Tile last = player.position;
+            Tile last = startTile;
             //now place all track if it can
             for(Tile tile : finalPath){
-                if(!player.hasTrack(last, tile)){
+                if(!player.hasTrack(last, tile) && !state.world.sameCity(last, tile)){
                     if(state.canPlaceTrack(player, last, tile)){
                         PlaceTrack place = new PlaceTrack();
                         place.from = last;
@@ -201,11 +218,6 @@ public class PlannedAI extends AI{
     void updatePlan(){
         Log.info("Updating plan. Money: {0}", player.money);
         plan.clear(); //clear old data, it's not useful anymore
-
-        //player can win if they place track and connect cities
-        if(player.money > State.winMoneyAmount){
-            //TODO attempt to connect track
-        }
 
         Demand[] bestCombination = new Demand[3];
         Demand[] inDemands = new Demand[3];
@@ -289,6 +301,11 @@ public class PlannedAI extends AI{
                 s -> s.getClass().getSimpleName() + s.toString()));
 
         plan.reverse();
+
+        //player can win if they place track and connect cities, try doing that
+        if(player.money > State.winMoneyAmount/2){
+            plan.addAll(linkCities());
+        }
     }
 
     /** Evaluates a plan of action for 3 demands.
@@ -354,7 +371,7 @@ public class PlannedAI extends AI{
     }
 
     /** Updates the plan to link cities. Clears all old plans.*/
-    void linkCities(){
+    Array<PlanAction> linkCities(){
         Array<City> majors = Array.with(state.world.cities()).select(c -> c.size == CitySize.major);
         //found city with maximum number of connections.
         City maxConnected = majors.max(city -> state.countConnectedCities(player, state.world.tile(city)));
@@ -363,6 +380,11 @@ public class PlannedAI extends AI{
         //find connected and unconnected cities
         Array<City> connectedCities = majors.select(c -> connected.contains(state.world.tile(c)));
         Array<City> unconnectedCities = majors.select(c -> !connected.contains(state.world.tile(c)));
+
+        //everything's already connected
+        if(connectedCities.size >= State.winCityAmount){
+            return new Array<>();
+        }
 
         //now, find the best cities that are unconnected to connect to the ones that are not
         //this is done by computing a 'connection cost' of a city to a group of tiles, then ordering cities by that cost
@@ -387,14 +409,16 @@ public class PlannedAI extends AI{
         unconnectedCities.sort(Structs.comparingFloat(c -> costs.get(c, 0f)));
 
         //clear plan and add link plans
-        plan.clear();
+        Array<PlanAction> actions = new Array<>();
 
         for(int i = 0; i < State.winCityAmount - connectedCities.size; i ++){
             City city = unconnectedCities.get(i);
-            plan.add(new LinkCities(city, linkages.get(city)));
+            actions.add(new LinkCities(city, linkages.get(city)));
         }
 
-        plan.reverse();
+        actions.reverse();
+
+        return actions;
     }
 
     abstract class PlanAction{
