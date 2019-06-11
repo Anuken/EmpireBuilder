@@ -1,15 +1,13 @@
 package empire.ai;
 
-import empire.game.*;
 import empire.game.Actions.*;
 import empire.game.DemandCard.Demand;
 import empire.game.GameEvents.EventEvent;
-import empire.game.World.City;
-import empire.game.World.Tile;
+import empire.game.*;
+import empire.game.World.*;
 import io.anuke.arc.Events;
-import io.anuke.arc.collection.Array;
-import io.anuke.arc.util.Log;
-import io.anuke.arc.util.Structs;
+import io.anuke.arc.collection.*;
+import io.anuke.arc.util.*;
 
 import java.util.Arrays;
 
@@ -21,9 +19,9 @@ public class PlannedAI extends AI{
     /** All the action combinations of 3 ordered demand cards with cargo space 2.*/
     private static final int[][] combinations = {
             //{1, -1, 2, 3, -2, -3},
-           // {1, -1, 2, 3, -3, -2},
+            //{1, -1, 2, 3, -3, -2},
             //{1, 2, -1, -2, 3, -3},
-            {1, 2, -2, -1, 3, -3},
+            //{1, 2, -2, -1, 3, -3},
             {1, -1, 2, -2, 3, -3}
     };
     /** All the action combinations of 3 ordered demand cards with cargo space 3.*/
@@ -37,8 +35,6 @@ public class PlannedAI extends AI{
     };
     /** List of planned actions.*/
     private Array<PlanAction> plan = new Array<>();
-    /** Tmp return tile.*/
-    private Tile returnTile;
 
     public PlannedAI(Player player, State state){
         super(player, state);
@@ -76,6 +72,11 @@ public class PlannedAI extends AI{
         while(moved){
             moved = false;
 
+            if(plan.size == 0){
+                Log.info("No plan.");
+                return;
+            }
+
             PlanAction action = plan.peek();
 
             Log.info("Execute action {0}", action.getClass().getSimpleName() + action.toString());
@@ -86,7 +87,8 @@ public class PlannedAI extends AI{
                 String good = u.good;
 
                 //queue a move to this location
-                astar(player.position, state.world.tile(u.city), finalPath);
+                astar(player.position, state.world.tile(u.city));
+                finalPath.clearAdd(astarTiles);
 
                 //check if player can deliver this good
                 City atCity = state.world.getCity(player.position);
@@ -110,7 +112,8 @@ public class PlannedAI extends AI{
                 String good = l.good;
 
                 //queue a move to this location
-                astar(player.position, state.world.tile(l.city), finalPath);
+                astar(player.position, state.world.tile(l.city));
+                finalPath.clearAdd(astarTiles);
 
                 //check if player can deliver this good
                 City atCity = state.world.getCity(player.position);
@@ -174,7 +177,7 @@ public class PlannedAI extends AI{
 
         //upgrade if the player can do it now; only happens after a money threshold
         if(state.player() == player &&
-                player.money > upgradeAfterMoney && player.loco != Loco.superFreight){
+                player.money > upgradeAfterMoney && player.loco != Loco.fastFreight){
             new UpgradeLoco(){{
                 type = 0;
             }}.act();
@@ -248,6 +251,11 @@ public class PlannedAI extends AI{
             }
         }
 
+        if(bestPlan == null){
+            Log.info("All plans are invalid, you're screwed.");
+            return;
+        }
+
         makePlan(bestCombination, bestPlan);
 
         Log.info(Array.with(bestCombination).toString(", ", d -> d.good + " to " + d.city.name));
@@ -270,7 +278,7 @@ public class PlannedAI extends AI{
                 //find best city to get load from
                 City loadFrom = Array.with(state.world.cities())
                         .select(s -> s.goods.contains(demand.good))
-                        .min(city -> astar(position, state.world.tile(city), tmpArray));
+                        .min(city -> astar(position, state.world.tile(city)));
                 plan.add(new LoadPlan(loadFrom, demand.good));
                 //update new position since you have to go to this city to load from it
                 currentTile = state.world.tile(loadFrom);
@@ -283,21 +291,15 @@ public class PlannedAI extends AI{
         plan.reverse();
     }
 
-    /** Evaluates the relative cost of doing all of these demands in sequence.
-     * Currently does not chain together loading at all.*/
-    float evaluateDemands(Demand first, Demand second, Demand third){
-        return getDemandCost(player.position, first) +
-                getDemandCost(state.world.tile(first.city), second) +
-                getDemandCost(state.world.tile(second.city), third);
-    }
-
     /** Evaluates a plan of action for 3 demands.
      * The action sequence's format is [demand index + 1] * (unload ? -1 : 1).
      */
     float evaluatePlan(Demand[] demands, int[] sequence){
-
         Tile currentTile = player.position;
         float finalCost = 0f;
+        //keep track of money to prevent illegal dead-end moves
+        int currentMoney = player.money;
+
         for(int value : sequence){
             //whether this is a load or unload action
             boolean unload = value < 0;
@@ -306,8 +308,16 @@ public class PlannedAI extends AI{
 
             if(unload){
                 //unload: just pathfind to the sell city, add cost
-                finalCost += astar(currentTile, state.world.tile(demand.city), tmpArray);
+                finalCost += astar(currentTile, state.world.tile(demand.city));
                 currentTile = state.world.tile(demand.city);
+
+                //make sure you can actually get to there to unload it!
+                currentMoney -= astarNewTrackCost;
+                //TODO implement
+                //if(currentMoney < 0) return Float.POSITIVE_INFINITY;
+
+                //assume you sold it, update money
+                currentMoney += demand.cost;
 
                 //factor in demand cost
                 finalCost -= demand.cost * demandCostScale;
@@ -316,66 +326,22 @@ public class PlannedAI extends AI{
                 //load: find the closest city to load up this good (to the current tile)
                 City min = Array.with(state.world.cities())
                         .select(s -> s.goods.contains(demand.good))
-                        .min(city -> astar(position, state.world.tile(city), tmpArray));
+                        .min(city -> astar(position, state.world.tile(city)));
 
                 //update the final cost and position based on this
-                finalCost += astar(position, state.world.tile(min), tmpArray);
+                finalCost += astar(position, state.world.tile(min));
+                currentMoney -= astarNewTrackCost;
                 currentTile = state.world.tile(min);
+            }
+
+            //bail out if at any point this AI runs out of money
+            //this doesn't work currently!
+            //TODO implement
+            if(currentMoney < 0){
+            //    return Float.POSITIVE_INFINITY;
             }
         }
         return finalCost;
-    }
-
-    /** Returns the cost to satisfy this demand, given the specified starting position.
-     * Finds the best city to get the good from and calculates the cost of the
-     * path to that city, then adds the cost of the path to the demand's city.*/
-    float getDemandCost(Tile position, Demand demand){
-        float minBuyCost = Float.MAX_VALUE;
-
-        //find best city to get good from for this demand
-        for(City city : Array.with(state.world.cities()).select(s -> s.goods.contains(demand.good))){
-            //get a* cost: from the player to the city, then from the city to the final destination
-            float dst = (player.cargo.contains(demand.good) ? 0f : //movement to the city is free if
-                    astar(position, state.world.tile(city), tmpArray)) +
-                    astar(state.world.tile(city),
-                            state.world.tile(demand.city), tmpArray);
-
-            //if this source city is better, update things
-            if(dst < minBuyCost){
-                minBuyCost = dst;
-                //update return tile to reflect the best end point, which is usually just the dest city
-                returnTile = tmpArray.peek();
-            }
-        }
-
-        //update cost to reflect the base good cost
-        minBuyCost -= demand.cost * 250f;
-
-        return minBuyCost;
-    }
-
-    City getBestCity(Tile position, Demand demand){
-        float minBuyCost = Float.MAX_VALUE;
-        City bestCity = null;
-
-        //find best city to get good from for this demand
-        for(City city : Array.with(state.world.cities()).select(s -> s.goods.contains(demand.good))){
-            //get a* cost: from the player to the city, then from the city to the final destination
-            float dst = (player.cargo.contains(demand.good) ? 0f :
-                    astar(position, state.world.tile(city.x, city.y), tmpArray)) +
-                    astar(state.world.tile(city.x, city.y),
-                            state.world.tile(demand.city.x, demand.city.y), tmpArray);
-
-            //if this source city is better, update things
-            if(dst < minBuyCost){
-                minBuyCost = dst;
-                bestCity = city;
-                //update return tile to reflect the best end point, which is usually just the dest city
-                returnTile = tmpArray.peek();
-            }
-        }
-
-        return bestCity;
     }
 
     /** Returns an array of valid demands, given that the passed demands have already been used.*/
@@ -387,8 +353,65 @@ public class PlannedAI extends AI{
         return out;
     }
 
+    /** Updates the plan to link cities. Clears all old plans.*/
+    void linkCities(){
+        Array<City> majors = Array.with(state.world.cities()).select(c -> c.size == CitySize.major);
+        //found city with maximum number of connections.
+        City maxConnected = majors.max(city -> state.countConnectedCities(player, state.world.tile(city)));
+        ObjectSet<Tile> connected = state.connectedTiles(player, state.world.tile(maxConnected));
+
+        //find connected and unconnected cities
+        Array<City> connectedCities = majors.select(c -> connected.contains(state.world.tile(c)));
+        Array<City> unconnectedCities = majors.select(c -> !connected.contains(state.world.tile(c)));
+
+        //now, find the best cities that are unconnected to connect to the ones that are not
+        //this is done by computing a 'connection cost' of a city to a group of tiles, then ordering cities by that cost
+        ObjectFloatMap<City> costs = new ObjectFloatMap<>();
+        ObjectMap<City, City> linkages = new ObjectMap<>();
+        unconnectedCities.each(city -> {
+            float minCost = Float.POSITIVE_INFINITY;
+            City minCity = null;
+            for(City other : unconnectedCities){
+               float dst = astar(state.world.tile(city), state.world.tile(other), connected::contains);
+               if(dst < minCost){
+                   minCity = other;
+                   minCost = dst;
+               }
+            }
+
+            costs.put(city, minCost);
+            linkages.put(city, minCity);
+        });
+
+        //sort by min cost
+        unconnectedCities.sort(Structs.comparingFloat(c -> costs.get(c, 0f)));
+
+        //clear plan and add link plans
+        plan.clear();
+
+        for(int i = 0; i < State.winCityAmount - connectedCities.size; i ++){
+            City city = unconnectedCities.get(i);
+            plan.add(new LinkCities(city, linkages.get(city)));
+        }
+
+        plan.reverse();
+    }
+
     abstract class PlanAction{
 
+    }
+
+    class LinkCities extends PlanAction{
+        final City from, to;
+
+        public LinkCities(City from, City to){
+            this.from = from;
+            this.to = to;
+        }
+
+        public String toString(){
+            return "{"+from.name + " to " + to.name+"}";
+        }
     }
 
     class LoadPlan extends PlanAction{

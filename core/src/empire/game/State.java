@@ -448,6 +448,33 @@ public class State{
         return citySet.size;
     }
 
+    /** Returns a set of all tiles connected to this tile by track.*/
+    public ObjectSet<Tile> connectedTiles(Player player, Tile other){
+        ObjectSet<Tile> out = new ObjectSet<>();
+
+        moveArray.clear();
+        closedSet.clear();
+        queue.clear();
+
+        queue.addFirst(other);
+        closedSet.add(other);
+
+        while(!queue.isEmpty()){
+            Tile tile = queue.removeLast();
+            out.add(tile);
+
+            //iterate through /connections/ of each tile
+            world.trackConnectionsOf(this, player, tile, false, child -> {
+                if(!closedSet.contains(child)){
+                    child.searchParent = tile;
+                    queue.addFirst(child);
+                    closedSet.add(child);
+                }
+            });
+        }
+        return out;
+    }
+
     /** Attempts to calculate in-between movement tiles for a player from a start point
      * to a destination. Returns an empty array if impossible.
      * This should be used to move from tile to tile and check each one for validity.*/

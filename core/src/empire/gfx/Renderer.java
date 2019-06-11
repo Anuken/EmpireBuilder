@@ -210,7 +210,7 @@ public class Renderer implements ApplicationListener{
         }
 
         //pathfinding debug
-        if(state.player().ai != null && false){
+        if(state.player().ai != null){
             AI ai = state.player().ai;
 
             Array<Tile> out = new Array<>();

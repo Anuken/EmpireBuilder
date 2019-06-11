@@ -42,19 +42,17 @@ public class UnplannedAI extends AI{
             //player already has some cargo to unload; find a city to unload to
             if(!player.cargo.isEmpty()){
                 String good = player.cargo.peek();
-                Array<Tile> outArray = new Array<>();
                 float minBuyCost = Float.MAX_VALUE;
 
                 //find best city to sell good to
                 for(City city : Array.with(state.world.cities()).select(s -> player.canDeliverGood(s, good))){
                     //get a* cost to this city
-                    float dst = astar(player.position, state.world.tile(city.x, city.y), outArray);
+                    float dst = astar(player.position, state.world.tile(city.x, city.y));
 
                     //if this source city is better, update things
                     if(dst < minBuyCost){
                         minBuyCost = dst;
-                        finalPath.clear();
-                        finalPath.addAll(outArray);
+                        finalPath.clearAdd(astarTiles);
                     }
                 }
 
@@ -79,8 +77,6 @@ public class UnplannedAI extends AI{
                 String bestGood = null;
                 float bestCost = Float.MAX_VALUE;
 
-                Array<Tile> outArray = new Array<>();
-
                 //find best demand
                 for(Demand demand : player.allDemands()){
                     float minBuyCost = Float.MAX_VALUE;
@@ -89,9 +85,9 @@ public class UnplannedAI extends AI{
                     //find best city to get good from for this demand
                     for(City city : Array.with(state.world.cities()).select(s -> s.goods.contains(demand.good))){
                         //get a* cost: from the player to the city, then from the city to the final destination
-                        float dst = astar(player.position, state.world.tile(city.x, city.y), outArray) +
+                        float dst = astar(player.position, state.world.tile(city.x, city.y)) +
                                 astar(state.world.tile(city.x, city.y),
-                                        state.world.tile(demand.city.x, demand.city.y), outArray);
+                                        state.world.tile(demand.city.x, demand.city.y));
 
                         //if this source city is better, update things
                         if(dst < minBuyCost){
@@ -115,7 +111,8 @@ public class UnplannedAI extends AI{
                 //now the best source and destination has been found.
                 finalPath.clear();
                 //move from position to the city
-                astar(player.position, state.world.tile(bestLoadCity.x, bestLoadCity.y), finalPath);
+                astar(player.position, state.world.tile(bestLoadCity.x, bestLoadCity.y));
+                finalPath.clearAdd(astarTiles);
 
                 //check if player is at a city that they can get cargo from right now
                 City atCity = state.world.getCity(player.position);

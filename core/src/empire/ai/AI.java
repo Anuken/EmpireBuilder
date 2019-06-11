@@ -10,18 +10,20 @@ import empire.gfx.EmpireCore;
 import io.anuke.arc.collection.Array;
 import io.anuke.arc.collection.GridBits;
 import io.anuke.arc.collection.IntFloatMap;
+import io.anuke.arc.function.Predicate;
 import io.anuke.arc.util.Tmp;
 
 import java.util.PriorityQueue;
 
 /** Handles the AI for a specific player.*/
 public abstract class AI{
-    /** A temporary discarded array.*/
-    protected final Array<Tile> tmpArray = new Array<>();
     /** The player this AI controls.*/
     public final Player player;
     /** The game state.*/
     public final State state;
+
+    protected Array<Tile> astarTiles = new Array<>();
+    protected int astarNewTrackCost = 0;
 
     public AI(Player player, State state){
         this.player = player;
@@ -32,6 +34,16 @@ public abstract class AI{
     public abstract void act();
 
     public float astar(Tile from, Tile to, Array<Tile> out){
+        float cost = astar(from, to);
+        out.clearAdd(astarTiles);
+        return cost;
+    }
+
+    public float astar(Tile from, Tile to){
+        return astar(from, to, test -> test == to || state.world.getMajorCity(test) == to.city && to.city != null);
+    }
+
+    public float astar(Tile from, Tile to, Predicate<Tile> endTest){
         DistanceHeuristic dh = this::tileDst;
         TileHeuristic th = this::cost;
         World world = state.world;
@@ -50,7 +62,7 @@ public abstract class AI{
         while(!queue.isEmpty()){
             Tile next = queue.poll();
             float baseCost = costs.get(world.index(next), 0f);
-            if(next == to || world.getMajorCity(next) == to.city && to.city != null){
+            if(endTest.test(next)){
                 found = true;
                 end = next;
                 break;
@@ -77,18 +89,30 @@ public abstract class AI{
             });
         }
 
-        out.clear();
+        astarTiles.clear();
+        astarNewTrackCost = 0;
 
         if(!found) return Float.MAX_VALUE;
         float totalCost = 0;
         Tile current = end;
+        boolean movedOnOtherTrack = false;
         while(current != from){
-            out.add(current);
+            astarTiles.add(current);
             totalCost += cost(current.searchParent, current);
+
+            //add up direct track costs
+            Tile cfrom = current.searchParent, cto = current;
+            if(!player.hasTrack(cfrom, cto) && !state.world.sameCity(cfrom, cto)){
+                astarNewTrackCost += state.getTrackCost(cfrom, cto);
+            }else if(!movedOnOtherTrack && state.players.contains(p -> p.hasTrack(cfrom, cto))){
+                astarNewTrackCost += State.otherMoveTrackCost;
+                movedOnOtherTrack = true;
+            }
+
             current = current.searchParent;
         }
 
-        out.reverse();
+        astarTiles.reverse();
 
         return totalCost;
     }
