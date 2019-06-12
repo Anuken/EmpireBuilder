@@ -2,14 +2,10 @@ package empire.game;
 
 import empire.ai.AI;
 import empire.game.DemandCard.Demand;
-import empire.game.World.City;
-import empire.game.World.Tile;
-import io.anuke.arc.collection.Array;
-import io.anuke.arc.collection.ObjectMap;
-import io.anuke.arc.collection.ObjectSet;
-import io.anuke.arc.function.BiConsumer;
-import io.anuke.arc.function.Consumer;
-import io.anuke.arc.function.Predicate;
+import empire.game.World.*;
+import empire.gfx.EmpireCore;
+import io.anuke.arc.collection.*;
+import io.anuke.arc.function.*;
 import io.anuke.arc.graphics.Color;
 import io.anuke.arc.util.Structs;
 
@@ -41,7 +37,7 @@ public class Player{
     /** All the event cards this player has active.*/
     public final Array<EventCard> eventCards = new Array<>();
     /** Tracks that this player has placed down.*/
-    public ObjectMap<Tile, Array<Tile>> tracks = new ObjectMap<>();
+    public Tracks tracks = new Tracks();
     /** Player color, used for display purposes.*/
     public Color color;
     /** Current cargo held.*/
@@ -80,19 +76,7 @@ public class Player{
 
     /** Removes one of this player's tracks.*/
     public void removeTrack(Tile from, Tile to){
-        if(tracks.containsKey(from)){
-            tracks.get(from).remove(to);
-            if(tracks.get(from).isEmpty()){
-                tracks.remove(from);
-            }
-        }
-
-        if(tracks.containsKey(to)){
-            tracks.get(to).remove(from);
-            if(tracks.get(to).isEmpty()){
-                tracks.remove(to);
-            }
-        }
+        tracks.remove(from.x, from.y, to.x, to.y);
     }
 
     /** Returns whether a certain action is allowed, according to the event cards.
@@ -108,7 +92,11 @@ public class Player{
 
     /** Returns whether this player has this specific track.*/
     public boolean hasTrack(Tile from, Tile to){
-        return tracks.get(from) != null && tracks.get(from).contains(to);
+        return tracks.has(from.x, from.y, to.x, to.y);
+    }
+
+    public void addTrack(Tile from, Tile to){
+        tracks.add(from.x, from.y, to.x, to.y);
     }
 
     /** Iterates through each good demanded in a city.*/
@@ -146,14 +134,17 @@ public class Player{
         cargo.add(good);
     }
 
-    /** Whether this player's track goes through this tile.*/
     public boolean hasTrack(Tile tile){
-        return tracks.containsKey(tile);
+        return tracks.has(tile.x, tile.y);
+    }
+
+    public int getTrackConnections(Tile tile){
+        return tracks.connections(tile.x, tile.y);
     }
 
     /** Iterates through each unique track that this player has.
      * Pairs are only iterated once, so make sure to check both ends.*/
     public void eachTrack(BiConsumer<Tile, Tile> cons){
-        tracks.each((tile, tiles) -> tiles.each(other -> cons.accept(tile, other)));
+        tracks.each((x, y, x2, y2) -> cons.accept(EmpireCore.state.world.tile(x, y), EmpireCore.state.world.tile(x2, y2)));
     }
 }

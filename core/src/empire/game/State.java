@@ -10,8 +10,7 @@ import io.anuke.arc.collection.Array;
 import io.anuke.arc.collection.ObjectSet;
 import io.anuke.arc.collection.Queue;
 import io.anuke.arc.function.Consumer;
-import io.anuke.arc.util.Strings;
-import io.anuke.arc.util.Structs;
+import io.anuke.arc.util.*;
 
 /** Holds the state of the entire game. */
 public class State{
@@ -89,13 +88,13 @@ public class State{
                 }
 
                 if(city.size == CitySize.major){
-                    if(countConnectedCities(player, world.tile(city.x, city.y)) >= winCityAmount){
+                    if(countConnectedCities(player, world.tile(city)) >= winCityAmount){
                         Events.fire(new WinEvent(player));
                         return;
                     }
-                }
 
-                checked ++;
+                    checked ++;
+                }
             }
         }
     }
@@ -176,8 +175,7 @@ public class State{
 
     /** Places a single track for a player and updates money for the player. */
     public void placeTrack(Player player, Tile from, Tile to){
-        player.tracks.getOr(from, Array::new).add(to);
-        player.tracks.getOr(to, Array::new).add(from);
+        player.addTrack(from, to);
 
         int cost = getTrackCost(from, to);
         player.money -= cost;
@@ -196,30 +194,30 @@ public class State{
     public boolean canBeginTrack(Player player, Tile tile){
         return world.getMajorCity(tile) != null ||
                 player.position == tile ||
-                player.tracks.containsKey(tile) ||
+                player.hasTrack(tile) ||
                 (tile.type == Terrain.port &&
-                        (player.tracks.containsKey(tile.port.from) ||
-                        player.tracks.containsKey(tile.port.to)));
+                        (player.hasTrack(tile.port.from) ||
+                        player.hasTrack(tile.port.to)));
     }
 
     public boolean checkTrackLimits(Player player, Tile tile){
         //only 2 players can build to or from a port
         if(tile.port != null){
-            if(players.count(p -> p.tracks.containsKey(tile)) >= 2){
+            if(players.count(p -> p.hasTrack(tile)) >= 2){
                 return false;
             }
         }
 
         if(tile.city != null){
             //can't build 3 tracks into a city
-            if(tile.city.size != CitySize.major && player.tracks.containsKey(tile) && player.tracks.get(tile).size >= 3){
+            if(tile.city.size != CitySize.major && player.getTrackConnections(tile) >= 3){
                 return true;
             }
 
             //max 3 players can build into medium, max 2 into small
-            if(tile.city.size == CitySize.medium && players.count(p -> p.tracks.containsKey(tile)) >= 3){
+            if(tile.city.size == CitySize.medium && players.count(p -> p.hasTrack(tile)) >= 3){
                 return false;
-            }else if(tile.city.size == CitySize.small && players.count(p -> p.tracks.containsKey(tile)) >= 2){
+            }else if(tile.city.size == CitySize.small && players.count(p -> p.hasTrack(tile)) >= 2){
                 return false;
             }
         }
@@ -233,8 +231,8 @@ public class State{
 
         //player needs to be there to place tracks there
         if(player.position != from
-            && !player.tracks.containsKey(from) //check existing track connections
-            && !player.tracks.containsKey(to)
+            && !player.hasTrack(from) //check existing track connections
+            && !player.hasTrack(to)
             && !(from.port != null && //check port
                 (from.port.from == from || from.port.to == from))
             && world.getMajorCity(from) == null){ //make sure to check for major cities too; track can be placed from any major city
@@ -267,11 +265,9 @@ public class State{
         }
 
         //make sure that this track is not used by a different player
-        for(Player other : players){
-            if((other.tracks.containsKey(from) && other.tracks.get(from).contains(to))
-                || (other.tracks.containsKey(to) && other.tracks.get(to).contains(from))){
-                return false;
-            }
+        //(including this player)
+        if(players.contains(other -> other.hasTrack(from, to))){
+            return false;
         }
 
         //make sure the player can spend the money

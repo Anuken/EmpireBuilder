@@ -52,7 +52,7 @@ public class UnplannedAI extends AI{
                     //if this source city is better, update things
                     if(dst < minBuyCost){
                         minBuyCost = dst;
-                        finalPath.clearAdd(astarTiles);
+                        finalPath.set(astarTiles);
                     }
                 }
 
@@ -112,7 +112,7 @@ public class UnplannedAI extends AI{
                 finalPath.clear();
                 //move from position to the city
                 astar(player.position, state.world.tile(bestLoadCity.x, bestLoadCity.y));
-                finalPath.clearAdd(astarTiles);
+                finalPath.set(astarTiles);
 
                 //check if player is at a city that they can get cargo from right now
                 City atCity = state.world.getCity(player.position);

@@ -161,10 +161,9 @@ public class World{
             if(city != null && getMajorCity(other) == city){
                 adjacent.accept(other);
                 //case 2: tracks between these two points
-            }else if(player.tracks.containsKey(tile) && player.tracks.get(tile).contains(other)){
+            }else if(player.hasTrack(tile, other)){
                 adjacent.accept(other);
             }else if(otherPlayers){
-                //TODO this is laughably inefficient
                 for(Player otherplayer : state.players){
                     if(otherplayer.hasTrack(tile, other)){
                         adjacent.accept(other);

@@ -35,7 +35,7 @@ public abstract class AI{
 
     public float astar(Tile from, Tile to, Array<Tile> out){
         float cost = astar(from, to);
-        out.clearAdd(astarTiles);
+        out.set(astarTiles);
         return cost;
     }
 

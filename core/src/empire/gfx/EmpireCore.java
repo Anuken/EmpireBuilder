@@ -1,15 +1,13 @@
 package empire.gfx;
 
 import empire.ai.*;
-import empire.game.Player;
-import empire.game.State;
+import empire.game.GameEvents.WinEvent;
+import empire.game.*;
 import empire.game.World.City;
-import empire.io.CardIO;
-import empire.io.MapIO;
+import empire.io.*;
 import empire.net.Net;
-import empire.net.WebsocketNet;
-import io.anuke.arc.ApplicationCore;
-import io.anuke.arc.Core;
+import empire.net.*;
+import io.anuke.arc.*;
 import io.anuke.arc.collection.Array;
 import io.anuke.arc.function.BiFunction;
 import io.anuke.arc.graphics.Color;
@@ -17,9 +15,7 @@ import io.anuke.arc.graphics.g2d.Draw;
 import io.anuke.arc.graphics.glutils.FrameBuffer;
 import io.anuke.arc.input.KeyCode;
 import io.anuke.arc.math.Mathf;
-import io.anuke.arc.util.Log;
-import io.anuke.arc.util.ScreenUtils;
-import io.anuke.arc.util.Timer;
+import io.anuke.arc.util.*;
 import io.anuke.arc.util.Timer.Task;
 
 /** Main class for graphical renderer. Initializes state and its renderers.*/
@@ -27,7 +23,7 @@ public class EmpireCore extends ApplicationCore{
     /** Size of each hex tile in pixels. */
     public static final int tilesize = 16;
     public static final int totalAI = 1;
-    public static final int testTurns = 100;
+    public static final int testTurns = 150;
     public static final boolean debug = true, isAI = true, netDebug = false,
                                 seeded = true, testEfficiency = true;
     public static final BiFunction<Player, State, AI> aiType = PlannedAI::new;
@@ -85,12 +81,26 @@ public class EmpireCore extends ApplicationCore{
 
         if(isAI){
             if(testEfficiency){
+                boolean[] hasWon = {false};
+
+                Events.on(WinEvent.class, e -> {
+                    hasWon[0] = true;
+                });
+
                 Core.app.post(() -> {
+                    int turns = 0;
                     for(int i = 0; i < testTurns; i++){
                         state.player().ai.act();
+                        turns ++;
+                        if(hasWon[0]){
+                            break;
+                        }
                     }
-                    Log.info("Final profit in {0} turns: {1}", testTurns, state.player().money);
-
+                    if(hasWon[0]){
+                        Log.info("Won in {0} turns.", turns);
+                    }else{
+                        Log.info("Final profit in {0} turns: {1}", testTurns, state.player().money);
+                    }
                     Core.app.post(() -> {
                         FrameBuffer buffer = new FrameBuffer(state.world.width * tilesize, state.world.height * tilesize);
 
@@ -115,6 +125,7 @@ public class EmpireCore extends ApplicationCore{
                             if(Core.input.keyDown(KeyCode.SPACE)){
                                 cancelled[0] = true;
                             }
+
                             if(!cancelled[0]){
                                 state.player().ai.act();
                             }

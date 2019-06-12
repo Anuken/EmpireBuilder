@@ -2,7 +2,7 @@ package empire.ai;
 
 import empire.game.Actions.*;
 import empire.game.DemandCard.Demand;
-import empire.game.GameEvents.EventEvent;
+import empire.game.GameEvents.*;
 import empire.game.*;
 import empire.game.World.*;
 import io.anuke.arc.Events;
@@ -18,7 +18,7 @@ public class PlannedAI extends AI{
     private static final float demandCostScale = 250f;
     /** All the action combinations of 3 ordered demand cards with cargo space 2.*/
     private static final int[][] combinations = {
-            //{1, -1, 2, 3, -2, -3},
+            {1, -1, 2, 3, -2, -3},
             //{1, -1, 2, 3, -3, -2},
             //{1, 2, -1, -2, 3, -3},
             //{1, 2, -2, -1, 3, -3},
@@ -90,7 +90,7 @@ public class PlannedAI extends AI{
 
                 //queue a move to this location
                 astar(player.position, state.world.tile(u.city));
-                finalPath.clearAdd(astarTiles);
+                finalPath.set(astarTiles);
 
                 //check if player can deliver this good
                 City atCity = state.world.getCity(player.position);
@@ -115,7 +115,7 @@ public class PlannedAI extends AI{
 
                 //queue a move to this location
                 astar(player.position, state.world.tile(l.city));
-                finalPath.clearAdd(astarTiles);
+                finalPath.set(astarTiles);
 
                 //check if player can deliver this good
                 City atCity = state.world.getCity(player.position);
@@ -144,7 +144,7 @@ public class PlannedAI extends AI{
                     moved = true;
                 }else{
                     astar(state.world.tile(l.from), state.world.tile(l.to), connected::contains);
-                    finalPath.clearAdd(astarTiles);
+                    finalPath.set(astarTiles);
                     shouldMove = false;
                     startTile = state.world.tile(l.from);
                 }
@@ -315,6 +315,7 @@ public class PlannedAI extends AI{
         Tile currentTile = player.position;
         float finalCost = 0f;
         //keep track of money to prevent illegal dead-end moves
+        //TODO currently doesn't work properly
         int currentMoney = player.money;
 
         for(int value : sequence){
