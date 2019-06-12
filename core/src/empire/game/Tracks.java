@@ -21,9 +21,24 @@ public class Tracks{
         }
     }
 
+    public void clear(){
+        map.clear();
+        used.clear();
+    }
+
     public void add(int x, int y, int x2, int y2){
         addDirectional(x, y, x2, y2);
         addDirectional(x2, y2, x, y);
+    }
+
+    public void add(Tracks tracks){
+        tracks.each(this::add);
+    }
+
+    public void set(Tracks other){
+        clear();
+        map.putAll(other.map);
+        used.putAll(other.used);
     }
 
     private void addDirectional(int x, int y, int x2, int y2){

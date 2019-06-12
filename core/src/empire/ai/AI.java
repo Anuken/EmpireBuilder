@@ -1,9 +1,7 @@
 package empire.ai;
 
+import empire.game.*;
 import empire.game.Actions.EndTurn;
-import empire.game.Player;
-import empire.game.State;
-import empire.game.World;
 import empire.game.World.City;
 import empire.game.World.Tile;
 import empire.gfx.EmpireCore;
@@ -24,6 +22,8 @@ public abstract class AI{
 
     protected Array<Tile> astarTiles = new Array<>();
     protected int astarNewTrackCost = 0;
+    protected Tracks astarOutputTracks = new Tracks(),
+                        astarInputTracks = new Tracks();
 
     public AI(Player player, State state){
         this.player = player;
@@ -47,6 +47,8 @@ public abstract class AI{
         DistanceHeuristic dh = this::tileDst;
         TileHeuristic th = this::cost;
         World world = state.world;
+
+        astarOutputTracks.clear();
 
         GridBits closed = new GridBits(world.width, world.height);
         GridBits open = new GridBits(world.width, world.height);
@@ -102,8 +104,10 @@ public abstract class AI{
 
             //add up direct track costs
             Tile cfrom = current.searchParent, cto = current;
-            if(!player.hasTrack(cfrom, cto) && !state.world.sameCity(cfrom, cto)){
+            if(!player.hasTrack(cfrom, cto) && !state.world.sameCity(cfrom, cto)
+                    /*&& !astarInputTracks.has(cfrom.x, cfrom.y, cto.x, cto.y)*/){
                 astarNewTrackCost += state.getTrackCost(cfrom, cto);
+                astarOutputTracks.add(cfrom.x, cfrom.y, cto.x, cto.y);
             }else if(!movedOnOtherTrack && state.players.contains(p -> p.hasTrack(cfrom, cto))){
                 astarNewTrackCost += State.otherMoveTrackCost;
                 movedOnOtherTrack = true;
@@ -118,7 +122,7 @@ public abstract class AI{
     }
 
     float cost(Tile from, Tile to){
-        if(player.hasTrack(from, to)){
+        if(player.hasTrack(from, to)/* || astarInputTracks.has(from.x, from.y, to.x, to.y)*/){
             return 0.5f;
         }
         if(state.players.contains(p -> p.hasTrack(from, to))){

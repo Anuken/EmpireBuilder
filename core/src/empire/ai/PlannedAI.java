@@ -18,7 +18,7 @@ public class PlannedAI extends AI{
     private static final float demandCostScale = 250f;
     /** All the action combinations of 3 ordered demand cards with cargo space 2.*/
     private static final int[][] combinations = {
-            {1, -1, 2, 3, -2, -3},
+            //{1, -1, 2, 3, -2, -3},
             //{1, -1, 2, 3, -3, -2},
             //{1, 2, -1, -2, 3, -3},
             //{1, 2, -2, -1, 3, -3},
@@ -275,6 +275,7 @@ public class PlannedAI extends AI{
 
     void makePlan(Demand[] demands, int[] inPlan){
         Tile currentTile = player.position;
+        Tracks newTracks = new Tracks();
 
         for(int value : inPlan){
             boolean unload = value < 0;
@@ -282,20 +283,34 @@ public class PlannedAI extends AI{
             Demand demand = demands[Math.abs(value) - 1];
 
             if(unload){
+                //astar here to add tracks used
+                astarInputTracks.set(newTracks);
+                astar(currentTile, state.world.tile(demand.city));
+                newTracks.add(astarOutputTracks);
+
                 plan.add(new UnloadPlan(demand.city, demand.good));
                 //update new position
                 currentTile = state.world.tile(demand.city);
             }else if(!player.cargo.contains(demand.good)){ //only plan to load if you don't have this good
                 Tile position = currentTile;
+                //set input tracks for all the calculations after this
+                astarInputTracks.set(newTracks);
                 //find best city to get load from
                 City loadFrom = Array.with(state.world.cities())
                         .select(s -> s.goods.contains(demand.good))
                         .min(city -> astar(position, state.world.tile(city)));
+
+                astar(position, state.world.tile(loadFrom));
+                newTracks.add(astarOutputTracks);
+
                 plan.add(new LoadPlan(loadFrom, demand.good));
                 //update new position since you have to go to this city to load from it
                 currentTile = state.world.tile(loadFrom);
             }
         }
+
+        //clear for next A* calls
+        astarInputTracks.clear();
 
         Log.info("Created plan:\n| | {0}", plan.toString("\n| | ",
                 s -> s.getClass().getSimpleName() + s.toString()));
@@ -317,6 +332,7 @@ public class PlannedAI extends AI{
         //keep track of money to prevent illegal dead-end moves
         //TODO currently doesn't work properly
         int currentMoney = player.money;
+        Tracks newTracks = new Tracks();
 
         for(int value : sequence){
             //whether this is a load or unload action
@@ -326,8 +342,11 @@ public class PlannedAI extends AI{
 
             if(unload){
                 //unload: just pathfind to the sell city, add cost
+                astarInputTracks.set(newTracks);
                 finalCost += astar(currentTile, state.world.tile(demand.city));
                 currentTile = state.world.tile(demand.city);
+                //add newly created tracks
+                newTracks.add(astarOutputTracks);
 
                 //make sure you can actually get to there to unload it!
                 currentMoney -= astarNewTrackCost;
@@ -347,7 +366,9 @@ public class PlannedAI extends AI{
                         .min(city -> astar(position, state.world.tile(city)));
 
                 //update the final cost and position based on this
+                astarInputTracks.set(newTracks);
                 finalCost += astar(position, state.world.tile(min));
+                newTracks.add(astarOutputTracks);
                 currentMoney -= astarNewTrackCost;
                 currentTile = state.world.tile(min);
             }
@@ -359,6 +380,8 @@ public class PlannedAI extends AI{
             //    return Float.POSITIVE_INFINITY;
             }
         }
+
+        astarInputTracks.clear();
         return finalCost;
     }
 
