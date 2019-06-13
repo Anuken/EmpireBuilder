@@ -2,10 +2,8 @@ package empire.ai;
 
 import empire.game.Actions.*;
 import empire.game.DemandCard.Demand;
-import empire.game.GameEvents.*;
 import empire.game.*;
 import empire.game.World.*;
-import io.anuke.arc.Events;
 import io.anuke.arc.collection.*;
 import io.anuke.arc.util.*;
 
@@ -27,6 +25,7 @@ public class PlannedAI extends AI{
     };
     /** All the action combinations of 3 ordered demand cards with cargo space 3.*/
     private static final int[][] cargo3Combinations = {
+            //all of these are terrible
             /*{1, 2, 3, -1, -2, -3},
             {1, 2, 3, -1, -3, -2},
             {1, 2, 3, -2, -1, -3},
@@ -39,10 +38,6 @@ public class PlannedAI extends AI{
 
     public PlannedAI(Player player, State state){
         super(player, state);
-
-        Events.on(EventEvent.class, e -> {
-            updatePlan();
-        });
     }
 
     @Override
@@ -53,16 +48,20 @@ public class PlannedAI extends AI{
         }
 
         //update the plan if it's empty
-        if(plan.isEmpty()){
-            updatePlan();
+        if(plan.isEmpty() && waitAsync()){
+            async(this::updatePlan);
         }
 
-        executePlan();
-
-        end();
+        //wait until plan is ready to be executed; if it is, execute it; then end the turn if it's over
+        if(waitAsync()){
+            if(executePlan()){
+                end();
+            }
+        }
     }
 
-    void executePlan(){
+    /** Attempts to execute the plan; returns whether or not the turn should end.*/
+    boolean executePlan(){
         Log.info("| Turn {0}", state.turn);
         Array<Tile> finalPath = new Array<>();
         boolean shouldMove = !state.isPreMovement();
@@ -76,7 +75,8 @@ public class PlannedAI extends AI{
 
             if(plan.size == 0){
                 Log.info("No plan.");
-                return;
+                //end the turn
+                return true;
             }
 
             PlanAction action = plan.peek();
@@ -102,7 +102,10 @@ public class PlannedAI extends AI{
                         sell.act();
                         moved = true;
                         plan.pop();
-                        updatePlan();
+
+                        //wait to update the plan but don't end the turn
+                        async(this::updatePlan);
+                        return false;
                     }else{
                         //if it's not possible, something's up with events, don't move
                         Log.info("Can't sell {0} at {1}, waiting.", good, atCity.name);
@@ -181,7 +184,7 @@ public class PlannedAI extends AI{
                         //moves may skip turns; if that happens, break out of the whole thing
                         if(state.player() != player){
                             plan.pop();
-                            return;
+                            return true;
                         }
                     }else{
                         //can't move due to an event or something
@@ -199,6 +202,7 @@ public class PlannedAI extends AI{
                 type = 0;
             }}.act();
         }
+        return true;
     }
 
     /**

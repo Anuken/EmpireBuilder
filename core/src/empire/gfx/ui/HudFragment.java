@@ -314,5 +314,12 @@ public class HudFragment{
                 setPosition(Core.input.mouseX(), Core.input.mouseY(), Align.bottomRight);
             });
         }});
+
+        group.fill(t -> {
+            t.table("dialogDim", f -> {
+                f.add("Thinking...").pad(5f);
+            });
+            t.visible(() -> scheduler.isThinking());
+        });
     }
 }

@@ -1,34 +1,22 @@
 package empire.gfx;
 
 import empire.ai.AI;
-import empire.game.DemandCard;
+import empire.game.*;
 import empire.game.DemandCard.Demand;
-import empire.game.EventCard;
-import empire.game.EventCard.FogEvent;
-import empire.game.EventCard.HeavySnowEvent;
+import empire.game.EventCard.*;
 import empire.game.GameEvents.EndTurnEvent;
-import empire.game.Player;
-import empire.game.World.City;
-import empire.game.World.Tile;
+import empire.game.World.*;
 import empire.gfx.gen.MapImageRenderer;
-import io.anuke.arc.ApplicationListener;
-import io.anuke.arc.Core;
-import io.anuke.arc.Events;
+import io.anuke.arc.*;
 import io.anuke.arc.collection.Array;
-import io.anuke.arc.graphics.Blending;
-import io.anuke.arc.graphics.Camera;
-import io.anuke.arc.graphics.Color;
-import io.anuke.arc.graphics.Texture;
+import io.anuke.arc.graphics.*;
 import io.anuke.arc.graphics.Texture.TextureFilter;
 import io.anuke.arc.graphics.g2d.*;
 import io.anuke.arc.graphics.glutils.FrameBuffer;
 import io.anuke.arc.input.KeyCode;
-import io.anuke.arc.math.Angles;
-import io.anuke.arc.math.Mathf;
+import io.anuke.arc.math.*;
 import io.anuke.arc.math.geom.Vector2;
-import io.anuke.arc.util.Align;
-import io.anuke.arc.util.Time;
-import io.anuke.arc.util.Tmp;
+import io.anuke.arc.util.*;
 
 import static empire.gfx.EmpireCore.*;
 
@@ -102,8 +90,21 @@ public class Renderer implements ApplicationListener{
         //Core.camera.height = ph;
     }
 
+    public void takeWorldScreenshot(){
+        FrameBuffer buffer = new FrameBuffer(state.world.width * tilesize, state.world.height * tilesize);
+
+        buffer.begin();
+        Core.graphics.clear(Color.BLACK);
+        Draw.proj().setOrtho(0, 0, buffer.getWidth(), buffer.getHeight());
+        renderer.drawBuffered();
+        Draw.flush();
+        ScreenUtils.saveScreenshot(Core.files.local("screenshot_" + state.player().ai.getClass().getSimpleName() + ".png"),
+                0, 0, buffer.getWidth(), buffer.getHeight());
+        buffer.end();
+    }
+
     /** Draws everything in the world that goes in the pixel buffer.*/
-    public void drawBuffered(){
+    void drawBuffered(){
         drawWorld();
         drawRails();
         drawPlayers();
@@ -118,7 +119,7 @@ public class Renderer implements ApplicationListener{
 
         float speed = 15f * Time.delta();
 
-        Vector2 movement = Tmp.v2.setZero();
+        Vector2 movement = Tmp.v4.setZero();
         if(Core.input.keyDown(KeyCode.W) || Core.input.keyDown(KeyCode.UP)) movement.y += speed;
         if(Core.input.keyDown(KeyCode.A) || Core.input.keyDown(KeyCode.LEFT)) movement.x -= speed;
         if(Core.input.keyDown(KeyCode.S) || Core.input.keyDown(KeyCode.DOWN)) movement.y -= speed;
@@ -130,7 +131,7 @@ public class Renderer implements ApplicationListener{
         }
 
         Vector2 v = control.toWorld(state.player().position);
-        if(doLerp && state.player().chosenLocation){
+        if(doLerp && state.player().chosenLocation && !scheduler.isThinking()){
             Core.camera.position.lerpDelta(v, 0.06f);
         }
     }

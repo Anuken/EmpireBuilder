@@ -1,14 +1,12 @@
 package empire.game;
 
 import empire.gfx.EmpireCore;
-import io.anuke.arc.collection.Array;
-import io.anuke.arc.collection.ObjectMap;
+import io.anuke.arc.collection.*;
+import io.anuke.arc.collection.ObjectMap.Values;
 import io.anuke.arc.function.Consumer;
 import io.anuke.arc.math.Mathf;
-import io.anuke.arc.math.geom.Point2;
-import io.anuke.arc.math.geom.Vector2;
-import io.anuke.arc.util.Strings;
-import io.anuke.arc.util.Structs;
+import io.anuke.arc.math.geom.*;
+import io.anuke.arc.util.*;
 
 /** Holds information about the game's world, such as tiles and their costs.*/
 public class World{
@@ -135,7 +133,7 @@ public class World{
 
     /** Returns the cities in this world.*/
     public Iterable<City> cities(){
-        return cities.values();
+        return new Values<>(cities);
     }
 
     /** Returns a tile at a location. Never returns null.

@@ -41,7 +41,7 @@ public class UI implements ApplicationListener{
         Core.input.addProcessor(Core.scene);
 
         Events.on(WinEvent.class, event -> {
-            ui.showDialog(event.player.name + " is victorious!", dialog -> {
+            ui.showDialog(event.player.name + " is victorious in " + state.turn + " turns!", dialog -> {
                 dialog.cont.add(event.player.name + " has won the game, as they have\nconnected 7 major cities and gotten " + State.winMoneyAmount + " ECU!");
             });
         });
@@ -113,8 +113,8 @@ public class UI implements ApplicationListener{
     public void showFade(String text){
         Label label = new Label(text);
         Core.scene.table(t -> {
-            t.add(label);
-            t.actions(Actions.fadeOut(20f, Interpolation.swingOut), Actions.remove());
+            t.add(label).padTop(200f);
+            t.actions(Actions.fadeOut(2f, Interpolation.swingOut), Actions.remove());
         });
     }
 

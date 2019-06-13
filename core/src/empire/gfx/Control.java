@@ -1,29 +1,20 @@
 package empire.gfx;
 
-import empire.game.Actions.ChooseStart;
-import empire.game.Actions.Move;
-import empire.game.Actions.PlaceTrack;
-import empire.game.World.City;
-import empire.game.World.Tile;
-import io.anuke.arc.ApplicationListener;
-import io.anuke.arc.Core;
+import empire.game.Actions.*;
+import empire.game.World.*;
+import io.anuke.arc.*;
 import io.anuke.arc.collection.Array;
 import io.anuke.arc.input.KeyCode;
 import io.anuke.arc.math.Mathf;
-import io.anuke.arc.math.geom.Intersector;
-import io.anuke.arc.math.geom.Point2;
-import io.anuke.arc.math.geom.Vector2;
-import io.anuke.arc.util.Structs;
-import io.anuke.arc.util.Timer;
-import io.anuke.arc.util.Timer.Task;
-import io.anuke.arc.util.Tmp;
+import io.anuke.arc.math.geom.*;
+import io.anuke.arc.util.*;
 
-import static empire.gfx.EmpireCore.state;
-import static empire.gfx.EmpireCore.tilesize;
+import static empire.gfx.EmpireCore.*;
 
 /** Handles user input.*/
 public class Control implements ApplicationListener{
     private Array<Tile> outArray = new Array<>();
+    private ThreadLocal<Vector2> vec = new ThreadLocal<>();
     public Tile placeLoc = null;
 
     @Override
@@ -147,7 +138,8 @@ public class Control implements ApplicationListener{
 
     /** Converts map coordinates to world coordinates.*/
     public Vector2 toWorld(int x, int y){
-        return Tmp.v1.set(x * tilesize + (y%2)*tilesize/2f, y*tilesize);
+        if(vec.get() == null) vec.set(new Vector2());
+        return vec.get().set(x * tilesize + (y%2)*tilesize/2f, y*tilesize);
     }
 
     /** {@link #toWorld(int, int)} for tiles.*/

@@ -10,15 +10,20 @@ import io.anuke.arc.collection.GridBits;
 import io.anuke.arc.collection.IntFloatMap;
 import io.anuke.arc.function.Predicate;
 import io.anuke.arc.util.Tmp;
+import io.anuke.arc.util.async.*;
 
 import java.util.PriorityQueue;
 
 /** Handles the AI for a specific player.*/
 public abstract class AI{
+    protected static final AsyncExecutor executor = new AsyncExecutor(4);
+
     /** The player this AI controls.*/
     public final Player player;
     /** The game state.*/
     public final State state;
+
+    private AsyncResult<Void> waiting;
 
     protected Array<Tile> astarTiles = new Array<>();
     protected int astarNewTrackCost = 0;
@@ -32,6 +37,18 @@ public abstract class AI{
 
     /** Performs actions on this AI's turn.*/
     public abstract void act();
+
+    public boolean waitAsync(){
+        return waiting == null || waiting.isDone();
+    }
+
+    public void async(Runnable runnable){
+        if(!waitAsync()){
+            throw new IllegalArgumentException("Wait for the task to be done until trying again.");
+        }
+
+        waiting = executor.submit(runnable);
+    }
 
     public float astar(Tile from, Tile to, Array<Tile> out){
         float cost = astar(from, to);

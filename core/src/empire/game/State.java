@@ -37,6 +37,8 @@ public class State{
     public int currentPlayer;
     /** All the cards of this state. May be event or demand cards*/
     public Array<Card> cards;
+    /** Whether someone has already won.*/
+    public boolean hasWinner = false;
 
     /** Tile collections for temporary usage.*/
     private static final ObjectSet<Tile> closedSet = new ObjectSet<>();
@@ -90,6 +92,7 @@ public class State{
                 if(city.size == CitySize.major){
                     if(countConnectedCities(player, world.tile(city)) >= winCityAmount){
                         Events.fire(new WinEvent(player));
+                        hasWinner = true;
                         return;
                     }
 
