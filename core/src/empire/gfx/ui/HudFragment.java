@@ -316,6 +316,14 @@ public class HudFragment{
         }});
 
         group.fill(t -> {
+            t.bottom();
+            t.table("button", f -> {
+                f.add("[coral]PAUSED").pad(5f);
+            });
+            t.visible(() -> scheduler.isPaused());
+        });
+
+        group.fill(t -> {
             t.table("dialogDim", f -> {
                 f.add("Thinking...").pad(5f);
             });

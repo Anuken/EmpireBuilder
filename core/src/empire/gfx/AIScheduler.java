@@ -40,7 +40,7 @@ public class AIScheduler implements ApplicationListener{
 
         if(Core.input.keyTap(KeyCode.SPACE) && task.isScheduled()){
             task.cancel();
-        }if(Core.input.keyTap(KeyCode.SPACE) && !task.isScheduled()){
+        }else if(Core.input.keyTap(KeyCode.SPACE) && !task.isScheduled()){
             Timer.schedule(task, interval, interval);
         }
     }
@@ -50,6 +50,6 @@ public class AIScheduler implements ApplicationListener{
     }
 
     public boolean isPaused(){
-        return task != null && task.isScheduled();
+        return task != null && !task.isScheduled();
     }
 }
