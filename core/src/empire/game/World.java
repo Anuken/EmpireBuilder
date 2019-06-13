@@ -61,6 +61,11 @@ public class World{
         return getMajorCity(from) == getMajorCity(to) && getMajorCity(to) != null;
     }
 
+    /** Returns whether these two tiles are in the same port.*/
+    public boolean samePort(Tile from, Tile to){
+        return from.port == to.port && to.port != null;
+    }
+
     /** Returns the major city that this tile is part of, or null.*/
     public City getMajorCity(Tile tile){
         if(tile.city != null && tile.city.size == CitySize.major){

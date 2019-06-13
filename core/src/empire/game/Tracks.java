@@ -1,7 +1,7 @@
 package empire.game;
 
 import io.anuke.arc.collection.*;
-import io.anuke.arc.collection.LongMap.Keys;
+import io.anuke.arc.collection.LongMap.*;
 import io.anuke.arc.function.IntSegmentConsumer;
 import io.anuke.arc.util.Pack;
 
@@ -11,9 +11,9 @@ public class Tracks{
     private IntIntMap used = new IntIntMap();
 
     public void each(IntSegmentConsumer cons){
-        Keys keys = map.keys();
-        while(keys.hasNext){
-            long key = keys.next();
+        Entries entries = new Entries(map);
+        while(entries.hasNext){
+            long key = entries.next().key;
             int start = Pack.leftInt(key), end = Pack.rightInt(key);
             short x1 = Pack.leftShort(start), y1 = Pack.rightShort(start);
             short x2 = Pack.leftShort(end), y2 = Pack.rightShort(end);

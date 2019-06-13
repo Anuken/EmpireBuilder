@@ -157,7 +157,7 @@ public class PlannedAI extends AI{
             Tile last = startTile;
             //now place all track if it can
             for(Tile tile : finalPath){
-                if(!player.hasTrack(last, tile) && !state.world.sameCity(last, tile)){
+                if(!player.hasTrack(last, tile) && !state.world.sameCity(last, tile) && !state.world.samePort(last, tile)){
                     if(state.canPlaceTrack(player, last, tile)){
                         PlaceTrack place = new PlaceTrack();
                         place.from = last;

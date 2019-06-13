@@ -17,6 +17,7 @@ import java.util.PriorityQueue;
 /** Handles the AI for a specific player.*/
 public abstract class AI{
     protected static final AsyncExecutor executor = new AsyncExecutor(4);
+    protected static final boolean checkHistory = false;
 
     /** The player this AI controls.*/
     public final Player player;
@@ -103,7 +104,6 @@ public abstract class AI{
                         queue.add(child);
                     }
                     open.set(child.x, child.y);
-                    //closed.set(child.x, child.y);
                 }
             });
         }
@@ -122,7 +122,7 @@ public abstract class AI{
             //add up direct track costs
             Tile cfrom = current.searchParent, cto = current;
             if(!player.hasTrack(cfrom, cto) && !state.world.sameCity(cfrom, cto)
-                    /*&& !astarInputTracks.has(cfrom.x, cfrom.y, cto.x, cto.y)*/){
+                     && !(checkHistory && astarInputTracks.has(cfrom.x, cfrom.y, cto.x, cto.y))){
                 astarNewTrackCost += state.getTrackCost(cfrom, cto);
                 astarOutputTracks.add(cfrom.x, cfrom.y, cto.x, cto.y);
             }else if(!movedOnOtherTrack && state.players.contains(p -> p.hasTrack(cfrom, cto))){
@@ -139,7 +139,7 @@ public abstract class AI{
     }
 
     float cost(Tile from, Tile to){
-        if(player.hasTrack(from, to)/* || astarInputTracks.has(from.x, from.y, to.x, to.y)*/){
+        if(player.hasTrack(from, to) || (checkHistory && astarInputTracks.has(from.x, from.y, to.x, to.y))){
             return 0.5f;
         }
         if(state.players.contains(p -> p.hasTrack(from, to))){
