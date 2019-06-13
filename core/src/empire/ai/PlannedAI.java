@@ -58,6 +58,8 @@ public class PlannedAI extends AI{
                 end();
             }
         }
+
+        state.checkIfWon(player);
     }
 
     /** Attempts to execute the plan; returns whether or not the turn should end.*/
@@ -100,7 +102,6 @@ public class PlannedAI extends AI{
                         SellCargo sell = new SellCargo();
                         sell.cargo = good;
                         sell.act();
-                        moved = true;
                         plan.pop();
 
                         //wait to update the plan but don't end the turn
