@@ -58,10 +58,6 @@ public class EmpireCore extends ApplicationCore{
             player.local = true;
             player.ai = aiType.get(player, state);
 
-            if(seeded){
-                player.chosenLocation = true;
-            }
-
             //add a turn scheduler for this AI
             add(scheduler = new AIScheduler(player.ai));
         }else{

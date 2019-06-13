@@ -210,7 +210,7 @@ public class Renderer implements ApplicationListener{
             }
         }
 
-        //pathfinding debug
+        //pathfinding debug, doesn't work currently
         if(state.player().ai != null && false){
             AI ai = state.player().ai;
 

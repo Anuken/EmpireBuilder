@@ -10,6 +10,10 @@ import io.anuke.arc.util.*;
 import java.util.Arrays;
 
 public class PlannedAI extends AI{
+    /** Whether to choose a location.*/
+    private static final boolean chooseLocation = false;
+    /** Whether to check plan validity in terms of money.*/
+    private static final boolean checkPlanValid = false;
     /** Money after which the AI will consider upgrading their loco.*/
     private static final int upgradeAfterMoney = 40;
     /** Demand cost scale: how many units to reduce a score by, per ECU.*/
@@ -43,7 +47,7 @@ public class PlannedAI extends AI{
     @Override
     public void act(){
         //select a random start location if not chosen already
-        if(!player.chosenLocation){
+        if(!player.chosenLocation && waitAsync()){
             selectLocation();
         }
 
@@ -197,8 +201,7 @@ public class PlannedAI extends AI{
         }
 
         //upgrade if the player can do it now; only happens after a money threshold
-        if(state.player() == player &&
-                player.money > upgradeAfterMoney && player.loco != Loco.fastFreight){
+        if(state.player() == player && player.money > upgradeAfterMoney && player.loco != Loco.fastFreight){
             new UpgradeLoco(){{
                 type = 0;
             }}.act();
@@ -225,8 +228,21 @@ public class PlannedAI extends AI{
         plan.clear(); //clear old data, it's not useful anymore
 
         Demand[] bestCombination = new Demand[3];
+        int[] bestPlan = new int[6];
+        getBestPlan(bestCombination, bestPlan);
+
+        if(bestPlan[0] == 0){
+            Log.info("All plans are invalid, you're screwed.");
+            return;
+        }
+
+        makePlan(bestCombination, bestPlan);
+
+        Log.info(Array.with(bestCombination).toString(", ", d -> d.good + " to " + d.city.name));
+    }
+
+    float getBestPlan(Demand[] bestCombination, int[] bestPlan){
         Demand[] inDemands = new Demand[3];
-        int[] bestPlan = null;
         float bestCost = Float.POSITIVE_INFINITY;
 
         //find the best sequence of demands possible
@@ -244,7 +260,7 @@ public class PlannedAI extends AI{
                             Log.info("Plan '{0}' is better than plan '{1}'" +
                                     " with scores {2} > {3}.", Arrays.toString(plan), Arrays.toString(bestPlan), bestCost, cost);
                             bestCost = cost;
-                            bestPlan = plan;
+                            System.arraycopy(plan, 0, bestPlan, 0, 6);
                             bestCombination[0] = first;
                             bestCombination[1] = second;
                             bestCombination[2] = third;
@@ -257,7 +273,7 @@ public class PlannedAI extends AI{
                             float cost = evaluatePlan(inDemands, plan);
                             if(cost < bestCost){
                                 bestCost = cost;
-                                bestPlan = plan;
+                                System.arraycopy(plan, 0, bestPlan, 0, 6);
                                 bestCombination[0] = first;
                                 bestCombination[1] = second;
                                 bestCombination[2] = third;
@@ -268,14 +284,7 @@ public class PlannedAI extends AI{
             }
         }
 
-        if(bestPlan == null){
-            Log.info("All plans are invalid, you're screwed.");
-            return;
-        }
-
-        makePlan(bestCombination, bestPlan);
-
-        Log.info(Array.with(bestCombination).toString(", ", d -> d.good + " to " + d.city.name));
+        return bestCost;
     }
 
     void makePlan(Demand[] demands, int[] inPlan){
@@ -356,7 +365,7 @@ public class PlannedAI extends AI{
                 //make sure you can actually get to there to unload it!
                 currentMoney -= astarNewTrackCost;
                 //TODO implement
-                //if(currentMoney < 0) return Float.POSITIVE_INFINITY;
+                if(currentMoney < 0 && checkPlanValid) return Float.POSITIVE_INFINITY;
 
                 //assume you sold it, update money
                 currentMoney += demand.cost;
@@ -381,8 +390,8 @@ public class PlannedAI extends AI{
             //bail out if at any point this AI runs out of money
             //this doesn't work currently!
             //TODO implement
-            if(currentMoney < 0){
-            //    return Float.POSITIVE_INFINITY;
+            if(currentMoney < 0 && checkPlanValid){
+                return Float.POSITIVE_INFINITY;
             }
         }
 
@@ -448,6 +457,26 @@ public class PlannedAI extends AI{
         actions.reverse();
 
         return actions;
+    }
+
+    @Override
+    void selectLocation(){
+        async(() -> {
+            if(!chooseLocation){
+                player.position = state.world.tile(state.world.getCity("bern"));
+                player.chosenLocation = true;
+            }else{
+                int[] index = {0};
+                player.position = state.world.tile(Array.with(state.world.cities()).min(city -> {
+                    Demand[] bestCombination = new Demand[3];
+                    int[] bestPlan = new int[6];
+                    Log.info("Finding best city, checking {0}/{1}", index[0]++, Array.with(state.world.cities()).size);
+                    return getBestPlan(bestCombination, bestPlan);
+                }));
+                player.chosenLocation = true;
+                Log.info("Chosen start city: " + player.position.city.name);
+            }
+        });
     }
 
     abstract class PlanAction{

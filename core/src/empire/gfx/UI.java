@@ -41,7 +41,7 @@ public class UI implements ApplicationListener{
         Core.input.addProcessor(Core.scene);
 
         Events.on(WinEvent.class, event -> {
-            ui.showDialog(event.player.name + " is victorious in " + state.turn + " turns!", dialog -> {
+            ui.showDialog("[coral]" +event.player.name + " is victorious in " + state.turn + " turns!", dialog -> {
                 dialog.cont.add(event.player.name + " has won the game, as they have\nconnected 7 major cities and gotten " + State.winMoneyAmount + " ECU!");
             });
         });
