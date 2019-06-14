@@ -4,7 +4,6 @@ import empire.gfx.EmpireCore;
 import io.anuke.arc.collection.*;
 import io.anuke.arc.collection.ObjectMap.Values;
 import io.anuke.arc.function.Consumer;
-import io.anuke.arc.math.Mathf;
 import io.anuke.arc.math.geom.*;
 import io.anuke.arc.util.*;
 
@@ -244,14 +243,10 @@ public class World{
         }
 
         public int distanceTo(int ox, int oy){
-            if(x == ox){
-                return Math.abs(y - oy);
-            }else if(y == oy){
-                return Math.abs(x - ox);
-            }else{
-                //TODO this is incorrect
-                return (int)Mathf.dst(ox, oy);
-            }
+            Vector2 v1 = EmpireCore.control.toWorld(this);
+            float vx = v1.x, vy = v1.y;
+            EmpireCore.control.toWorld(this);
+            return (int)(v1.dst(vx, vy) / 8);
         }
 
         public int distanceTo(Tile other){

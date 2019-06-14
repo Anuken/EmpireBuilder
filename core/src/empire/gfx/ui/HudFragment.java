@@ -48,7 +48,7 @@ public class HudFragment{
         //for local player
         group.fill(main -> {
             main.touchable(Touchable.disabled);
-            main.visible(() -> state.player().local && !state.player().chosenLocation);
+            main.visible(() -> state.player().local && !state.player().chosenLocation && state.player().ai == null);
             main.add("Choose a start city by clicking on it.");
         });
 
