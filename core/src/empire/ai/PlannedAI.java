@@ -13,11 +13,11 @@ public class PlannedAI extends AI{
     /** Whether to choose a location.*/
     private static final boolean chooseLocation = false;
     /** Whether to check plan validity in terms of money.*/
-    private static final boolean checkPlanValid = false;
+    private static final boolean checkPlanValid = true;
     /** Money after which the AI will consider upgrading their loco.*/
-    private static final int upgradeAfterMoney = 40;
+    private static final int upgradeAfterMoney = 60;
     /** Demand cost scale: how many units to reduce a score by, per ECU.*/
-    private static final float demandCostScale = 300f;
+    private static final float demandCostScale = 250f;
     /** All the action combinations of 3 ordered demand cards with cargo space 2.*/
     private static final int[][] combinations = {
             //{1, -1, 2, 3, -2, -3},
@@ -161,7 +161,7 @@ public class PlannedAI extends AI{
             Tile last = startTile;
             //now place all track if it can
             for(Tile tile : finalPath){
-                if(!player.hasTrack(last, tile) && !state.world.sameCity(last, tile) && !state.world.samePort(last, tile)){
+                if(!player.hasTrack(last, tile) && last != tile && !state.world.sameCity(last, tile) && !state.world.samePort(last, tile)){
                     if(state.canPlaceTrack(player, last, tile)){
                         PlaceTrack place = new PlaceTrack();
                         place.from = last;
@@ -348,6 +348,8 @@ public class PlannedAI extends AI{
         int currentMoney = player.money;
         Tracks newTracks = new Tracks();
 
+        int totalUsed = 0;
+
         for(int value : sequence){
             //whether this is a load or unload action
             boolean unload = value < 0;
@@ -362,9 +364,10 @@ public class PlannedAI extends AI{
                 //add newly created tracks
                 newTracks.add(astarOutputTracks);
 
+               // Log.info("Unload cost to {0}: {1} -> {2}", demand, currentMoney, currentMoney - astarNewTrackCost);
                 //make sure you can actually get to there to unload it!
                 currentMoney -= astarNewTrackCost;
-                //TODO implement
+                totalUsed += astarNewTrackCost;
                 if(currentMoney < 0 && checkPlanValid) return Float.POSITIVE_INFINITY;
 
                 //assume you sold it, update money
@@ -383,17 +386,21 @@ public class PlannedAI extends AI{
                 astarInputTracks.set(newTracks);
                 finalCost += astar(position, state.world.tile(min));
                 newTracks.add(astarOutputTracks);
+
+                //Log.info("Load cost to {0}: {1} -> {2}", demand, currentMoney, currentMoney - astarNewTrackCost);
                 currentMoney -= astarNewTrackCost;
+
+                totalUsed += astarNewTrackCost;
                 currentTile = state.world.tile(min);
             }
 
             //bail out if at any point this AI runs out of money
-            //this doesn't work currently!
-            //TODO implement
             if(currentMoney < 0 && checkPlanValid){
                 return Float.POSITIVE_INFINITY;
             }
         }
+
+       // Log.info("final moveset:\n" + Arrays.toString(demands) + "\n" + Arrays.toString(sequence) + "\nUsed: " + totalUsed + "\n");
 
         astarInputTracks.clear();
         return finalCost;
@@ -463,7 +470,7 @@ public class PlannedAI extends AI{
     void selectLocation(){
         async(() -> {
             if(!chooseLocation){
-                player.position = state.world.tile(state.world.getCity("bern"));
+                player.position = state.world.tile(state.world.getCity("bremen"));
                 player.chosenLocation = true;
             }else{
                 int[] index = {0};

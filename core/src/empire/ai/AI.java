@@ -1,13 +1,11 @@
 package empire.ai;
 
-import empire.game.*;
 import empire.game.Actions.EndTurn;
-import empire.game.World.City;
-import empire.game.World.Tile;
+import empire.game.*;
+import empire.game.World.*;
 import empire.gfx.EmpireCore;
-import io.anuke.arc.collection.Array;
-import io.anuke.arc.collection.GridBits;
-import io.anuke.arc.collection.IntFloatMap;
+import io.anuke.arc.Core;
+import io.anuke.arc.collection.*;
 import io.anuke.arc.function.Predicate;
 import io.anuke.arc.util.Tmp;
 import io.anuke.arc.util.async.*;
@@ -17,7 +15,7 @@ import java.util.PriorityQueue;
 /** Handles the AI for a specific player.*/
 public abstract class AI{
     protected static final AsyncExecutor executor = new AsyncExecutor(4);
-    protected static final boolean checkHistory = false;
+    protected static final boolean checkHistory = true;
 
     /** The player this AI controls.*/
     public final Player player;
@@ -48,7 +46,13 @@ public abstract class AI{
             throw new IllegalArgumentException("Wait for the task to be done until trying again.");
         }
 
-        waiting = executor.submit(runnable);
+        waiting = executor.submit(() -> {
+            try{
+                runnable.run();
+            }catch(Throwable t){
+                Core.app.post(() -> {throw new RuntimeException(t);});
+            }
+        });
     }
 
     public float astar(Tile from, Tile to, Array<Tile> out){
