@@ -143,7 +143,8 @@ public abstract class AI{
     }
 
     float cost(Tile from, Tile to){
-        if(player.hasTrack(from, to) || (checkHistory && astarInputTracks.has(from.x, from.y, to.x, to.y))){
+        if(player.hasTrack(from, to) || state.world.sameCity(from, to) || state.world.samePort(from, to)
+                || (checkHistory && astarInputTracks.has(from.x, from.y, to.x, to.y))){
             return 0.5f;
         }
         if(state.players.contains(p -> p.hasTrack(from, to))){

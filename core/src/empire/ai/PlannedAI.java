@@ -17,7 +17,7 @@ public class PlannedAI extends AI{
     /** Money after which the AI will consider upgrading their loco.*/
     private static final int upgradeAfterMoney = 60;
     /** Demand cost scale: how many units to reduce a score by, per ECU.*/
-    private static final float demandCostScale = 250f;
+    private static final float demandCostScale = 300f;
     /** All the action combinations of 3 ordered demand cards with cargo space 2.*/
     private static final int[][] combinations = {
             //{1, -1, 2, 3, -2, -3},
