@@ -16,11 +16,9 @@ import io.anuke.arc.math.Mathf;
 public class EmpireCore extends ApplicationCore{
     /** Size of each hex tile in pixels. */
     public static final int tilesize = 16;
-    public static final int totalAI = 1;
-    public static final int testTurns = 150;
     public static boolean debug = false, isAI = false, netDebug = false,
                                 seeded = true, testEfficiency = true;
-    public static final BiFunction<Player, State, AI> aiType = PlannedAI::new;
+    public static final BiFunction<Player, State, AI> aiType = NextAI::new;
 
     public static Control control;
     public static UI ui;

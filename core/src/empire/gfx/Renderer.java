@@ -295,14 +295,12 @@ public class Renderer implements ApplicationListener{
             Draw.color();
             Draw.rect(region, tx, ty, region.getWidth() * tilesize/16f, region.getHeight() * tilesize/16f);
 
-            if(player.ai == null){
-                if(player.hasGoodDelivery(city)){
-                    icon("icon-export", tx, ty, 10f, 10f);
-                }
+            if(player.hasGoodDelivery(city)){
+                icon("icon-export", tx, ty, 10f, 10f);
+            }
 
-                if(player.hasGoodDemand(city)){
-                    icon("icon-open", tx, ty, -10f, 10f);
-                }
+            if(player.hasGoodDemand(city)){
+                icon("icon-open", tx, ty, -10f, 10f);
             }
         }
 
@@ -314,7 +312,8 @@ public class Renderer implements ApplicationListener{
 
             Lines.stroke(2f, Color.WHITE);
             //draw good delivery line based on cities who can supply this good
-            if(player.hasGoodDelivery(city) && player.ai == null){
+            if(player.hasGoodDelivery(city)
+            ){
                 for(DemandCard card : player.demandCards){
                     for(Demand demand : card.demands){
                         if(demand.city == city){

@@ -196,7 +196,6 @@ public class State{
 
     public boolean canBeginTrack(Player player, Tile tile){
         return world.getMajorCity(tile) != null ||
-                player.position == tile ||
                 player.hasTrack(tile) ||
                 (tile.type == Terrain.port &&
                         (player.hasTrack(tile.port.from) ||
@@ -233,8 +232,7 @@ public class State{
         if(from == to) return false;
 
         //player needs to be there to place tracks there
-        if(player.position != from
-            && !player.hasTrack(from) //check existing track connections
+        if(!player.hasTrack(from) //check existing track connections
             && !player.hasTrack(to)
             && !(from.port != null && //check port
                 (from.port.from == from || from.port.to == from))
@@ -384,8 +382,8 @@ public class State{
      * Adds movement cost as needed.*/
     public void move(Player player, Tile to){
         if(!canMove(player, to)){
-            throw new IllegalArgumentException(Strings.format("Illegal player movement of {0}: {1} to {2}",
-                        player.name, player.position.str(), to.str()));
+        //    throw new IllegalArgumentException(Strings.format("Illegal player movement of {0}: {1} to {2}",
+        //                player.name, player.position.str(), to.str()));
         }
 
         //change player direction

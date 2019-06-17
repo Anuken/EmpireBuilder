@@ -9,11 +9,11 @@ import io.anuke.arc.util.*;
 
 import java.util.Arrays;
 
-public class PlannedAI extends AI{
+public class PlannedAI extends BaseAI{
     /** Whether to choose a location.*/
     private static final boolean chooseLocation = false;
     /** Whether to check plan validity in terms of money.*/
-    private static final boolean checkPlanValid = true;
+    private static final boolean checkPlanValid = false;
     /** Money after which the AI will consider upgrading their loco.*/
     private static final int upgradeAfterMoney = 60;
     /** Demand cost scale: how many units to reduce a score by, per ECU.*/
@@ -344,11 +344,8 @@ public class PlannedAI extends AI{
         Tile currentTile = player.position;
         float finalCost = 0f;
         //keep track of money to prevent illegal dead-end moves
-        //TODO currently doesn't work properly
         int currentMoney = player.money;
         Tracks newTracks = new Tracks();
-
-        int totalUsed = 0;
 
         for(int value : sequence){
             //whether this is a load or unload action
@@ -364,10 +361,8 @@ public class PlannedAI extends AI{
                 //add newly created tracks
                 newTracks.add(astarOutputTracks);
 
-               // Log.info("Unload cost to {0}: {1} -> {2}", demand, currentMoney, currentMoney - astarNewTrackCost);
                 //make sure you can actually get to there to unload it!
                 currentMoney -= astarNewTrackCost;
-                totalUsed += astarNewTrackCost;
                 if(currentMoney < 0 && checkPlanValid) return Float.POSITIVE_INFINITY;
 
                 //assume you sold it, update money
@@ -387,10 +382,8 @@ public class PlannedAI extends AI{
                 finalCost += astar(position, state.world.tile(min));
                 newTracks.add(astarOutputTracks);
 
-                //Log.info("Load cost to {0}: {1} -> {2}", demand, currentMoney, currentMoney - astarNewTrackCost);
                 currentMoney -= astarNewTrackCost;
 
-                totalUsed += astarNewTrackCost;
                 currentTile = state.world.tile(min);
             }
 
@@ -399,8 +392,6 @@ public class PlannedAI extends AI{
                 return Float.POSITIVE_INFINITY;
             }
         }
-
-       // Log.info("final moveset:\n" + Arrays.toString(demands) + "\n" + Arrays.toString(sequence) + "\nUsed: " + totalUsed + "\n");
 
         astarInputTracks.clear();
         return finalCost;
@@ -466,15 +457,15 @@ public class PlannedAI extends AI{
         return actions;
     }
 
-    @Override
     void selectLocation(){
         async(() -> {
             if(!chooseLocation){
-                player.position = state.world.tile(state.world.getCity("bremen"));
+                player.position = state.world.tile(state.world.getCity("ruhr"));
                 player.chosenLocation = true;
             }else{
                 int[] index = {0};
-                player.position = state.world.tile(Array.with(state.world.cities()).min(city -> {
+                player.position = state.world.tile(Array.with(state.world.cities())
+                        .select(city -> city.size == CitySize.major).min(city -> {
                     player.position = state.world.tile(city);
                     Demand[] bestCombination = new Demand[3];
                     int[] bestPlan = new int[6];
