@@ -6,15 +6,21 @@ import empire.gfx.EmpireCore;
 import io.anuke.arc.collection.*;
 import io.anuke.arc.function.Predicate;
 import io.anuke.arc.util.Tmp;
-import static empire.gfx.EmpireCore.*;
 
 import java.util.PriorityQueue;
+
+import static empire.gfx.EmpireCore.state;
 
 public class Astar{
     protected Array<Tile> tiles = new Array<>();
     protected int newTrackCost = 0;
     protected Tracks outputTracks = new Tracks(), inputTracks = new Tracks();
+    protected Player player;
     protected boolean usedOtherTrack = false;
+
+    public Astar(Player player){
+        this.player = player;
+    }
 
     public float astar(Tile from, Tile to, Array<Tile> out){
         float cost = astar(from, to);
@@ -88,7 +94,7 @@ public class Astar{
             //add up direct track costs
             Tile cfrom = current.searchParent, cto = current;
             if(!player.hasTrack(cfrom, cto) && !state.world.sameCity(cfrom, cto)
-                    && !(checkHistory && inputTracks.has(cfrom.x, cfrom.y, cto.x, cto.y))){
+                    && !inputTracks.has(cfrom.x, cfrom.y, cto.x, cto.y)){
                 newTrackCost += state.getTrackCost(cfrom, cto);
                 outputTracks.add(cfrom.x, cfrom.y, cto.x, cto.y);
             }else if(!movedOnOtherTrack && state.players.contains(p -> p.hasTrack(cfrom, cto))){
@@ -105,8 +111,8 @@ public class Astar{
     }
 
     float cost(Tile from, Tile to){
-        if(player.hasTrack(from, to) || state.world.sameCity(from, to) || state.world.samePort(from, to)
-                || (checkHistory && inputTracks.has(from.x, from.y, to.x, to.y))){
+        if(player.hasTrack(from, to) || state.world.sameCity(from, to)
+                || state.world.samePort(from, to) || inputTracks.has(from.x, from.y, to.x, to.y)){
             return 0.5f;
         }
         if(state.players.contains(p -> p.hasTrack(from, to))){
