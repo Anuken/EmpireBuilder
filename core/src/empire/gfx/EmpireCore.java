@@ -18,7 +18,7 @@ public class EmpireCore extends ApplicationCore{
     public static final int tilesize = 16;
     public static final int totalAI = 1;
     public static final int testTurns = 150;
-    public static final boolean debug = true, isAI = true, netDebug = false,
+    public static boolean debug = false, isAI = false, netDebug = false,
                                 seeded = true, testEfficiency = true;
     public static final BiFunction<Player, State, AI> aiType = PlannedAI::new;
 

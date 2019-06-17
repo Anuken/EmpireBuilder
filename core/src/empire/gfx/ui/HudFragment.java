@@ -111,7 +111,7 @@ public class HudFragment{
             arr[0] = actions;
 
             main.top().left().table("dialogDim", t -> {
-                t.margin(10f);
+                t.margin(10f).left();
                 t.defaults().left();
                 t.add("").update(l -> {
                     l.setColor(state.localPlayer().color);
@@ -257,7 +257,7 @@ public class HudFragment{
                                                     new SellCargo(){{
                                                         cargo = d.good;
                                                     }}.act();
-                                                }).colspan(2).left().fillX().width(190f).height(45f);
+                                                }).colspan(2).left().fillX().width(190f).height(60f);
                                     }else{
                                         table.addImage("icon-trash").size(14 * 2).padRight(3).color(Color.SCARLET).right();
                                         table.add("[lightgray]" + Strings.capitalize(d.good) + "[] for[coral] " + d.cost + "[] ECU");

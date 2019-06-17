@@ -10,7 +10,7 @@ import static empire.gfx.EmpireCore.*;
 
 /** Handles scheduling of AI actions, including pausing and resuming.*/
 public class AIScheduler implements ApplicationListener{
-    private static final float interval = 0.5f;
+    private static final float interval = 1f;
 
     private Task task;
     private AI ai;
@@ -21,7 +21,9 @@ public class AIScheduler implements ApplicationListener{
 
     public AIScheduler(AI ai){
         this.task = Timer.schedule(() -> {
-            ai.act();
+            if(state.player().ai == ai){
+                ai.act();
+            }
 
             if(state.hasWinner){
                 renderer.takeWorldScreenshot();

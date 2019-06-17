@@ -28,6 +28,7 @@ public abstract class AI{
     protected int astarNewTrackCost = 0;
     protected Tracks astarOutputTracks = new Tracks(),
                         astarInputTracks = new Tracks();
+    protected boolean astarUsedOtherTrack = false;
 
     public AI(Player player, State state){
         this.player = player;
@@ -71,6 +72,7 @@ public abstract class AI{
         World world = state.world;
 
         astarOutputTracks.clear();
+        astarUsedOtherTrack = false;
 
         GridBits closed = new GridBits(world.width, world.height);
         GridBits open = new GridBits(world.width, world.height);
@@ -148,7 +150,12 @@ public abstract class AI{
             return 0.5f;
         }
         if(state.players.contains(p -> p.hasTrack(from, to))){
-            return State.otherMoveTrackCost * 500;
+            if(!astarUsedOtherTrack){
+                astarUsedOtherTrack = true;
+                return State.otherMoveTrackCost * 500;
+            }else{
+                return 0.5f;
+            }
         }
         return state.getTrackCost(from, to) * 500;
     }

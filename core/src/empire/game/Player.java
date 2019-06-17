@@ -28,7 +28,7 @@ public class Player{
     /** Whether this player is local and controllable.*/
     public boolean local;
     /** The AI that controls this player. May be null. */
-    public AI ai;
+    public transient AI ai;
 
     /** Other players' tracks this player has moved on.*/
     public final ObjectSet<Player> movedPlayers = new ObjectSet<>();
