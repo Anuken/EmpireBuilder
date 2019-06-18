@@ -2,19 +2,11 @@ package empire.io;
 
 import empire.game.World;
 import empire.game.World.*;
-import io.anuke.arc.collection.Array;
-import io.anuke.arc.collection.FloatArray;
-import io.anuke.arc.collection.IntMap;
-import io.anuke.arc.collection.ObjectSet;
+import io.anuke.arc.collection.*;
 import io.anuke.arc.files.FileHandle;
 import io.anuke.arc.function.Supplier;
-import io.anuke.arc.math.EarClippingTriangulator;
-import io.anuke.arc.math.Mathf;
-import io.anuke.arc.math.geom.ConvexHull;
-import io.anuke.arc.math.geom.Geometry;
-import io.anuke.arc.math.geom.Point2;
-import io.anuke.arc.math.geom.Vector2;
-import io.anuke.arc.util.Log;
+import io.anuke.arc.math.*;
+import io.anuke.arc.math.geom.*;
 import io.anuke.arc.util.Structs;
 
 import java.util.Scanner;
@@ -306,10 +298,12 @@ public class MapIO{
             Tile tile = tiles[p.x][p.y];
             for(Point2 adj : tile.getAdjacent()){
                 if(right.contains(test -> test.equals(p.x + adj.x, p.y + adj.y))){
-                    if(tile.crossings == null){
-                        tile.crossings = new Array<>();
-                        tile.crossings.add(new WaterCrossing(cost, river, tiles[p.x + adj.x][p.y + adj.y]));
-                    }
+                    Tile other = tiles[p.x + adj.x][p.y + adj.y];
+                    if(tile.crossings == null) tile.crossings = new Array<>();
+                    if(other.crossings == null) other.crossings = new Array<>();
+
+                    other.crossings.add(new WaterCrossing(cost, river, tile));
+                    tile.crossings.add(new WaterCrossing(cost, river, other));
                 }
             }
         }

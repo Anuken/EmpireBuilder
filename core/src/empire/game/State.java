@@ -1,16 +1,12 @@
 package empire.game;
 
 import empire.game.DemandCard.Demand;
-import empire.game.GameEvents.EndTurnEvent;
-import empire.game.GameEvents.EventEvent;
-import empire.game.GameEvents.WinEvent;
+import empire.game.GameEvents.*;
 import empire.game.World.*;
 import io.anuke.arc.Events;
-import io.anuke.arc.collection.Array;
-import io.anuke.arc.collection.ObjectSet;
-import io.anuke.arc.collection.Queue;
+import io.anuke.arc.collection.*;
 import io.anuke.arc.function.Consumer;
-import io.anuke.arc.util.*;
+import io.anuke.arc.util.Structs;
 
 /** Holds the state of the entire game. */
 public class State{
@@ -39,12 +35,6 @@ public class State{
     public Array<Card> cards;
     /** Whether someone has already won.*/
     public boolean hasWinner = false;
-
-    /** Tile collections for temporary usage.*/
-    private static final ObjectSet<Tile> closedSet = new ObjectSet<>();
-    private static final Queue<Tile> queue = new Queue<>();
-    private static final Array<Tile> moveArray = new Array<>();
-    private static final ObjectSet<City> citySet = new ObjectSet<>();
 
     /** Grabs 3 demand cards from the top of the deck and returns them.
      * Event cards are discarded.*/
@@ -414,10 +404,9 @@ public class State{
 
     /** Counts cities connected to a tile using only this player's track.*/
     public int countConnectedCities(Player player, Tile other){
-        moveArray.clear();
-        closedSet.clear();
-        queue.clear();
-        citySet.clear();
+        ObjectSet<Tile> closedSet = new ObjectSet<>();
+        Queue<Tile> queue = new Queue<>();
+        ObjectSet<City> citySet = new ObjectSet<>();
 
         queue.addFirst(other);
         closedSet.add(other);
@@ -433,7 +422,6 @@ public class State{
             //iterate through /connections/ of each tile
             world.trackConnectionsOf(this, player, tile, false, child -> {
                 if(!closedSet.contains(child)){
-                    child.searchParent = tile;
                     queue.addFirst(child);
                     closedSet.add(child);
                 }
@@ -446,6 +434,9 @@ public class State{
     /** Returns a set of all tiles connected to this tile by track.*/
     public ObjectSet<Tile> connectedTiles(Player player, Tile other){
         ObjectSet<Tile> out = new ObjectSet<>();
+        ObjectSet<Tile> closedSet = new ObjectSet<>();
+        Queue<Tile> queue = new Queue<>();
+        Array<Tile> moveArray = new Array<>();
 
         moveArray.clear();
         closedSet.clear();
@@ -461,7 +452,6 @@ public class State{
             //iterate through /connections/ of each tile
             world.trackConnectionsOf(this, player, tile, false, child -> {
                 if(!closedSet.contains(child)){
-                    child.searchParent = tile;
                     queue.addFirst(child);
                     closedSet.add(child);
                 }
@@ -474,7 +464,10 @@ public class State{
      * to a destination. Returns an empty array if impossible.
      * This should be used to move from tile to tile and check each one for validity.*/
     public Array<Tile> calculateMovement(Player player, Tile other){
-        moveArray.clear();
+        ObjectSet<Tile> closedSet = new ObjectSet<>();
+        Queue<Tile> queue = new Queue<>();
+        Array<Tile> moveArray = new Array<>();
+        ObjectMap<Tile, Tile> parents = new ObjectMap<>();
 
         //already there.
         if(other == player.position){
@@ -483,8 +476,6 @@ public class State{
 
         closedSet.clear();
         queue.clear();
-
-        other.searchParent = null;
 
         Tile result = null;
         //perform BFS
@@ -502,7 +493,7 @@ public class State{
                 if(!closedSet.contains(child)
                         //make sure player isn't blocked by event cards!
                         && player.isAllowed(e -> e.canMove(player, tile, child))){
-                    child.searchParent = tile;
+                    parents.put(child, tile);
                     queue.addFirst(child);
                     closedSet.add(child);
                 }
@@ -514,7 +505,7 @@ public class State{
 
             while(result != null){
                 moveArray.add(result);
-                result = result.searchParent;
+                result = parents.get(result);
             }
         }
 

@@ -5,13 +5,14 @@ import empire.game.World.Tile;
 import empire.gfx.EmpireCore;
 import io.anuke.arc.collection.*;
 import io.anuke.arc.function.Predicate;
-import io.anuke.arc.util.Tmp;
+import io.anuke.arc.math.geom.Vector2;
 
 import java.util.PriorityQueue;
 
 import static empire.gfx.EmpireCore.*;
 
 public class Astar{
+    private static Vector2 vec = new Vector2();
     protected Array<Tile> tiles = new Array<>();
     protected int newTrackCost = 0;
     protected Tracks outputTracks = new Tracks(), inputTracks = new Tracks();
@@ -59,6 +60,7 @@ public class Astar{
         //GridBits closed = new GridBits(world.width, world.height);
         //GridBits open = new GridBits(world.width, world.height);
         IntFloatMap costs = new IntFloatMap();
+        ObjectMap<Tile, Tile> searchParent = new ObjectMap<>();
         PriorityQueue<Tile> queue = new PriorityQueue<>(100,
                 (a, b) -> Float.compare(
                         costs.get(world.index(a), 0f) + dh.cost(a, to),
@@ -86,7 +88,7 @@ public class Astar{
                     float newCost = dh.cost(parent, child) + baseCost;
 
                     if(!costs.containsKey(world.index(child)) || newCost < costs.get(world.index(child), Float.POSITIVE_INFINITY)){
-                        child.searchParent = parent;
+                        searchParent.put(child, parent);
                         costs.put(world.index(child), newCost);
                         queue.add(child);
 
@@ -116,10 +118,10 @@ public class Astar{
         boolean movedOnOtherTrack = false;
         while(current != from){
             tiles.add(current);
-            totalCost += cost(current.searchParent, current);
+            totalCost += cost(searchParent.get(current), current);
 
             //add up direct track costs
-            Tile cfrom = current.searchParent, cto = current;
+            Tile cfrom = searchParent.get(current), cto = current;
             if(!hasTrack(cfrom, cto)){
                 newTrackCost += state.getTrackCost(cfrom, cto);
                 outputTracks.add(cfrom.x, cfrom.y, cto.x, cto.y);
@@ -128,7 +130,7 @@ public class Astar{
                 movedOnOtherTrack = true;
             }
 
-            current = current.searchParent;
+            current = searchParent.get(current);
         }
 
         tiles.reverse();
@@ -180,8 +182,8 @@ public class Astar{
     }
 
     public static float tileDst(Tile from, Tile to){
-        Tmp.v2.set(EmpireCore.control.toWorld(from.x, from.y));
-        return Math.round(Tmp.v2.dst(EmpireCore.control.toWorld(to.x, to.y)) / tilesize);
+        vec.set(EmpireCore.control.toWorld(from.x, from.y));
+        return Math.round(vec.dst(EmpireCore.control.toWorld(to.x, to.y)) / tilesize);
     }
 
     //interfaces

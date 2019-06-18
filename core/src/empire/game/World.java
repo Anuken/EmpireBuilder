@@ -220,7 +220,7 @@ public class World{
         /** The sea area on this tile; may be null.*/
         public Sea sea;
         /** Temporary search parent.*/
-        public Tile searchParent;
+        //public Tile searchParent;
         /** List of crossings to other tiles.*/
         public Array<WaterCrossing> crossings;
         /** Whether this tile is inland, e.g. 3 tiles from shore.*/
