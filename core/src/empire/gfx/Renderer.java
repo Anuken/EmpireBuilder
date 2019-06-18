@@ -1,6 +1,5 @@
 package empire.gfx;
 
-import empire.ai.AI;
 import empire.game.*;
 import empire.game.DemandCard.Demand;
 import empire.game.EventCard.*;
@@ -8,7 +7,6 @@ import empire.game.GameEvents.EndTurnEvent;
 import empire.game.World.*;
 import empire.gfx.gen.MapImageRenderer;
 import io.anuke.arc.*;
-import io.anuke.arc.collection.Array;
 import io.anuke.arc.graphics.*;
 import io.anuke.arc.graphics.Texture.TextureFilter;
 import io.anuke.arc.graphics.g2d.*;
@@ -207,24 +205,6 @@ public class Renderer implements ApplicationListener{
                     Lines.stroke(2f, Color.LIGHT_GRAY);
                     Lines.dashCircle(world.x, world.y, dst * tilesize);
                 }
-            }
-        }
-
-        //pathfinding debug, doesn't work currently
-        if(state.player().ai != null && false){
-            AI ai = state.player().ai;
-
-            Array<Tile> out = new Array<>();
-            Tile to = control.tileMouse();
-            if(to != null){
-                float cost = ai.astar(state.player().position, to, out);
-                Draw.color(Color.RED, 0.5f);
-                for(Tile tile : out){
-                    Vector2 world = control.toWorld(tile.x, tile.y);
-                    Fill.square(world.x, world.y, 8f);
-                }
-                control.toWorld(state.player().position.x, state.player().position.y);
-                Core.scene.skin.getFont("default").draw(cost + "", Tmp.v1.x, Tmp.v1.y);
             }
         }
     }

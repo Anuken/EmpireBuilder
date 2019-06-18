@@ -9,17 +9,38 @@ import io.anuke.arc.util.Tmp;
 
 import java.util.PriorityQueue;
 
-import static empire.gfx.EmpireCore.state;
+import static empire.gfx.EmpireCore.*;
 
 public class Astar{
     protected Array<Tile> tiles = new Array<>();
     protected int newTrackCost = 0;
     protected Tracks outputTracks = new Tracks(), inputTracks = new Tracks();
     protected Player player;
-    protected boolean usedOtherTrack = false;
+    protected IntSet usedOtherTrack = new IntSet();
+
+    //how much this AI would rather move than place a single track
+    protected static final float ecuCostScale = 20;
 
     public Astar(Player player){
         this.player = player;
+    }
+
+    public void begin(){
+        inputTracks.clear();
+    }
+
+    public void end(){
+
+    }
+
+    /** Copies the output, placed tracks into the input buffer.
+     * This essentials makes the AI consider the newly placed tracks in the next calculations. */
+    public void placeTracks(){
+        inputTracks.add(outputTracks);
+    }
+
+    public int newTrackCost(){
+        return newTrackCost;
     }
 
     public float astar(Tile from, Tile to, Array<Tile> out){
@@ -33,49 +54,59 @@ public class Astar{
     }
 
     public float astar(Tile from, Tile to, Predicate<Tile> endTest){
-        BaseAI.DistanceHeuristic dh = this::tileDst;
-        BaseAI.TileHeuristic th = this::cost;
+        DistanceHeuristic dh = this::cost;
         World world = state.world;
 
         outputTracks.clear();
-        usedOtherTrack = false;
+        usedOtherTrack.clear();
 
-        GridBits closed = new GridBits(world.width, world.height);
-        GridBits open = new GridBits(world.width, world.height);
+        //GridBits closed = new GridBits(world.width, world.height);
+        //GridBits open = new GridBits(world.width, world.height);
         IntFloatMap costs = new IntFloatMap();
         PriorityQueue<Tile> queue = new PriorityQueue<>(100,
                 (a, b) -> Float.compare(
-                        costs.get(world.index(a), 0f) + dh.cost(a.x, a.y, to.x, to.y),
-                        costs.get(world.index(b), 0f) + dh.cost(b.x, b.y, to.x, to.y)));
+                        costs.get(world.index(a), 0f) + dh.cost(a, to),
+                        costs.get(world.index(b), 0f) + dh.cost(b, to)));
 
         queue.add(from);
         Tile end = null;
         boolean found = false;
         while(!queue.isEmpty()){
-            Tile next = queue.poll();
-            float baseCost = costs.get(world.index(next), 0f);
-            if(endTest.test(next)){
+            Tile parent = queue.poll();
+            float baseCost = costs.get(world.index(parent), 0f);
+            if(endTest.test(parent)){
                 found = true;
-                end = next;
+                end = parent;
                 break;
             }
-            closed.set(next.x, next.y);
-            open.set(next.x, next.y, false);
-            world.adjacentsOf(next, child -> {
-                if(!closed.get(child.x, child.y) && state.isPassable(player, child) &&
+            //closed.set(parent.x, parent.y);
+            //open.set(parent.x, parent.y, false);
+            world.adjacentsOf(parent, child -> {
+                if(state.isPassable(player, child) &&
                         !(world.getCity(player.position) == null &&
-                                player.position == next && player.position.directionTo(child) != null &&
-                                player.position.directionTo(child).opposite(player.direction))
-                ){
-                    float newCost = th.cost(next, child) + baseCost;
-                    if(costs.get(world.index(child), Float.POSITIVE_INFINITY) > newCost){
-                        child.searchParent = next;
+                                player.position == parent && player.position.directionTo(child) != null &&
+                                player.position.directionTo(child).opposite(player.direction))){
+
+                    float newCost = dh.cost(parent, child) + baseCost;
+
+                    if(!costs.containsKey(world.index(child)) || newCost < costs.get(world.index(child), Float.POSITIVE_INFINITY)){
+                        child.searchParent = parent;
                         costs.put(world.index(child), newCost);
-                    }
-                    if(!open.get(child.x, child.y)){
                         queue.add(child);
+
+                        //update chain of "used other's track" flags
+                        if(usedOtherTrack.contains(parent.index())){
+                            usedOtherTrack.add(child.index());
+                        }else{
+                            usedOtherTrack.remove(child.index());
+                        }
+
+                        //check if another player has this track, and if that is the case, mark this tile as
+                        //using someone else's track
+                        if(state.players.contains(p -> p != player && p.hasTrack(from, to))){
+                            usedOtherTrack.add(child.index());
+                        }
                     }
-                    open.set(child.x, child.y);
                 }
             });
         }
@@ -110,34 +141,57 @@ public class Astar{
         return totalCost;
     }
 
+    /** Cost heuristic for two tiles.*/
     float cost(Tile from, Tile to){
-        if(player.hasTrack(from, to) || state.world.sameCity(from, to)
-                || state.world.samePort(from, to) || inputTracks.has(from.x, from.y, to.x, to.y)){
-            return 0.5f;
+        //note that the board is a non-euclidean space, since ports exist!
+        //this may not be an overestimate in some cases
+        float dst = tileDst(from, to);
+
+        //not adjacent, no idea how much they cost, just return an underestimate
+        if(!state.world.isAdjacent(from, to)){
+            return dst;
         }
+
+        //cost of two tiles with track across them is just the amount of moves (1)
+        if(hasTrack(from, to)){
+            return 1f;
+        }
+
+        //when moving across ports, the cost is equal to the movement speed since
+        //the player loses all their movement points that turn, but no money
+        //this takes an average amount of turns lost of 1/2
+        if(state.world.samePort(from, to)){
+            return player.loco.speed/2;
+        }
+
+        //other players may have track here, which takes 4 ECU per turn
         if(state.players.contains(p -> p.hasTrack(from, to))){
-            if(!usedOtherTrack){
-                usedOtherTrack = true;
-                return State.otherMoveTrackCost * 500;
+            if(!usedOtherTrack.contains(state.world.index(from))){
+                //no track between these, so it costs ECU
+                return State.otherMoveTrackCost * ecuCostScale;
             }else{
-                return 0.5f;
+                //if the track has already been used, the cost is just the moves (1)
+                return 1f;
             }
         }
-        return state.getTrackCost(from, to) * 500;
+
+        //no links whatsoever, return base track cost to build here
+        return state.getTrackCost(from, to) * ecuCostScale;
     }
 
-    float tileDst(int x, int y, int x2, int y2){
-        Tmp.v2.set(EmpireCore.control.toWorld(x, y));
-        return Tmp.v2.dst(EmpireCore.control.toWorld(x2, y2));
+    boolean hasTrack(Tile from, Tile to){
+        return player.hasTrack(from, to) || (state.world.sameCity(from, to) && state.world.isAdjacent(from, to))
+                || inputTracks.has(from.x, from.y, to.x, to.y);
+    }
+
+    public static float tileDst(Tile from, Tile to){
+        Tmp.v2.set(EmpireCore.control.toWorld(from.x, from.y));
+        return Math.round(Tmp.v2.dst(EmpireCore.control.toWorld(to.x, to.y)) / tilesize);
     }
 
     //interfaces
 
     interface DistanceHeuristic{
-        float cost(int x1, int y1, int x2, int y2);
-    }
-
-    interface TileHeuristic{
         float cost(Tile from, Tile to);
     }
 }

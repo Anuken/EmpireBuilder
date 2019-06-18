@@ -265,6 +265,10 @@ public class World{
             return null;
         }
 
+        public int index(){
+            return EmpireCore.state.world.index(this);
+        }
+
         /** Returns a basic string representation of this object.*/
         public String str(){
             return "[" + x + "," + y + "]";
