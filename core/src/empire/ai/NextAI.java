@@ -1,8 +1,10 @@
 package empire.ai;
 
+import empire.game.DemandCard.Demand;
 import empire.game.*;
 import empire.game.World.*;
 import io.anuke.arc.collection.Array;
+import io.anuke.arc.util.*;
 
 /** Next iteration of this AI.*/
 public class NextAI extends AI{
@@ -46,12 +48,89 @@ public class NextAI extends AI{
         state.checkIfWon(player);
     }
 
-    void updatePlan(){
-
-    }
-
+    /** Attempts to execute this pla.
+     * @return whether or not this turn should end. */
     boolean executePlan(){
         return true;
+    }
+
+    /** Update the plan, find the best one. */
+    void updatePlan(){
+        Plan bestPlan = null;
+        float bestCost = Float.POSITIVE_INFINITY; //min cost
+
+        //find the cheapest plan
+        for(Demand first : allDemands()){
+            for(Demand second : allDemands(first)){
+                for(Demand third : allDemands(first, second)){
+                    for(int[] combination : PlanCombinations.all){
+                        Plan plan = makePlan(new Demand[]{first, second, third}, combination);
+                        float cost = plan.cost();
+                        if(cost < bestCost){
+                            bestPlan = plan;
+                            bestCost = cost;
+                        }
+                    }
+                }
+            }
+        }
+
+        if(bestPlan != null){
+            plan = bestPlan;
+            //reverse to act on it layer
+            plan.actions.reverse();
+        }else{
+            Log.err("No good plan found.");
+        }
+    }
+
+    /** Returns an array of valid demands, given that the passed demands have already been used.*/
+    Array<Demand> allDemands(Demand... alreadyUsed){
+        Array<Demand> out = new Array<>();
+        Array.with(player.demandCards).select(card -> !Structs.contains(card.demands,
+                d -> Structs.contains(alreadyUsed, d)))
+                .each(c -> out.addAll(c.demands));
+        return out;
+    }
+
+    Plan makePlan(Demand[] demands, int[] combination){
+        Array<NextAction> actions = new Array<>();
+
+        astar.begin();
+
+        for(int value : combination){
+            boolean unload = value < 0;
+            Demand demand = demands[Math.abs(value) - 1];
+            Tile currentTile = player.position;
+
+            if(unload){
+                astar.astar(currentTile, state.world.tile(demand.city));
+                astar.placeTracks();
+
+                actions.add(new UnloadAction(demand.city, demand.good));
+                //update new position
+                currentTile = state.world.tile(demand.city);
+            }else if(!player.cargo.contains(demand.good)){
+                //only plan to load if you don't have this good
+                Tile position = currentTile;
+                //find best city to get load from
+                City loadFrom = Array.with(state.world.cities())
+                        .select(s -> s.goods.contains(demand.good))
+                        .min(city -> astar.astar(position, state.world.tile(city)));
+
+                //add the placed tracks now
+                astar.astar(position, state.world.tile(loadFrom));
+                astar.placeTracks();
+
+                actions.add(new LoadAction(loadFrom, demand.good));
+                //update new position since you have to go to this city to load from it
+                currentTile = state.world.tile(loadFrom);
+            }
+        }
+
+        astar.end();
+
+        return new Plan(actions);
     }
 
     void selectLocation(){
@@ -78,6 +157,7 @@ public class NextAI extends AI{
             Tile position = player.position;
             float total = 0f;
             int money = player.money;
+            int cargoUsed = player.cargo.size;
 
             astar.begin();
 
@@ -88,24 +168,32 @@ public class NextAI extends AI{
                     total += astar.astar(position, state.world.tile(l.city));
                     money -= astar.newTrackCost;
                     position = state.world.tile(l.city);
+                    cargoUsed ++;
 
                     astar.placeTracks();
 
                     //when the player runs out of money, bail out, this plan isn't possible
-                    if(money < 0) return Float.POSITIVE_INFINITY;
+                    //also bail out if player has no cargo space to hold this new load
+                    if(money < 0 || cargoUsed > player.loco.loads) return Float.POSITIVE_INFINITY;
                 }else if(action instanceof UnloadAction){
                     UnloadAction u = (UnloadAction)action;
 
                     total += astar.astar(position, state.world.tile(u.city));
                     money -= astar.newTrackCost;
+                    cargoUsed --;
 
                     astar.placeTracks();
 
                     //when the player runs out of money, bail out, this plan isn't possible
                     if(money < 0) return Float.POSITIVE_INFINITY;
 
+                    //get money earned
+                    int earned = player.allDemands().find(d -> d.good.equals(u.good) && d.city == u.city).cost;
+
                     //after checking money, add unloaded cost by finding the correct demand
-                    money += player.allDemands().find(d -> d.good.equals(u.good) && d.city == u.city).cost;
+                    money += earned;
+                    //remove earned ECU cost to make this cheaper
+                    total -= earned * Astar.ecuCostScale;
                 }
             }
 

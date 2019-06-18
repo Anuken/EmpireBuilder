@@ -30,17 +30,13 @@ public class Astar{
     }
 
     public void end(){
-
+        inputTracks.clear();
     }
 
     /** Copies the output, placed tracks into the input buffer.
      * This essentials makes the AI consider the newly placed tracks in the next calculations. */
     public void placeTracks(){
         inputTracks.add(outputTracks);
-    }
-
-    public int newTrackCost(){
-        return newTrackCost;
     }
 
     public float astar(Tile from, Tile to, Array<Tile> out){
@@ -124,8 +120,7 @@ public class Astar{
 
             //add up direct track costs
             Tile cfrom = current.searchParent, cto = current;
-            if(!player.hasTrack(cfrom, cto) && !state.world.sameCity(cfrom, cto)
-                    && !inputTracks.has(cfrom.x, cfrom.y, cto.x, cto.y)){
+            if(!hasTrack(cfrom, cto)){
                 newTrackCost += state.getTrackCost(cfrom, cto);
                 outputTracks.add(cfrom.x, cfrom.y, cto.x, cto.y);
             }else if(!movedOnOtherTrack && state.players.contains(p -> p.hasTrack(cfrom, cto))){
