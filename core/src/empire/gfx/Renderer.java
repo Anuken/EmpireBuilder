@@ -105,6 +105,7 @@ public class Renderer implements ApplicationListener{
     void drawBuffered(){
         drawWorld();
         drawRails();
+        drawCities();
         drawPlayers();
         drawControl();
         drawOver();
@@ -256,12 +257,13 @@ public class Renderer implements ApplicationListener{
         Lines.line(Core.atlas.find("track"), fromX, fromY, toX, toY, CapStyle.none, 0f);
     }
 
-    /** Draws the cities of the world.*/
     void drawWorld(){
         Draw.color();
         float rwidth = state.world.width * tilesize, rheight = state.world.height * tilesize;
         Draw.rect(Draw.wrap(worldTexture), rwidth/2f, rheight/2f, rwidth, -rheight);
+    }
 
+    void drawCities(){
         Player player = state.localPlayer();
 
         if(player == null) throw new IllegalArgumentException("Local player can't be null.");

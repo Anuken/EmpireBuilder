@@ -11,6 +11,8 @@ import io.anuke.arc.util.Strings;
 
 import java.util.Scanner;
 
+import static empire.gfx.EmpireCore.ui;
+
 /** Defines some type of event card, which may prevent the player from doing an action
  * or simply do something to the player when it is first drawn. */
 public abstract class EventCard extends Card{
@@ -191,7 +193,14 @@ public abstract class EventCard extends Card{
                         p.lostTurns ++;
                         //TODO, currently the last cargo is popped off instead of a choice
                         if(p.cargo.size > 0){
-                            p.cargo.pop();
+                            String cargo = p.cargo.pop();
+                            ui.showDialog("You've been derailed!", d -> {
+                                d.cont.add("You were near [lime]" + city.formalName() + "[].\nCargo lost: [yellow]" + Strings.capitalize(cargo));
+                            });
+                        }else{
+                            ui.showDialog("You've been derailed!", d -> {
+                                d.cont.add("You were near [lime]" + city.formalName() + "[].\nNo cargo in train, so none lost.");
+                            });
                         }
                         break;
                     }

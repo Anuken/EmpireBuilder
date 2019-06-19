@@ -55,6 +55,8 @@ public class MapIO{
                 int radius = 3;
                 Tile tile = tiles[x][y];
 
+                tile.inland = true;
+
                 if(tile.type == Terrain.water){
                     tile.inland = false;
                     continue;
@@ -64,10 +66,11 @@ public class MapIO{
                 for(int rx = -radius; rx <= radius; rx++){
                     for(int ry = -radius; ry <= radius; ry++){
                         Tile other = tiles
+                                
                                     [Mathf.clamp(x + rx, 0, width - 1)]
                                     [Mathf.clamp(y + ry, 0, height - 1)];
                         if(other.type == Terrain.water){
-                            tile.inland = true;
+                            tile.inland = false;
                             break outer;
                         }
                     }

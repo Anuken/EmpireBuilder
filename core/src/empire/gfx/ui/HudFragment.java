@@ -7,6 +7,7 @@ import empire.game.World.City;
 import empire.game.World.Tile;
 import empire.io.SaveIO;
 import io.anuke.arc.Core;
+import io.anuke.arc.collection.Array;
 import io.anuke.arc.graphics.Color;
 import io.anuke.arc.math.Mathf;
 import io.anuke.arc.scene.Group;
@@ -58,13 +59,16 @@ public class HudFragment{
 
         //display event info
         group.fill(events -> {
-            events.visible(() -> !state.player().eventCards.isEmpty());
+            Array<EventCard> cards = new Array<>();
+            state.players.each(p -> cards.addAll(p.eventCards));
+
+            events.visible(() -> !cards.isEmpty());
             events.bottom().left();
             events.update(() -> {
                 events.clearChildren();
                 events.add("[lightgray]Active Events:");
                 events.row();
-                for(EventCard card : state.player().eventCards){
+                for(EventCard card : cards){
                     events.add("| " + card.name()).color(Color.CORAL).left();
                     events.row();
                 }
