@@ -10,7 +10,7 @@ import static empire.gfx.EmpireCore.*;
 
 /** Handles scheduling of AI actions, including pausing and resuming.*/
 public class AIScheduler implements ApplicationListener{
-    private static final float interval = 1f;
+    private static final float interval = 0.25f;
 
     private Task task;
     private AI ai;

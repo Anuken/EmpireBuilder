@@ -37,6 +37,7 @@ public class Actions{
         public Player[] players;
         public int currentPlayer;
         public int turn;
+        public boolean lastLocal;
 
         @Override
         public void apply(State state){
@@ -52,18 +53,10 @@ public class Actions{
                 state.cards.add(CardIO.cardsByID[cards.get(i)]);
             }
 
-            //fix crappy serialization
-            /*
-            for(Player player : players){
-                ObjectMap<Tile, Array<Tile>> out = new ObjectMap<>();
-                //oh my god
-                //it actually mangles it this badly
-                //how is this even possible
-                @SuppressWarnings("unchecked")
-                ObjectMap<String, Array<Float>> map = (ObjectMap)player.tracks;
-                map.each((str, tiles) -> out.put(state.world.tile(Integer.parseInt(str)), tiles.map(f -> state.world.tile((int)(float)f))));
-                player.tracks = out;
-            }*/
+            //special flag for save loads
+            if(lastLocal){
+                state.players.peek().local = true;
+            }
         }
     }
 
@@ -190,6 +183,15 @@ public class Actions{
         public void apply(State state){
             state.discardCards(player);
             state.nextPlayer();
+        }
+    }
+
+    public static class DumpCargo extends PlayerAction{
+        public String cargo;
+
+        @Override
+        public void apply(State state){
+            player.cargo.remove(cargo);
         }
     }
 

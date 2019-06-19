@@ -6,7 +6,7 @@ import empire.game.World.*;
 import io.anuke.arc.Events;
 import io.anuke.arc.collection.*;
 import io.anuke.arc.function.Consumer;
-import io.anuke.arc.util.Structs;
+import io.anuke.arc.util.*;
 
 /** Holds the state of the entire game. */
 public class State{
@@ -149,6 +149,7 @@ public class State{
         if(currentPlayer >= players.size){
             currentPlayer = 0;
             turn ++;
+            Log.info("Turn: {0}", turn);
         }
 
         Events.fire(new EndTurnEvent(last, player()));

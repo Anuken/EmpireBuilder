@@ -5,6 +5,7 @@ import empire.game.*;
 import empire.game.DemandCard.Demand;
 import empire.game.World.City;
 import empire.game.World.Tile;
+import empire.io.SaveIO;
 import io.anuke.arc.Core;
 import io.anuke.arc.graphics.Color;
 import io.anuke.arc.math.Mathf;
@@ -75,7 +76,7 @@ public class HudFragment{
             float width = 250f;
             Collapser[] arr = {null};
             Collapser actions = new Collapser(t -> {
-                t.defaults().width(width).height(60f);
+                t.defaults().width(width).height(50f);
                 t.addButton("Upgrade", () -> {
                     if(state.player().loco != Loco.freight){
                         new UpgradeLoco().act();
@@ -102,10 +103,36 @@ public class HudFragment{
                     b.setText(baseText);
                 });
                 t.row();
+                t.addButton("Dump Cargo...", () -> {
+                    ui.showDialog("Dump", b -> {
+                        b.cont.defaults().size(180f, 50f);
+
+                        for(String c : state.player().cargo){
+                            b.cont.addButton("[yellow]" + Strings.capitalize(c), () -> {
+                                new DumpCargo(){{ cargo = c; }}.act();
+                                b.hide();
+                            });
+                        }
+                    });
+                }).disabled(b -> state.player().cargo.isEmpty());
+                t.row();
                 t.addButton("Discard Cards", () -> {
                     new DiscardCards().act();
                     arr[0].toggle();
                 });
+                t.row();
+                t.addButton("Save", () -> {
+                    SaveIO.save(state, Core.files.external("empire_save.json"));
+                }).disabled(b -> net.client());
+                t.row();
+                t.addButton("Load", () -> {
+                    try{
+                        SaveIO.load(state, Core.files.external("empire_save.json"));
+                    }catch(Exception e){
+                        e.printStackTrace();
+                        ui.showFade("Failed to load save.");
+                    }
+                }).disabled(b -> net.client());
             }, true);
 
             arr[0] = actions;
@@ -151,8 +178,11 @@ public class HudFragment{
                 });
             }).fillX().height(50);
             main.row();
-            main.addImageTextButton("Action...", "icon-down", 16*2, actions::toggle)
-                    .disabled(b -> !state.player().local).fillX().height(50);
+            main.addImageTextButton("Action...", "icon-down", 16*2, actions::toggle).disabled(b -> !state.player().local).update(t -> {
+                if(!actions.isCollapsed() && !state.player().local){
+                    actions.toggle();
+                }
+            }).fillX().height(50);
             main.row();
             main.add(actions).fillX();
         });
@@ -314,6 +344,8 @@ public class HudFragment{
                 setPosition(Core.input.mouseX(), Core.input.mouseY(), Align.bottomRight);
             });
         }});
+
+        group.fill(t -> t.bottom().right().label(() -> "Turn " + state.turn).color(Color.LIGHT_GRAY));
 
         group.fill(t -> {
             t.bottom();

@@ -15,12 +15,14 @@ public class NextAI extends AI{
     /** Money after which the AI will consider upgrading their loco.*/
     private static final int upgradeAfterMoney = 60;
     /** Demand cost scale: how many units to reduce a score by, per ECU.*/
-    private static final float demandCostScale = 300f;
+    private static final float demandCostScale = 20f;
 
     /** List of planned actions.*/
     private Plan plan = new Plan(new Array<>());
     /** Object for handling pathfinding.*/
     private Astar astar;
+    /** Plans skipped due to branch and bound.*/
+    private int skipped = 0;
 
     public NextAI(Player player, State state){
         super(player, state);
@@ -201,6 +203,7 @@ public class NextAI extends AI{
         int considered = 0;
 
         Log.info("Updating plan...");
+        skipped = 0;
 
         //find the cheapest plan
         for(Demand first : allDemands()){
@@ -208,7 +211,7 @@ public class NextAI extends AI{
                 for(Demand third : allDemands(first, second)){
                     for(int[] combination : PlanCombinations.all){
                         Plan plan = makePlan(new Demand[]{first, second, third}, combination);
-                        float cost = plan.cost();
+                        float cost = plan.cost(bestCost);
                         considered ++;
                         if(cost < bestCost){
                             bestPlan = plan;
@@ -219,7 +222,7 @@ public class NextAI extends AI{
             }
         }
 
-        Log.info("Considered {0} plans.", considered);
+        Log.info("Considered {0} plans, skipped {1}.", considered, skipped);
 
         if(bestPlan != null){
             plan = bestPlan;
@@ -248,11 +251,11 @@ public class NextAI extends AI{
         Array<NextAction> actions = new Array<>();
 
         astar.begin();
+        Tile currentTile = player.position;
 
         for(int value : combination){
             boolean unload = value < 0;
             Demand demand = demands[Math.abs(value) - 1];
-            Tile currentTile = player.position;
 
             if(unload){
                 astar.astar(currentTile, state.world.tile(demand.city));
@@ -355,11 +358,15 @@ public class NextAI extends AI{
 
         /** Calculates a cost for this plan of actions. Disregards city linking actions.
          * Returns plan cost in moves.*/
-        float cost(){
+        float cost(float bestSoFar){
             Tile position = player.position;
             float total = 0f;
             int money = player.money;
             int cargoUsed = player.cargo.size;
+
+            float totalProfit = actions.sum(a -> a instanceof UnloadAction ?
+                    player.allDemands().find(d -> d.good.equals(((UnloadAction) a).good)
+                            && d.city == ((UnloadAction) a).city).cost : 0f) * demandCostScale;
 
             astar.begin();
 
@@ -394,14 +401,19 @@ public class NextAI extends AI{
 
                     //after checking money, add unloaded cost by finding the correct demand
                     money += earned;
-                    //remove earned ECU cost to make this cheaper
-                    total -= earned * Astar.ecuCostScale;
+                }
+
+                //branch and bound step: total is only going to get higher from here, if it's already over the best
+                //drop out
+                if(total - totalProfit > bestSoFar){
+                    skipped ++;
+                    //return Float.POSITIVE_INFINITY;
                 }
             }
 
             astar.end();
 
-            return total;
+            return total - totalProfit;
         }
     }
 

@@ -219,8 +219,6 @@ public class World{
         public Port port;
         /** The sea area on this tile; may be null.*/
         public Sea sea;
-        /** Temporary search parent.*/
-        //public Tile searchParent;
         /** List of crossings to other tiles.*/
         public Array<WaterCrossing> crossings;
         /** Whether this tile is inland, e.g. 3 tiles from shore.*/
@@ -323,17 +321,18 @@ public class World{
     public static class City{
         /** City name in lower case.*/
         public final String name;
-        /** This city's x/y position.*/
-        public final int x, y;
+        /** This city's x/y position and ID.*/
+        public final int x, y, id;
         /** This city's size.*/
         public final CitySize size;
         /** Goods that this city has, as lowercase strings.*/
         public final Array<String> goods;
 
-        public City(String name, int x, int y, CitySize size, Array<String> goods){
+        public City(String name, int x, int y, int id, CitySize size, Array<String> goods){
             this.name = name;
             this.x = x;
             this.y = y;
+            this.id = id;
             this.size = size;
             this.goods = goods;
         }

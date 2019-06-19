@@ -20,7 +20,8 @@ public class Astar{
     protected IntSet usedOtherTrack = new IntSet();
 
     //how much this AI would rather move than place a single track
-    protected static final float ecuCostScale = 20;
+    //calculated: (250 (money to win) / 80 (approx. turns to win) / loco speed) + terrain cost
+    private static final float ecuCostScale = 250f / 20f;
 
     public Astar(Player player){
         this.player = player;
@@ -165,7 +166,7 @@ public class Astar{
         if(state.players.contains(p -> p.hasTrack(from, to))){
             if(!usedOtherTrack.contains(state.world.index(from))){
                 //no track between these, so it costs ECU
-                return State.otherMoveTrackCost * ecuCostScale;
+                return 1f + costScale(State.otherMoveTrackCost);
             }else{
                 //if the track has already been used, the cost is just the moves (1)
                 return 1f;
@@ -173,7 +174,11 @@ public class Astar{
         }
 
         //no links whatsoever, return base track cost to build here
-        return state.getTrackCost(from, to) * ecuCostScale;
+        return 1f + costScale(state.getTrackCost(from, to));
+    }
+
+    float costScale(int base){
+        return base * 19f;
     }
 
     boolean hasTrack(Tile from, Tile to){

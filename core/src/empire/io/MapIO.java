@@ -93,7 +93,7 @@ public class MapIO{
                 //they can be capitalized later
                 goods.add(scan.next().toLowerCase());
             }
-            cities.add(new City(name, x, y, CitySize.values()[size-1], goods));
+            cities.add(new City(name, x, y, i, CitySize.values()[size-1], goods));
             allgoods.addAll(goods);
         }
 

@@ -129,12 +129,26 @@ public class ActionRelay implements NetListener{
         }
     }
 
-    private String write(Action action){
-        Class<?> type = action.getClass();
-        if(action.getClass().isAnonymousClass()){
-            type = action.getClass().getSuperclass();
+    public String writeString(Object object){
+        return json.toJson(object);
+    }
+
+    public <T> T readString(Class<T> type, String str){
+        return json.fromJson(type, str);
+    }
+
+    public void handleStateLoad(WorldSend send){
+        if(net.active()){
+            send.lastLocal = true;
+            net.send(EmpireCore.actions.write(send));
+            if(!players.isEmpty()){
+                players.put(players.entries().next().key, send.players[send.players.length-1]);
+            }
         }
-        return ClassReflection.getSimpleName(type) + json.toJson(action);
+    }
+
+    private String write(Action action){
+        return className(action) + json.toJson(action);
     }
 
     private Action read(String str){
@@ -143,6 +157,14 @@ public class ActionRelay implements NetListener{
         String data = str.substring(idx);
         Class<?> type = classMap.getOr(name, () -> find("empire.game.Actions$" + name));
         return (Action) json.fromJson(type, data);
+    }
+
+    private String className(Action action){
+        Class<?> type = action.getClass();
+        if(action.getClass().isAnonymousClass()){
+            type = action.getClass().getSuperclass();
+        }
+        return ClassReflection.getSimpleName(type);
     }
 
     private Class<?> find(String name){
@@ -241,7 +263,8 @@ public class ActionRelay implements NetListener{
             }
 
             if(state.player() != player && !(action instanceof AnyPlayerAction)){
-                Log.err("Player '{0}' just attempted to do an action not in their turn!", player.name);
+                Log.err("Player '{0}' just attempted to do an action not in their turn: {1}", player.name,
+                        className(action));
                 return;
             }
 
