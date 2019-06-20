@@ -1,69 +1,78 @@
 package empire.gfx;
 
+import empire.ai.Astar;
 import empire.game.Actions.*;
 import empire.game.World.*;
 import io.anuke.arc.*;
 import io.anuke.arc.collection.Array;
 import io.anuke.arc.input.KeyCode;
-import io.anuke.arc.math.Mathf;
-import io.anuke.arc.math.geom.*;
-import io.anuke.arc.util.*;
+import io.anuke.arc.math.geom.Vector2;
 
 import static empire.gfx.EmpireCore.*;
 
 /** Handles user input.*/
 public class Control implements ApplicationListener{
     private Array<Tile> outArray = new Array<>();
+    private Astar astar = new Astar(null);
+
+    private Array<Tile[]> placement = new Array<>();
+    private Array<Tile> selectTiles = new Array<>();
+
     private ThreadLocal<Vector2> vec = new ThreadLocal<>();
-    public Tile placeLoc = null;
+    public Tile placeLoc = null, cursor = null;
 
     @Override
     public void update(){
+        if(tileMouse() != null && tileMouse() != cursor && placeLoc != null){
+            cursor = tileMouse();
+            updatePath();
+        }
 
-        //choose start pos
-        if(Core.input.keyTap(KeyCode.MOUSE_LEFT) && EmpireCore.net.active() && state.player().local && !state.player().chosenLocation){
-            Tile tile = tileMouse();
-            if(tile != null && state.world.getCity(tile) != null){
-                City city = state.world.getCity(tile);
+        cursor = tileMouse();
+
+        if(cursor != null){
+            //choose start pos
+            if(Core.input.keyTap(KeyCode.MOUSE_LEFT) && EmpireCore.net.active()
+                    && state.player().local && !state.player().chosenLocation
+                    && state.world.getCity(cursor) != null){
+                City city = state.world.getCity(cursor);
                 new ChooseStart(){{
                     location = state.world.tile(city.x, city.y);
                 }}.act();
             }
-        }
 
-        //begin placing on mouse down
-        if(Core.input.keyTap(KeyCode.MOUSE_LEFT) && !Core.scene.hasMouse() && state.player().local && state.player().chosenLocation){
-            Tile tile = tileMouse();
-            if(tile != null && state.canBeginTrack(state.player(), tile)){
-                placeLoc = tile;
+            //begin placing on mouse down
+            if(Core.input.keyTap(KeyCode.MOUSE_LEFT) && !Core.scene.hasMouse()
+                    && state.player().local
+                    && state.player().chosenLocation
+                    && state.canBeginTrack(state.player(), cursor)){
+                placeLoc = cursor;
             }
-        }
 
-        //place lines on mouse up
-        if(Core.input.keyRelease(KeyCode.MOUSE_LEFT) && state.player().local){
-            Tile other = tileMouse();
-            if(placeLoc != null && other != null && canPlaceLine(placeLoc, other)){
-                for(Tile tile : getTiles(placeLoc, other)){
-                    if(state.canPlaceTrack(state.player(), placeLoc, tile)){
-                        int cost = state.getTrackCost(placeLoc, tile);
-                        if(state.canSpendTrack(state.player(), cost)){
-                            //placing tracks is a special case, so it is executed locally as well
-                            new PlaceTrack(){{
-                                from = placeLoc;
-                                to = tile;
-                            }}.act();
+            //place lines on mouse up
+            if(Core.input.keyRelease(KeyCode.MOUSE_LEFT) && state.player().local){
+                //if(placeLoc != null && canPlaceLine(placeLoc, cursor)){
+                    /*
+                    for(Tile tile : getTiles(placeLoc, tile)){
+                        if(state.canPlaceTrack(state.player(), placeLoc, tile)){
+                            int cost = state.getTrackCost(placeLoc, tile);
+                            if(state.canSpendTrack(state.player(), cost)){
+                                //placing tracks is a special case, so it is executed locally as well
+                                new PlaceTrack(){{
+                                    from = placeLoc;
+                                    to = tile;
+                                }}.act();
+                            }
                         }
-                    }
-                    placeLoc = tile;
-                }
-            }
-            placeLoc = null;
-        }
+                        placeLoc = tile;
+                    }*/
+                //}
 
-        if(Core.input.keyTap(KeyCode.MOUSE_RIGHT) && state.player().local && !state.isPreMovement() && !Core.scene.hasMouse()){
-            Tile tile = tileMouse();
-            if(tile != null){
-                Array<Tile> tiles = state.calculateMovement(state.player(), tile);
+                placeLoc = null;
+            }
+
+            if(Core.input.keyTap(KeyCode.MOUSE_RIGHT) && state.player().local && !state.isPreMovement() && !Core.scene.hasMouse()){
+                Array<Tile> tiles = state.calculateMovement(state.player(), cursor);
                 for(Tile next : tiles){
                     //skip duplicates
                     if(next == state.player().position) continue;;
@@ -81,35 +90,16 @@ public class Control implements ApplicationListener{
         }
     }
 
-    public Array<Tile> getTiles(Tile from, Tile to){
-        outArray.clear();
-        Tile current = from;
-        Tmp.v2.set(toWorld(from));
-        Tmp.v3.set(toWorld(to));
-        while(current != to && current != null){
-            outArray.add(current);
-            Tile tile = current;
-            Point2 min = Structs.findMin(current.getAdjacent(), point -> {
-                Tile other = state.world.tileOpt(tile.x + point.x, tile.y + point.y);
-                if(other == null || Mathf.dst(tile.x, tile.y, from.x, from.y) >
-                        Mathf.dst(other.x, other.y, from.x, from.y)){
-                    return Integer.MAX_VALUE;
-                }else if(other == to){
-                    return -Integer.MAX_VALUE;
-                }
-
-                Tmp.v4.set(toWorld(other));
-
-                return Intersector.distanceSegmentPoint(Tmp.v2, Tmp.v3, Tmp.v4);
-            });
-            current = state.world.tileOpt(tile.x + min.x, tile.y + min.y);
-        }
-        if(!outArray.isEmpty() && outArray.peek() != to){
-            outArray.add(to);
-        }
-        return outArray;
+    private void updatePath(){
+        astar.setPlayer(state.localPlayer());
+        astar.astar(placeLoc, cursor, selectTiles);
     }
 
+    public Array<Tile> selectedTiles(){
+        return selectTiles;
+    }
+
+    /*
     public boolean canPlaceLine(Tile from, Tile to){
         for(Tile tile : getTiles(from, to)){
             if(tile == null || !state.isPassable(state.player(), tile)){
@@ -117,7 +107,7 @@ public class Control implements ApplicationListener{
             }
         }
         return true;
-    }
+    }*/
 
     public Tile tileMouse(){
         return tileWorld(Core.input.mouseWorld().x, Core.input.mouseWorld().y);

@@ -12,7 +12,8 @@ import java.util.PriorityQueue;
 import static empire.gfx.EmpireCore.*;
 
 public class Astar{
-    private static Vector2 vec = new Vector2();
+    private Vector2 vec = new Vector2();
+
     protected Array<Tile> tiles = new Array<>();
     protected int newTrackCost = 0;
     protected Tracks outputTracks = new Tracks(), inputTracks = new Tracks();
@@ -24,6 +25,10 @@ public class Astar{
     private static final float ecuCostScale = 250f / 20f;
 
     public Astar(Player player){
+        this.player = player;
+    }
+
+    public void setPlayer(Player player){
         this.player = player;
     }
 
@@ -186,7 +191,7 @@ public class Astar{
                 || inputTracks.has(from.x, from.y, to.x, to.y);
     }
 
-    public static float tileDst(Tile from, Tile to){
+    public float tileDst(Tile from, Tile to){
         vec.set(EmpireCore.control.toWorld(from.x, from.y));
         return Math.round(vec.dst(EmpireCore.control.toWorld(to.x, to.y)) / tilesize);
     }

@@ -160,12 +160,13 @@ public class Renderer implements ApplicationListener{
                 Fill.rect(world.x, world.y, tilesize, tilesize);
             }
 
+
             //draw rail track placement
             if(control.placeLoc != null && other != null){
                 Tile last = control.placeLoc;
                 int cost = 0;
-                for(Tile tile : control.getTiles(control.placeLoc, other)){
-                    if(tile != last){
+                for(Tile tile : control.selectedTiles()){
+                    if(tile != last && !state.world.samePort(tile, last)){
 
                         Vector2 world = control.toWorld(last);
                         float fx = world.x, fy = world.y;
@@ -254,6 +255,7 @@ public class Renderer implements ApplicationListener{
     }
 
     void drawTrack(float fromX, float fromY, float toX, float toY){
+        Lines.stroke(Core.atlas.find("track").getHeight() * tilesize/16f);
         Lines.line(Core.atlas.find("track"), fromX, fromY, toX, toY, CapStyle.none, 0f);
     }
 

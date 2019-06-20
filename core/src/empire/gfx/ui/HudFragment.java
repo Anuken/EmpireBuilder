@@ -331,7 +331,7 @@ public class HudFragment{
                     int totalCost = 0;
                     int totalTiles = 0;
                     Tile last = control.placeLoc;
-                    for(Tile other : control.getTiles(control.placeLoc, tile)){
+                    for(Tile other : control.selectedTiles()){
                         if(other != last &&
                                 !(state.world.getMajorCity(tile) == state.world.getMajorCity(last)
                                 && state.world.getMajorCity(tile) != null)){
