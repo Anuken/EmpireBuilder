@@ -115,12 +115,12 @@ public abstract class EventCard extends Card{
 
         @Override
         public boolean canPlaceTrack(Player player, Tile from, Tile to){
-            return false;
+            return player.eventCards.contains(c -> c == this);
         }
 
         @Override
         public boolean canMove(Player player, Tile from, Tile to){
-            return false;
+            return !EmpireCore.state.players.contains(p -> p.eventCards.contains(c -> c == this));
         }
     }
 

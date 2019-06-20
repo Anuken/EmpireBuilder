@@ -266,7 +266,7 @@ public class HudFragment{
                                         new LoadCargo(){{
                                             cargo = good;
                                         }}.act();
-                                    }).colspan(2).left().fillX().disabled(b -> !player.hasCargoSpace()).width(190f).height(45f);
+                                    }).colspan(2).left().fillX().disabled(b -> !player.hasCargoSpace() || !state.player().local).width(190f).height(45f);
                                 }else{
                                     table.addImage("icon-trash").size(14*2).padRight(3).right().color(Color.SCARLET);
                                     table.add(Strings.capitalize(good)).color(Color.LIGHT_GRAY);
@@ -289,11 +289,11 @@ public class HudFragment{
                                     //make sure player is not event-blocked here
                                     if(state.canLoadUnload(player, state.world.tile(fcity.x, fcity.y))){
                                         table.addImageTextButton(Strings.capitalize(d.good) + "[] for[coral] " + d.cost + "[] ECU",
-                                                "icon-project-open", 14 * 2, () -> {
-                                                    new SellCargo(){{
-                                                        cargo = d.good;
-                                                    }}.act();
-                                                }).colspan(2).left().fillX().width(190f).height(60f);
+                                        "icon-project-open", 14 * 2, () -> {
+                                            new SellCargo(){{
+                                                cargo = d.good;
+                                            }}.act();
+                                        }).colspan(2).left().fillX().width(190f).height(60f).disabled(b -> !state.player().local);
                                     }else{
                                         table.addImage("icon-trash").size(14 * 2).padRight(3).color(Color.SCARLET).right();
                                         table.add("[lightgray]" + Strings.capitalize(d.good) + "[] for[coral] " + d.cost + "[] ECU");

@@ -82,9 +82,11 @@ public class Player{
     /** Returns whether a certain action is allowed, according to the event cards.
      * If any one of them returns false, false is returned.*/
     public boolean isAllowed(Predicate<EventCard> pred){
-        for(EventCard card : eventCards){
-            if(!pred.test(card)){
-                return false;
+        for(Player player : EmpireCore.state.players){
+            for(EventCard card : eventCards){
+                if(!pred.test(card)){
+                    return false;
+                }
             }
         }
         return true;

@@ -269,8 +269,12 @@ public class ActionRelay implements NetListener{
             }
 
             //apply action and send it out
-            action.apply(state);
-            net.send(write(action));
+            try{
+                action.apply(state);
+                net.send(write(action));
+            }catch(Exception e){
+                e.printStackTrace();
+            }
             if(netDebug) Log.info("Received packet from {0}: \n{1}", connection, json.prettyPrint(action));
         }
     }
