@@ -352,11 +352,12 @@ public class HudFragment{
         //placement for tracks
         group.fill(t -> {
             t.bottom();
-            t.table(f -> {
-                f.defaults().size(230f, 50f);
+            t.table("button", f -> {
+                f.margin(8f).defaults().size(230f, 50f);
                 f.addImageTextButton("Place Track", "icon-plus", 16f*2, () -> {
                     control.placeQueued();
-                });
+                }).height(75f).update(b -> b.setText("Place Track\n" +
+                        (state.canSpendTrack(state.player(), (int)control.queueCost()) ? "[green] " : "[scarlet] ") + control.queueCost() + "[coral] ECU"));
                 f.row();
                 f.addImageTextButton("Cancel", "icon-trash", 14*2f, () -> {
                     control.getQueued().clear();

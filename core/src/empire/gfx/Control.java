@@ -19,6 +19,7 @@ public class Control implements ApplicationListener{
     private Array<Tile[]> placement = new Array<>();
     private Tracks placementTracks = new Tracks();
     private Array<Tile> selectTiles = new Array<>();
+    private float placementCost = 0;
 
     private ThreadLocal<Vector2> vec = new ThreadLocal<>();
     public Tile placeLoc = null, cursor = null;
@@ -66,24 +67,9 @@ public class Control implements ApplicationListener{
                     last = tile;
                 }
 
-                selectTiles.clear();
+                updateCost();
 
-                //if(placeLoc != null && canPlaceLine(placeLoc, cursor)){
-                    /*
-                    for(Tile tile : getTiles(placeLoc, tile)){
-                        if(state.canPlaceTrack(state.player(), placeLoc, tile)){
-                            int cost = state.getTrackCost(placeLoc, tile);
-                            if(state.canSpendTrack(state.player(), cost)){
-                                //placing tracks is a special case, so it is executed locally as well
-                                new PlaceTrack(){{
-                                    from = placeLoc;
-                                    to = tile;
-                                }}.act();
-                            }
-                        }
-                        placeLoc = tile;
-                    }*/
-                //}
+                selectTiles.clear();
 
                 placeLoc = null;
             }
@@ -112,6 +98,10 @@ public class Control implements ApplicationListener{
         astar.astar(placeLoc, cursor, selectTiles);
     }
 
+    private void updateCost(){
+        placementCost = placement.sum(p -> state.getTrackCost(p[0], p[1]));
+    }
+
     /** Places all the tiles that are queued.
      * Clears the queue afterwards.*/
     public void placeQueued(){
@@ -125,6 +115,10 @@ public class Control implements ApplicationListener{
         }
 
         placement.clear();
+    }
+
+    public float queueCost(){
+        return placementCost;
     }
 
     /** Returns an array of queued tiles.*/

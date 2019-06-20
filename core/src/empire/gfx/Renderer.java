@@ -153,13 +153,17 @@ public class Renderer implements ApplicationListener{
     /** Draws player input on the board.*/
     void drawControl(){
         //draw stuff in queue
-        Draw.color(state.player().color, 0.3f);
+        int queueUsed = 0;
 
         for(Tile[] queue : control.getQueued()){
             Vector2 world = control.toWorld(queue[0]);
             float fx = world.x, fy = world.y;
             control.toWorld(queue[1]);
 
+            queueUsed += state.getTrackCost(queue[0], queue[1]);
+
+            Draw.color(state.canSpendTrack(state.player(), queueUsed) ?
+                    state.player().color : Color.SCARLET, 0.43f);
             drawTrack(fx, fy, world.x, world.y);
         }
 
@@ -184,11 +188,11 @@ public class Renderer implements ApplicationListener{
                         float fx = world.x, fy = world.y;
                         control.toWorld(tile);
 
-                        if(state.isPassable(state.player(), tile) && state.canPlaceTrack(state.player(), last, tile)){
+                        if(state.isPassable(state.player(), tile)){
                             cost += state.getTrackCost(last, tile);
                             Draw.color(1f, 1f, 1f, 0.5f);
                         }else{
-                            Draw.color(1f, 0.3f, 0.3f, 0.5f);
+                            Draw.color(1f, 1f, 1f, 0.5f);
                         }
 
                         drawTrack(fx, fy, world.x, world.y);
@@ -196,7 +200,6 @@ public class Renderer implements ApplicationListener{
                     last = tile;
                 }
             }
-
         }
 
         for(Player player : state.players){
