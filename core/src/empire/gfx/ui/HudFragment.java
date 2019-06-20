@@ -349,8 +349,25 @@ public class HudFragment{
             });
         }});
 
+        //placement for tracks
+        group.fill(t -> {
+            t.bottom();
+            t.table(f -> {
+                f.defaults().size(230f, 50f);
+                f.addImageTextButton("Place Track", "icon-plus", 16f*2, () -> {
+                    control.placeQueued();
+                });
+                f.row();
+                f.addImageTextButton("Cancel", "icon-trash", 14*2f, () -> {
+                    control.getQueued().clear();
+                });
+            });
+            t.visible(() -> state.player().local && !control.getQueued().isEmpty());
+        });
+
         group.fill(t -> t.bottom().right().label(() -> "Turn " + state.turn).color(Color.LIGHT_GRAY));
 
+        //paused, only for AI
         group.fill(t -> {
             t.bottom();
             t.table("button", f -> {

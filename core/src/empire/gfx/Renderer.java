@@ -152,6 +152,17 @@ public class Renderer implements ApplicationListener{
 
     /** Draws player input on the board.*/
     void drawControl(){
+        //draw stuff in queue
+        Draw.color(state.player().color, 0.3f);
+
+        for(Tile[] queue : control.getQueued()){
+            Vector2 world = control.toWorld(queue[0]);
+            float fx = world.x, fy = world.y;
+            control.toWorld(queue[1]);
+
+            drawTrack(fx, fy, world.x, world.y);
+        }
+
         if(!Core.scene.hasMouse()){
             Tile other = control.tileMouse();
             if(other != null){
@@ -160,21 +171,20 @@ public class Renderer implements ApplicationListener{
                 Fill.rect(world.x, world.y, tilesize, tilesize);
             }
 
-
-            //draw rail track placement
+            //draw stuff selected
             if(control.placeLoc != null && other != null){
                 Tile last = control.placeLoc;
                 int cost = 0;
                 for(Tile tile : control.selectedTiles()){
-                    if(tile != last && !state.world.samePort(tile, last)){
+                    if(tile != last
+                            && !state.world.samePort(tile, last)
+                            && !state.world.sameCity(tile, last)){
 
                         Vector2 world = control.toWorld(last);
                         float fx = world.x, fy = world.y;
                         control.toWorld(tile);
 
-                        if(state.isPassable(state.player(), tile) && state.canSpendTrack(state.player(), cost)
-                        && !(state.world.getMajorCity(tile) == state.world.getMajorCity(last)
-                                && state.world.getMajorCity(tile) != null)){
+                        if(state.isPassable(state.player(), tile) && state.canPlaceTrack(state.player(), last, tile)){
                             cost += state.getTrackCost(last, tile);
                             Draw.color(1f, 1f, 1f, 0.5f);
                         }else{
@@ -186,6 +196,7 @@ public class Renderer implements ApplicationListener{
                     last = tile;
                 }
             }
+
         }
 
         for(Player player : state.players){

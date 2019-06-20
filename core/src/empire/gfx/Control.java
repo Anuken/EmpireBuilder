@@ -2,6 +2,7 @@ package empire.gfx;
 
 import empire.ai.Astar;
 import empire.game.Actions.*;
+import empire.game.Tracks;
 import empire.game.World.*;
 import io.anuke.arc.*;
 import io.anuke.arc.collection.Array;
@@ -16,6 +17,7 @@ public class Control implements ApplicationListener{
     private Astar astar = new Astar(null);
 
     private Array<Tile[]> placement = new Array<>();
+    private Tracks placementTracks = new Tracks();
     private Array<Tile> selectTiles = new Array<>();
 
     private ThreadLocal<Vector2> vec = new ThreadLocal<>();
@@ -45,12 +47,27 @@ public class Control implements ApplicationListener{
             if(Core.input.keyTap(KeyCode.MOUSE_LEFT) && !Core.scene.hasMouse()
                     && state.player().local
                     && state.player().chosenLocation
-                    && state.canBeginTrack(state.player(), cursor)){
+                    && (state.canBeginTrack(state.player(), cursor)
+                        || placementTracks.has(cursor.x, cursor.y))){
                 placeLoc = cursor;
             }
 
-            //place lines on mouse up
+            //add track to queue on mouse up
             if(Core.input.keyRelease(KeyCode.MOUSE_LEFT) && state.player().local){
+                Tile last = placeLoc;
+                for(Tile tile : selectTiles){
+                    if(last != tile
+                            && !state.world.sameCity(last, tile)
+                            && !state.world.samePort(last, tile)
+                            && !state.player().hasTrack(last, tile)){
+                        placement.add(new Tile[]{last, tile});
+                        placementTracks.add(last.x, last.y, tile.x, tile.y);
+                    }
+                    last = tile;
+                }
+
+                selectTiles.clear();
+
                 //if(placeLoc != null && canPlaceLine(placeLoc, cursor)){
                     /*
                     for(Tile tile : getTiles(placeLoc, tile)){
@@ -75,7 +92,7 @@ public class Control implements ApplicationListener{
                 Array<Tile> tiles = state.calculateMovement(state.player(), cursor);
                 for(Tile next : tiles){
                     //skip duplicates
-                    if(next == state.player().position) continue;;
+                    if(next == state.player().position) continue;
                     //move until the player can't
                     if(!state.canMove(state.player(), next)){
                         break;
@@ -95,6 +112,27 @@ public class Control implements ApplicationListener{
         astar.astar(placeLoc, cursor, selectTiles);
     }
 
+    /** Places all the tiles that are queued.
+     * Clears the queue afterwards.*/
+    public void placeQueued(){
+        for(Tile[] pair : placement){
+            if(state.canPlaceTrack(state.player(), pair[0], pair[1])){
+                new PlaceTrack(){{
+                    from = pair[0];
+                    to = pair[1];
+                }}.act();
+            }
+        }
+
+        placement.clear();
+    }
+
+    /** Returns an array of queued tiles.*/
+    public Array<Tile[]> getQueued(){
+        return placement;
+    }
+
+    /** Returns a tentative array of tiles to place.*/
     public Array<Tile> selectedTiles(){
         return selectTiles;
     }

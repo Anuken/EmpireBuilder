@@ -219,8 +219,8 @@ public class State{
     }
 
     public boolean canPlaceTrack(Player player, Tile from, Tile to){
-        //can't place track into itself
-        if(from == to) return false;
+        //can't place track into itself or overwrite existing track
+        if(from == to || player.hasTrack(from, to)) return false;
 
         //player needs to be there to place tracks there
         if(!player.hasTrack(from) //check existing track connections
