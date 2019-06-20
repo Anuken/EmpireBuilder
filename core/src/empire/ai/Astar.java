@@ -20,9 +20,6 @@ public class Astar{
     protected Player player;
     protected IntSet usedOtherTrack = new IntSet();
 
-    //how much this AI would rather move than place a single track
-    //calculated: (250 (money to win) / 80 (approx. turns to win) / loco speed) + terrain cost
-    private static final float ecuCostScale = 250f / 20f;
 
     public Astar(Player player){
         this.player = player;
@@ -183,7 +180,7 @@ public class Astar{
     }
 
     float costScale(int base){
-        return base * 19f;
+        return base * 16f;
     }
 
     boolean hasTrack(Tile from, Tile to){

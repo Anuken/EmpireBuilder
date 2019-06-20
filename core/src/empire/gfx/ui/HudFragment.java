@@ -60,9 +60,11 @@ public class HudFragment{
         //display event info
         group.fill(events -> {
             Array<EventCard> cards = new Array<>();
-            state.players.each(p -> cards.addAll(p.eventCards));
 
-            events.visible(() -> !cards.isEmpty());
+            events.visible(() -> {
+                state.players.each(p -> cards.addAll(p.eventCards));
+                return !cards.isEmpty();
+            });
             events.bottom().left();
             events.update(() -> {
                 events.clearChildren();
@@ -332,9 +334,9 @@ public class HudFragment{
                     int totalTiles = 0;
                     Tile last = control.placeLoc;
                     for(Tile other : control.selectedTiles()){
-                        if(other != last &&
-                                !(state.world.getMajorCity(tile) == state.world.getMajorCity(last)
-                                && state.world.getMajorCity(tile) != null)){
+                        if(other != last
+                                && !state.world.sameCity(other, last)
+                                && !state.player().hasTrack(other, last)){
                             totalCost += state.getTrackCost(last, other);
                             totalTiles ++;
                         }

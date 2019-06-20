@@ -477,6 +477,7 @@ public class State{
 
         closedSet.clear();
         queue.clear();
+        boolean moveOther = !player.hasTrack(player.position);
 
         Tile result = null;
         //perform BFS
@@ -493,7 +494,8 @@ public class State{
             world.trackConnectionsOf(this, player, tile, true, child -> {
                 if(!closedSet.contains(child)
                         //make sure player isn't blocked by event cards!
-                        && player.isAllowed(e -> e.canMove(player, tile, child))){
+                        && player.isAllowed(e -> e.canMove(player, tile, child))
+                        && (moveOther || player.hasTrack(tile, child))){
                     parents.put(child, tile);
                     queue.addFirst(child);
                     closedSet.add(child);

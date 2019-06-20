@@ -7,7 +7,7 @@ import io.anuke.arc.files.FileHandle;
 import io.anuke.arc.function.Supplier;
 import io.anuke.arc.math.*;
 import io.anuke.arc.math.geom.*;
-import io.anuke.arc.util.Structs;
+import io.anuke.arc.util.*;
 
 import java.util.Scanner;
 
@@ -321,6 +321,18 @@ public class MapIO{
         int smoothIterations = 3;
         //compute convex hull of points
         FloatArray polygon = hull.computePolygon(points, false);
+
+        Vector2 v = Geometry.polygonCentroid(polygon.items, 0, polygon.size, new Vector2());
+
+        for(int i = 0; i < polygon.size; i += 2){
+            float x = polygon.get(i), y = polygon.get(i + 1);
+            Vector2 o = Tmp.v1.set(x, y).sub(v);
+            o.setLength(o.len() + 0.75f);
+            o.add(v);
+            polygon.set(i, o.x);
+            polygon.set(i + 1, o.y);
+        }
+
         Array<Vector2> out = polygon.toVector2Array();
 
         //smooth it out across several iterations

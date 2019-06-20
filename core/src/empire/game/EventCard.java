@@ -194,13 +194,17 @@ public abstract class EventCard extends Card{
                         //TODO, currently the last cargo is popped off instead of a choice
                         if(p.cargo.size > 0){
                             String cargo = p.cargo.pop();
-                            ui.showDialog("You've been derailed!", d -> {
-                                d.cont.add("You were near [lime]" + city.formalName() + "[].\nCargo lost: [yellow]" + Strings.capitalize(cargo));
-                            });
+                            if(p.local){
+                                ui.showDialog("You've been derailed!", d -> {
+                                    d.cont.add("You were near [lime]" + city.formalName() + "[].\nCargo lost: [yellow]" + Strings.capitalize(cargo));
+                                });
+                            }
                         }else{
-                            ui.showDialog("You've been derailed!", d -> {
-                                d.cont.add("You were near [lime]" + city.formalName() + "[].\nNo cargo in train, so none lost.");
-                            });
+                            if(p.local){
+                                ui.showDialog("You've been derailed!", d -> {
+                                    d.cont.add("You were near [lime]" + city.formalName() + "[].\nNo cargo in train, so none lost.");
+                                });
+                            }
                         }
                         break;
                     }
@@ -237,15 +241,13 @@ public abstract class EventCard extends Card{
         @Override
         public boolean canPlaceTrack(Player player, Tile from, Tile to){
             //prevent mountain placing
-            return (!to.isMountainous() || to.distanceTo(city.x, city.y) > dst)
-                    && (!from.isMountainous() || from.distanceTo(city.x, city.y) > dst);
+            return !(to.isMountainous() && to.distanceTo(city.x, city.y) <= dst);
         }
 
         @Override
         public boolean canMove(Player player, Tile from, Tile to){
             //prevent mountain moving
-            return (!to.isMountainous() || to.distanceTo(city.x, city.y) > dst)
-                    && (!from.isMountainous() || from.distanceTo(city.x, city.y) > dst);
+            return !(to.isMountainous() && to.distanceTo(city.x, city.y) <= dst);
         }
 
         @Override

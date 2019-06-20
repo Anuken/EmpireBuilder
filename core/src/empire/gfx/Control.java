@@ -94,8 +94,13 @@ public class Control implements ApplicationListener{
     }
 
     private void updatePath(){
-        astar.setPlayer(state.localPlayer());
-        astar.astar(placeLoc, cursor, selectTiles);
+        if(state.world.isAdjacent(placeLoc, cursor)){
+            selectTiles.clear();
+            selectTiles.add(placeLoc, cursor);
+        }else{
+            astar.setPlayer(state.localPlayer());
+            astar.astar(placeLoc, cursor, selectTiles);
+        }
     }
 
     private void updateCost(){
@@ -130,16 +135,6 @@ public class Control implements ApplicationListener{
     public Array<Tile> selectedTiles(){
         return selectTiles;
     }
-
-    /*
-    public boolean canPlaceLine(Tile from, Tile to){
-        for(Tile tile : getTiles(from, to)){
-            if(tile == null || !state.isPassable(state.player(), tile)){
-                return false;
-            }
-        }
-        return true;
-    }*/
 
     public Tile tileMouse(){
         return tileWorld(Core.input.mouseWorld().x, Core.input.mouseWorld().y);
