@@ -1,8 +1,9 @@
 package empire.gfx;
 
 import empire.ai.Astar;
+import empire.game.*;
 import empire.game.Actions.*;
-import empire.game.Tracks;
+import empire.game.EventCard.DerailmentEvent;
 import empire.game.World.*;
 import io.anuke.arc.*;
 import io.anuke.arc.collection.Array;
@@ -32,6 +33,10 @@ public class Control implements ApplicationListener{
         }
 
         cursor = tileMouse();
+
+        if(debug && Core.input.keyTap(KeyCode.P)){
+            ((EventCard)state.cards.select(c -> c instanceof DerailmentEvent).random()).apply(state, state.player());
+        }
 
         if(cursor != null){
             //choose start pos

@@ -243,7 +243,7 @@ public class World{
         public int distanceTo(int ox, int oy){
             Vector2 v1 = EmpireCore.control.toWorld(this);
             float vx = v1.x, vy = v1.y;
-            EmpireCore.control.toWorld(this);
+            EmpireCore.control.toWorld(ox, oy);
             return (int)(v1.dst(vx, vy) / 8);
         }
 

@@ -521,6 +521,7 @@ public class State{
         cards.insert(0, card);
         if(!card.apply(this, player)){
             player.drawEventCards.add(card);
+            player.eventCards.add(card);
         }
         handler.accept(card);
     }
