@@ -62,6 +62,7 @@ public class HudFragment{
             Array<EventCard> cards = new Array<>();
 
             events.visible(() -> {
+                cards.clear();
                 state.players.each(p -> cards.addAll(p.eventCards));
                 return !cards.isEmpty();
             });
@@ -237,7 +238,7 @@ public class HudFragment{
                 Tile on = control.tileMouse();
                 City city = on == null ? null : state.world.getCity(on);
 
-                if(city == null && player.chosenLocation){
+                if(city == null && player.chosenLocation   ){
                     city = player.position.city;
                     if(city == null){
                         city = state.world.getMajorCity(player.position);
@@ -266,7 +267,7 @@ public class HudFragment{
                                         new LoadCargo(){{
                                             cargo = good;
                                         }}.act();
-                                    }).colspan(2).left().fillX().disabled(b -> !player.hasCargoSpace() || !state.player().local).width(190f).height(45f);
+                                    }).colspan(2).left().fillX().disabled(b -> !player.hasCargoSpace() || !state.player().local ).width(190f).height(45f);
                                 }else{
                                     table.addImage("icon-trash").size(14*2).padRight(3).right().color(Color.SCARLET);
                                     table.add(Strings.capitalize(good)).color(Color.LIGHT_GRAY);
