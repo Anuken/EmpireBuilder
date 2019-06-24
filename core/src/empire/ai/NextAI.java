@@ -129,7 +129,25 @@ public class NextAI extends AI{
                     if(state.canLoadUnload(player, player.position)){
                         LoadCargo load = new LoadCargo();
                         load.cargo = good;
+                        if(player.cargo.size >= player.loco.loads){
+                            String dump = player.cargo.find(p -> !player.allDemands().contains(d -> d.good.equals(p)));
+                            if(dump == null){
+                                dump = player.cargo.min(p -> player.allDemands().find(d -> d.good.equals(p)).cost);
+                            }
+
+                            String fdump = dump;
+
+                            new DumpCargo(){{
+                                cargo = fdump;
+                            }}.act();
+
+                            //dumped some cargo, what now?
+                            async(this::updatePlan);
+                            return false;
+                        }
+
                         load.act();
+
                         plan.actions.pop();
                         moved = true;
                     }else{
@@ -152,6 +170,16 @@ public class NextAI extends AI{
                     finalPath.set(astar.tiles);
                     shouldMove = false;
                     startTile = state.world.tile(l.from);
+                }
+            }
+
+            if(state.world.getCity(player.position) != null && state.canLoadUnload(player, player.position) &&
+                    player.cargo.size < player.loco.loads){
+                City city = state.world.getCity(player.position);
+                if(!city.goods.isEmpty()){
+                    LoadCargo load = new LoadCargo();
+                    load.cargo = city.goods.peek(); //TODO select best good and not a random one
+                    load.act();
                 }
             }
 
@@ -418,8 +446,8 @@ public class NextAI extends AI{
                 //branch and bound step: total is only going to get higher from here, if it's already over the best
                 //drop out
                 if(total - totalProfit > bestSoFar){
-                    skipped ++;
-                    return Float.POSITIVE_INFINITY;
+                    //skipped ++;
+                    //return Float.POSITIVE_INFINITY;
                 }
             }
 
