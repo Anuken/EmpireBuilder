@@ -31,7 +31,7 @@ public class Player{
     public transient AI ai;
 
     /** Other players' tracks this player has moved on.*/
-    public final ObjectSet<Player> movedPlayers = new ObjectSet<>();
+    public final transient ObjectSet<Player> movedPlayers = new ObjectSet<>();
     /** All the event cards this player drew this turn.*/
     public final Array<EventCard> drawEventCards = new Array<>();
     /** All the event cards this player has active.*/

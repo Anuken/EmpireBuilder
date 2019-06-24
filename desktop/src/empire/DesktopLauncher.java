@@ -16,6 +16,8 @@ public class DesktopLauncher {
 			EmpireCore.testEfficiency = args.contains("-test");
 			EmpireCore.debug = args.contains("-debug");
 			EmpireCore.seeded = args.contains("-seeded");
+			EmpireCore.snapshots = args.contains("-snapshots");
+			EmpireCore.snapshotView = args.contains("-snapshotview");
 
 			new Lwjgl3Application(new EmpireCore(), config);
 			EmpireCore.net.close();

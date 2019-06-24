@@ -60,8 +60,6 @@ public class Astar{
         outputTracks.clear();
         usedOtherTrack.clear();
 
-        //GridBits closed = new GridBits(world.width, world.height);
-        //GridBits open = new GridBits(world.width, world.height);
         IntFloatMap costs = new IntFloatMap();
         ObjectMap<Tile, Tile> searchParent = new ObjectMap<>();
         PriorityQueue<Tile> queue = new PriorityQueue<>(100,
@@ -80,8 +78,6 @@ public class Astar{
                 end = parent;
                 break;
             }
-            //closed.set(parent.x, parent.y);
-            //open.set(parent.x, parent.y, false);
             world.adjacentsOf(parent, child -> {
                 if(state.isPassable(player, child) &&
                         !(world.getCity(player.position) == null &&

@@ -29,6 +29,7 @@ logs/
 /core/src/io/anuke/mindustry/gen/
 ios/robovm.properties
 config/
+snapshots/
 *.gif
 
 version.properties

@@ -8,17 +8,22 @@ import empire.net.Net;
 import empire.net.*;
 import io.anuke.arc.*;
 import io.anuke.arc.collection.Array;
+import io.anuke.arc.files.FileHandle;
 import io.anuke.arc.function.BiFunction;
 import io.anuke.arc.graphics.Color;
 import io.anuke.arc.math.Mathf;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /** Main class for graphical renderer. Initializes state and its renderers.*/
 public class EmpireCore extends ApplicationCore{
     /** Size of each hex tile in pixels. */
     public static final int tilesize = 16;
     public static boolean debug = false, isAI = false, netDebug = false,
-                                seeded = true, testEfficiency = true;
+                                seeded, testEfficiency, snapshots, snapshotView;
     public static final BiFunction<Player, State, AI> aiType = NextAI::new;
+    public static FileHandle snapshotDirectory;
 
     public static Control control;
     public static UI ui;
@@ -69,6 +74,9 @@ public class EmpireCore extends ApplicationCore{
     }
 
     void createState(){
+        snapshotDirectory = Core.files.local("snapshots_" +
+                new SimpleDateFormat("yyyy_MM_dd-HH|mm|ss").format(new Date()));
+
         state = new State();
         state.world = MapIO.loadTiles(Core.files.internal("maps/eurorails.txt"));
         state.cards = CardIO.loadCards(state.world, Core.files.internal("maps/deck.txt"));

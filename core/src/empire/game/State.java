@@ -284,7 +284,7 @@ public class State{
                     to.city.size == CitySize.medium ? 3 : 0
                     ) :
             world.sameCity(to, from) ? 0 :
-            world.getMajorCity(to) != null ? 5 :
+            world.getMajorCity(to) != null ? 1 :
             to.port != null ? to.port.cost :
             to.type == Terrain.plain ? 1 :
             to.type == Terrain.mountain ? 2 :

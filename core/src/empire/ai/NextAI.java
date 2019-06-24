@@ -4,8 +4,12 @@ import empire.game.Actions.*;
 import empire.game.DemandCard.Demand;
 import empire.game.*;
 import empire.game.World.*;
+import empire.gfx.EmpireCore;
+import empire.io.SaveIO;
 import io.anuke.arc.collection.*;
 import io.anuke.arc.util.*;
+
+import static empire.gfx.EmpireCore.snapshotDirectory;
 
 /** Next iteration of this AI.*/
 public class NextAI extends AI{
@@ -14,8 +18,9 @@ public class NextAI extends AI{
     private static final boolean chooseLocation = false;
     /** Money after which the AI will consider upgrading their loco.*/
     private static final int upgradeAfterMoney = 60;
-    /** Demand cost scale: how many units to reduce a score by, per ECU.*/
-    private static final float demandCostScale = 20f;
+    /** Demand cost scale: how many units to reduce a score by, per ECU.
+     * If this value is, for example, 10, this AI will move 10 extra spaces to gain 1 ECU. */
+    private static final float demandCostScale = 20;
 
     /** List of planned actions.*/
     private Plan plan = new Plan(new Array<>());
@@ -24,6 +29,8 @@ public class NextAI extends AI{
     /** Plans skipped due to branch and bound.*/
     private int skipped = 0;
 
+    private int lastTurn = 0;
+
     public NextAI(Player player, State state){
         super(player, state);
         astar = new Astar(player);
@@ -31,13 +38,18 @@ public class NextAI extends AI{
 
     @Override
     public void act(){
+        if(lastTurn != state.turn && EmpireCore.snapshots){
+            SaveIO.save(state, snapshotDirectory.child("turn-" + state.turn + ".json"));
+            lastTurn = state.turn;
+        }
+
         //select a random start location if not chosen already
         if(!player.chosenLocation && waitAsync()){
             selectLocation();
         }
 
         //update the plan if it's empty
-        if(plan.actions.isEmpty() && waitAsync()){
+        if(plan.actions.isEmpty() && !state.hasWinner && waitAsync()){
             async(this::updatePlan);
         }
 
@@ -407,7 +419,7 @@ public class NextAI extends AI{
                 //drop out
                 if(total - totalProfit > bestSoFar){
                     skipped ++;
-                    //return Float.POSITIVE_INFINITY;
+                    return Float.POSITIVE_INFINITY;
                 }
             }
 
