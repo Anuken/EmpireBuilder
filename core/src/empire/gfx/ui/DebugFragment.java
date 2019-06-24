@@ -27,9 +27,9 @@ public class DebugFragment{
         }});
 
         if(snapshotView){
-            String[] name = {"snapshots_2019_06_24-10|15|30"};
+            String[] name = {"snapshots"};
             group.fill(t -> {
-                t.bottom();
+                t.bottom().left();
                 t.addField(name[0], text -> name[0] = text).colspan(3).height(50f).width(250f);
                 t.row();
                 t.addButton("<", () -> {

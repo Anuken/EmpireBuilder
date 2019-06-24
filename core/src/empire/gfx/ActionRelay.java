@@ -24,8 +24,8 @@ public class ActionRelay implements NetListener{
     private ObjectMap<String, Class<?>> classMap = new ObjectMap<>();
 
     public ActionRelay(){
-        json.setElementType(Player.class, "drawEventCards", EventCard.class);
-        json.setElementType(Player.class, "eventCards", EventCard.class);
+        //json.setElementType(Player.class, "drawEventCards", EventCard.class);
+        //json.setElementType(Player.class, "eventCards", EventCard.class);
 
         json.setSerializer(Tile.class, new Serializer<Tile>(){
             @Override

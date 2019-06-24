@@ -21,7 +21,7 @@ public class EmpireCore extends ApplicationCore{
     /** Size of each hex tile in pixels. */
     public static final int tilesize = 16;
     public static boolean debug = false, isAI = false, netDebug = false,
-                                seeded, testEfficiency, snapshots, snapshotView;
+                                seeded, snapshots, snapshotView;
     public static final BiFunction<Player, State, AI> aiType = NextAI::new;
     public static FileHandle snapshotDirectory;
 
@@ -35,6 +35,10 @@ public class EmpireCore extends ApplicationCore{
 
     @Override
     public void setup(){
+        debug = true;
+        snapshotView = true;
+        seeded = true;
+
         net = new WebsocketNet();
         actions = new ActionRelay();
 

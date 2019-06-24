@@ -33,9 +33,9 @@ public class Player{
     /** Other players' tracks this player has moved on.*/
     public final transient ObjectSet<Player> movedPlayers = new ObjectSet<>();
     /** All the event cards this player drew this turn.*/
-    public final Array<EventCard> drawEventCards = new Array<>();
+    public final transient Array<EventCard> drawEventCards = new Array<>();
     /** All the event cards this player has active.*/
-    public final Array<EventCard> eventCards = new Array<>();
+    public final transient Array<EventCard> eventCards = new Array<>();
     /** Tracks that this player has placed down.*/
     public Tracks tracks = new Tracks();
     /** Player color, used for display purposes.*/

@@ -13,7 +13,6 @@ public class DesktopLauncher {
 		try{
 			Array<String> args = Array.with(arg);
 			EmpireCore.isAI = args.contains("-ai");
-			EmpireCore.testEfficiency = args.contains("-test");
 			EmpireCore.debug = args.contains("-debug");
 			EmpireCore.seeded = args.contains("-seeded");
 			EmpireCore.snapshots = args.contains("-snapshots");
