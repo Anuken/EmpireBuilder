@@ -4,12 +4,8 @@ import empire.game.Actions.*;
 import empire.game.DemandCard.Demand;
 import empire.game.*;
 import empire.game.World.*;
-import empire.gfx.EmpireCore;
-import empire.io.SaveIO;
 import io.anuke.arc.collection.*;
 import io.anuke.arc.util.*;
-
-import static empire.gfx.EmpireCore.snapshotDirectory;
 
 /** Next iteration of this AI.*/
 public class NextAI extends AI{
@@ -38,10 +34,6 @@ public class NextAI extends AI{
 
     @Override
     public void act(){
-        if(lastTurn != state.turn && EmpireCore.snapshots){
-            SaveIO.save(state, snapshotDirectory.child("turn-" + state.turn + ".json"));
-            lastTurn = state.turn;
-        }
 
         //select a random start location if not chosen already
         if(!player.chosenLocation && waitAsync()){
@@ -178,7 +170,16 @@ public class NextAI extends AI{
                 City city = state.world.getCity(player.position);
                 if(!city.goods.isEmpty()){
                     LoadCargo load = new LoadCargo();
-                    load.cargo = city.goods.peek(); //TODO select best good and not a random one
+                    load.cargo = city.goods.max(good -> {
+                        Demand best = player.allDemands().find(d -> d.good.equals(good));
+                        if(best != null){
+                            return best.cost;
+                        }else{
+                            //if the player already has this cargo, return a lower value since that's worse
+                            return player.cargo.contains(good) ? -1 : 0;
+                        }
+                    });
+                    Log.info("Goods: {0} Result: {1}", city.goods, load.cargo);
                     load.act();
                 }
             }

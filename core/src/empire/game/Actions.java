@@ -157,7 +157,7 @@ public class Actions{
                 throw new IllegalArgumentException("No city at player's position!");
             }
             if(!state.world.getCity(player.position).goods.contains(cargo)){
-                throw new IllegalArgumentException("Good '" + cargo + "' found at city: " + state.world.getCity(player.position).name);
+                throw new IllegalArgumentException("Good '" + cargo + "' not found at city: " + state.world.getCity(player.position).name);
             }
 
             player.addCargo(cargo);

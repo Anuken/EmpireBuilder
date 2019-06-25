@@ -3,10 +3,14 @@ package empire.game;
 import empire.game.DemandCard.Demand;
 import empire.game.GameEvents.*;
 import empire.game.World.*;
+import empire.gfx.EmpireCore;
+import empire.io.SaveIO;
 import io.anuke.arc.Events;
 import io.anuke.arc.collection.*;
 import io.anuke.arc.function.Consumer;
 import io.anuke.arc.util.*;
+
+import static empire.gfx.EmpireCore.snapshotDirectory;
 
 /** Holds the state of the entire game. */
 public class State{
@@ -131,6 +135,10 @@ public class State{
     /** Switches turns to the next player.
      * Increments total turn if needed.*/
     public void nextPlayer(){
+        if(EmpireCore.snapshots){
+            SaveIO.save(this, snapshotDirectory.child("turn-" + turn + ".json"));
+        }
+
         Player last = player();
         //reset turn-specific data
         last.moneySpent = 0;
