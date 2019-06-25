@@ -29,7 +29,10 @@ logs/
 /core/src/io/anuke/mindustry/gen/
 ios/robovm.properties
 config/
+snapshots_*/
 snapshots/
+turn-*.json
+screenshot_*
 *.gif
 
 version.properties

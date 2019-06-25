@@ -38,7 +38,7 @@ public class Astar{
     }
 
     /** Copies the output, placed tracks into the input buffer.
-     * This essentials makes the AI consider the newly placed tracks in the next calculations. */
+     * This essentialy makes the AI consider the newly placed tracks in the next calculations. */
     public void placeTracks(){
         inputTracks.add(outputTracks);
     }

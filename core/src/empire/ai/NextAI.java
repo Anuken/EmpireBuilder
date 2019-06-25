@@ -4,7 +4,9 @@ import empire.game.Actions.*;
 import empire.game.DemandCard.Demand;
 import empire.game.*;
 import empire.game.World.*;
+import io.anuke.arc.Core;
 import io.anuke.arc.collection.*;
+import io.anuke.arc.function.Consumer;
 import io.anuke.arc.util.*;
 
 /** Next iteration of this AI.*/
@@ -53,6 +55,19 @@ public class NextAI extends AI{
         }
 
         state.checkIfWon(player);
+    }
+
+    /** Asynchronously calculates a plan and returns a preview of the result. Debugging only.*/
+    public void previewPlan(Consumer<String> result){
+        executor.submit(() -> {
+            updatePlan();
+
+            Core.app.post(() -> {
+                plan.actions.reverse();
+                result.accept(Strings.format("---\n{0}\n---",
+                        plan.actions.toString("\n", n -> n.getClass().getSimpleName() + n.toString())));
+            });
+        });
     }
 
     /** Attempts to execute the plan.
@@ -266,6 +281,9 @@ public class NextAI extends AI{
         Log.info("Considered {0} plans, skipped {1}.", considered, skipped);
 
         if(bestPlan != null){
+            Log.info("---\nFinal plan: \n{0}\n---",
+                    bestPlan.actions.toString("\n", n -> n.getClass().getSimpleName() + n.toString()));
+
             plan = bestPlan;
             //reverse to act on it layer
             plan.actions.reverse();
@@ -415,16 +433,21 @@ public class NextAI extends AI{
                 if(action instanceof LoadAction){
                     LoadAction l = (LoadAction)action;
 
-                    total += astar.astar(position, state.world.tile(l.city));
-                    money -= astar.newTrackCost;
-                    position = state.world.tile(l.city);
-                    cargoUsed ++;
+                    //player may already have this good, in which case loading is free
+                    if(!player.cargo.contains(l.good)){
+                        total += astar.astar(position, state.world.tile(l.city));
+                        money -= astar.newTrackCost;
+                        position = state.world.tile(l.city);
+                        cargoUsed++;
 
-                    astar.placeTracks();
+                        astar.placeTracks();
 
-                    //when the player runs out of money, bail out, this plan isn't possible
-                    //also bail out if player has no cargo space to hold this new load
-                    if(money < 0 || cargoUsed > player.loco.loads) return Float.POSITIVE_INFINITY;
+                        //when the player runs out of money, bail out, this plan isn't possible
+                        //also bail out if player has no cargo space to hold this new load
+                        if(money < 0){
+                            return Float.POSITIVE_INFINITY;
+                        }
+                    }
                 }else if(action instanceof UnloadAction){
                     UnloadAction u = (UnloadAction)action;
 
@@ -435,7 +458,9 @@ public class NextAI extends AI{
                     astar.placeTracks();
 
                     //when the player runs out of money, bail out, this plan isn't possible
-                    if(money < 0) return Float.POSITIVE_INFINITY;
+                    if(money < 0){
+                        return Float.POSITIVE_INFINITY;
+                    }
 
                     //get money earned
                     int earned = player.allDemands().find(d -> d.good.equals(u.good) && d.city == u.city).cost;

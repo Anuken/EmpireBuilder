@@ -35,8 +35,6 @@ public class EmpireCore extends ApplicationCore{
 
     @Override
     public void setup(){
-        seeded = snapshotView = debug = true;
-
         net = new WebsocketNet();
         actions = new ActionRelay();
 

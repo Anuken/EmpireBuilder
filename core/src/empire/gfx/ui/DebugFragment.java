@@ -1,5 +1,6 @@
 package empire.gfx.ui;
 
+import empire.ai.*;
 import empire.game.World.Tile;
 import empire.io.SaveIO;
 import io.anuke.arc.Core;
@@ -11,6 +12,7 @@ import io.anuke.arc.util.Align;
 import static empire.gfx.EmpireCore.*;
 
 public class DebugFragment{
+    boolean calculating = false;
 
     public void build(Group group){
         group.addChild(new Label(""){{
@@ -49,6 +51,25 @@ public class DebugFragment{
                         ui.showFade(e.getClass().getSimpleName() + ": " + e.getMessage());
                     }
                 }).size(50f);
+                t.row();
+                t.addButton("Make Plan", () -> {
+                    NextAI ai = new NextAI(state.player(), state);
+                    calculating = true;
+                    ai.previewPlan(str -> {
+                        calculating = false;
+                        ui.showDialog("Plan", d ->
+                                d.cont.add(str
+                                        .replace("{", "[coral]{")
+                                        .replace("}", "}[]")
+                                ).get().setAlignment(Align.left, Align.left));
+                    });
+                }).colspan(3).height(50f).width(250f).disabled(b ->  calculating);
+            });
+
+            group.fill(t -> {
+                t.visible(() -> calculating);
+                t.touchable(Touchable.disabled);
+                t.table("dialogDim", i -> i.add("Calculating plan preview...").pad(10f));
             });
         }
     }
