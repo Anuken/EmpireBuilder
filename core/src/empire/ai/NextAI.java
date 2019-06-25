@@ -44,6 +44,7 @@ public class NextAI extends AI{
 
         //update the plan if it's empty
         if(plan.actions.isEmpty() && !state.hasWinner && waitAsync()){
+            Log.info("No plan, updating...");
             async(this::updatePlan);
         }
 
@@ -55,6 +56,31 @@ public class NextAI extends AI{
         }
 
         state.checkIfWon(player);
+    }
+
+    /** Test-only function. Used for whatever is necessary at the time.*/
+    public void test(){
+        float c1 = new Plan(Array.with(
+            new LoadAction(state.world.getCity("beograd"), "oil"),
+            new UnloadAction(state.world.getCity("zurich"), "oil"),
+            new LoadAction(state.world.getCity("beograd"), "oil"),
+            new LoadAction(state.world.getCity("ruhr"), "steel"),
+            new UnloadAction(state.world.getCity("valencia"), "steel"),
+            new UnloadAction(state.world.getCity("madrid"), "oil")
+        )).cost(0);
+
+        Log.info("Awful plan cost: " + c1);
+
+        float c2 = new Plan(Array.with(
+            new LoadAction(state.world.getCity("beograd"), "oil"),
+            new LoadAction(state.world.getCity("beograd"), "oil"),
+            new UnloadAction(state.world.getCity("zurich"), "oil"),
+            new LoadAction(state.world.getCity("ruhr"), "steel"),
+            new UnloadAction(state.world.getCity("valencia"), "steel"),
+            new UnloadAction(state.world.getCity("madrid"), "oil")
+        )).cost(0);
+
+        Log.info( "Cool and reasonable plan cost: " + c2);
     }
 
     /** Asynchronously calculates a plan and returns a preview of the result. Debugging only.*/
@@ -111,6 +137,8 @@ public class NextAI extends AI{
                         //it is done, pop it out
                         plan.actions.pop();
 
+                        Log.info("Sold {0} to {1}, updating plan.", sell.cargo, atCity.name);
+
                         //wait to update the plan but don't end the turn
                         async(this::updatePlan);
                         return false;
@@ -148,8 +176,12 @@ public class NextAI extends AI{
                                 cargo = fdump;
                             }}.act();
 
-                            //dumped some cargo, what now?
-                            async(this::updatePlan);
+                            if(player.allDemands().contains(d -> d.good.equals(good))){
+                                Log.info("Dumped {0}, updating plan.", fdump);
+
+                                //dumped some cargo, what now?
+                                async(this::updatePlan);
+                            }
                             return false;
                         }
 
@@ -421,7 +453,7 @@ public class NextAI extends AI{
             Tile position = player.position;
             float total = 0f;
             int money = player.money;
-            int cargoUsed = player.cargo.size;
+            int neededCargoUsed = 0;
 
             float totalProfit = actions.sum(a -> a instanceof UnloadAction ?
                     player.allDemands().find(d -> d.good.equals(((UnloadAction) a).good)
@@ -433,27 +465,30 @@ public class NextAI extends AI{
                 if(action instanceof LoadAction){
                     LoadAction l = (LoadAction)action;
 
+                    neededCargoUsed ++;
+
                     //player may already have this good, in which case loading is free
                     if(!player.cargo.contains(l.good)){
-                        total += astar.astar(position, state.world.tile(l.city));
+                        float added = astar.astar(position, state.world.tile(l.city));
+                        total += added;
                         money -= astar.newTrackCost;
                         position = state.world.tile(l.city);
-                        cargoUsed++;
 
                         astar.placeTracks();
+                    }
 
-                        //when the player runs out of money, bail out, this plan isn't possible
-                        //also bail out if player has no cargo space to hold this new load
-                        if(money < 0){
-                            return Float.POSITIVE_INFINITY;
-                        }
+                    //when the player runs out of money, bail out, this plan isn't possible
+                    //also bail out if player has no cargo space to hold this new load
+                    if(money < 0 || neededCargoUsed > player.loco.loads){
+                        return Float.POSITIVE_INFINITY;
                     }
                 }else if(action instanceof UnloadAction){
                     UnloadAction u = (UnloadAction)action;
 
-                    total += astar.astar(position, state.world.tile(u.city));
+                    float added = astar.astar(position, state.world.tile(u.city));
+                    total += added;
                     money -= astar.newTrackCost;
-                    cargoUsed --;
+                    neededCargoUsed --;
 
                     astar.placeTracks();
 
@@ -465,16 +500,17 @@ public class NextAI extends AI{
                     //get money earned
                     int earned = player.allDemands().find(d -> d.good.equals(u.good) && d.city == u.city).cost;
 
+                    position = state.world.tile(u.city);
                     //after checking money, add unloaded cost by finding the correct demand
                     money += earned;
                 }
 
                 //branch and bound step: total is only going to get higher from here, if it's already over the best
                 //drop out
-                if(total - totalProfit > bestSoFar){
+                //if(total - totalProfit > bestSoFar){
                     //skipped ++;
                     //return Float.POSITIVE_INFINITY;
-                }
+                //}
             }
 
             astar.end();

@@ -1,6 +1,6 @@
 package empire.gfx;
 
-import empire.ai.Astar;
+import empire.ai.*;
 import empire.game.*;
 import empire.game.Actions.*;
 import empire.game.EventCard.DerailmentEvent;
@@ -36,6 +36,10 @@ public class Control implements ApplicationListener{
 
         if(debug && Core.input.keyTap(KeyCode.P)){
             ((EventCard)state.cards.select(c -> c instanceof DerailmentEvent).random()).apply(state, state.player());
+        }
+
+        if(debug && Core.input.keyTap(KeyCode.O)){
+            new NextAI(state.player(), state).test();
         }
 
         if(cursor != null){

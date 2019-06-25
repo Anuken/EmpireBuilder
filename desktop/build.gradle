@@ -1,7 +1,7 @@
 apply plugin: "java"
 
 sourceCompatibility = 1.8
-sourceSets.main.java.srcDirs = [ "src/" ]
+sourceSets.main.java.srcDirs = ["src/"]
 
 project.ext.mainClassName = "empire.DesktopLauncher"
 project.ext.assetsDir = new File("../core/assets");
@@ -12,10 +12,10 @@ task run(dependsOn: classes, type: JavaExec) {
     standardInput = System.in
     workingDir = project.assetsDir
     ignoreExitValue = true
-    //args(["-ai", "-test", "-debug", "-seeded", "-snapshots"])
-    args(["-test", "-debug", "-seeded", "-snapshotview"])
+    args(["-ai", "-test", "-debug", "-seeded", "-snapshots"])
+    //args(["-test", "-debug", "-seeded", "-snapshotview"])
 
-    if(System.getProperty("os.name").toLowerCase().contains("mac")){
+    if (System.getProperty("os.name").toLowerCase().contains("mac")) {
         jvmArgs "-XstartOnFirstThread"
     }
 }
@@ -32,9 +32,9 @@ task debug(dependsOn: classes, type: JavaExec) {
 task dist(type: Jar) {
     from files(sourceSets.main.output.classesDirs)
     from files(sourceSets.main.output.resourcesDir)
-    from {configurations.compile.collect {zipTree(it)}}
+    from { configurations.compile.collect { zipTree(it) } }
     from files(project.assetsDir);
- 
+
     manifest {
         attributes 'Main-Class': project.mainClassName
     }
