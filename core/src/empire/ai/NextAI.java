@@ -176,13 +176,15 @@ public class NextAI extends AI{
                                 cargo = fdump;
                             }}.act();
 
+                            //load.act();
+
                             if(player.allDemands().contains(d -> d.good.equals(good))){
                                 Log.info("Dumped {0}, updating plan.", fdump);
 
                                 //dumped some cargo, what now?
-                                async(this::updatePlan);
+                                //async(this::updatePlan);
                             }
-                            return false;
+                            //return false;
                         }
 
                         load.act();
@@ -355,7 +357,7 @@ public class NextAI extends AI{
                 actions.add(new UnloadAction(demand.city, demand.good));
                 //update new position
                 currentTile = state.world.tile(demand.city);
-            }else if(!player.cargo.contains(demand.good)){
+            }else{
                 //only plan to load if you don't have this good
                 Tile position = currentTile;
                 //find best city to get load from
