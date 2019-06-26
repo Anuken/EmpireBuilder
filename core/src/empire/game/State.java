@@ -135,7 +135,7 @@ public class State{
     /** Switches turns to the next player.
      * Increments total turn if needed.*/
     public void nextPlayer(){
-        if(EmpireCore.snapshots){
+        if(EmpireCore.snapshots && turn == 1){
             SaveIO.save(this, snapshotDirectory.child("turn-" + turn + ".json"));
         }
 
@@ -165,6 +165,10 @@ public class State{
         //recursively advance the next player until there are no lost turns left.
         if(player().lostTurns > 0){
             nextPlayer();
+        }
+
+        if(EmpireCore.snapshots){
+            SaveIO.save(this, snapshotDirectory.child("turn-" + turn + ".json"));
         }
     }
 

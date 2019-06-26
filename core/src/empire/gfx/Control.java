@@ -38,7 +38,7 @@ public class Control implements ApplicationListener{
             ((EventCard)state.cards.select(c -> c instanceof DerailmentEvent).random()).apply(state, state.player());
         }
 
-        if(debug && Core.input.keyTap(KeyCode.O)){
+        if(debug && Core.input.keyTap(KeyCode.GRAVE)){
             new NextAI(state.player(), state).test();
         }
 

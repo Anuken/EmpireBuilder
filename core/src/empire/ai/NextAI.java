@@ -129,8 +129,14 @@ public class NextAI extends AI{
                 //check if player can deliver this good right now
                 City atCity = state.world.getCity(player.position);
                 if(atCity == u.city && player.canDeliverGood(atCity, good)){
+                    if(!player.cargo.contains(good)){
+                        Log.err("No cargo to deliver, what?");
+                        async(this::updatePlan);
+                        return false;
+                    }
+
                     //attempt to deliver if possible
-                    if(state.canLoadUnload(player, player.position) && player.cargo.contains(good)){
+                    if(state.canLoadUnload(player, player.position)){
                         SellCargo sell = new SellCargo();
                         sell.cargo = good;
                         sell.act();
@@ -159,11 +165,17 @@ public class NextAI extends AI{
 
                 //check if player can deliver this good
                 City atCity = state.world.getCity(player.position);
-                if(atCity == l.city && atCity.goods.contains(good)){
+
+                //the player can already have this cargo; if the city doesn't have this good, just ignore this load request
+                if(player.cargo.contains(good) && (atCity == null || !atCity.goods.contains(good))){
+                    plan.actions.pop();
+                    moved = true;
+                }else if(atCity == l.city && atCity.goods.contains(good)){
                     //attempt to load up cargo if possible
                     if(state.canLoadUnload(player, player.position)){
                         LoadCargo load = new LoadCargo();
                         load.cargo = good;
+
                         if(player.cargo.size >= player.loco.loads){
                             String dump = player.cargo.find(p -> !player.allDemands().contains(d -> d.good.equals(p)));
                             if(dump == null){
@@ -176,15 +188,16 @@ public class NextAI extends AI{
                                 cargo = fdump;
                             }}.act();
 
-                            //load.act();
+                            load.act();
 
-                            if(player.allDemands().contains(d -> d.good.equals(good))){
+                            if(player.allDemands().contains(d -> d.good.equals(good)) && !good.equals(load.cargo)){
                                 Log.info("Dumped {0}, updating plan.", fdump);
 
                                 //dumped some cargo, what now?
-                                //async(this::updatePlan);
+                                async(this::updatePlan);
                             }
-                            //return false;
+                            plan.actions.pop();
+                            return false;
                         }
 
                         load.act();
@@ -213,6 +226,7 @@ public class NextAI extends AI{
                     startTile = state.world.tile(l.from);
                 }
             }
+
 
             if(state.world.getCity(player.position) != null && state.canLoadUnload(player, player.position) &&
                     player.cargo.size < player.loco.loads){
@@ -396,11 +410,11 @@ public class NextAI extends AI{
             return new Array<>();
         }
 
-        //now, find the best cities that are unconnected to connect to the ones that are not
+        //now, find the best cities that are connected to connect to the ones that are not
         //this is done by computing a 'connection cost' of a city to a group of tiles, then ordering cities by that cost
         ObjectFloatMap<City> costs = new ObjectFloatMap<>();
         ObjectMap<City, City> linkages = new ObjectMap<>();
-        unconnectedCities.each(city -> {
+        connectedCities.each(city -> {
             float minCost = Float.POSITIVE_INFINITY;
             City minCity = null;
             for(City other : unconnectedCities){

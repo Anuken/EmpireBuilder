@@ -6,7 +6,7 @@ import io.anuke.arc.function.Consumer;
 /** An abstract class for handling netcode. */
 public abstract class Net{
     /** The port to be used. */
-    public static final int port = 3257;
+    public static final int port = 3258;
 
     protected Consumer<Throwable> errorHandler = Throwable::printStackTrace;
     protected NetListener listener;
