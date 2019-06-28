@@ -74,26 +74,31 @@ public class State{
 
     /** Checks if a player has won a game, and runs the onWin callback if that is the case.*/
     public void checkIfWon(Player player){
-        if(player.money >= winMoneyAmount){
-            int checked = 0;
+        if(player.money >= winMoneyAmount && hasConnectedAllCities(player)){
+            Events.fire(new WinEvent(player));
+            hasWinner = true;
+        }
+    }
 
-            for(City city : world.cities()){
-                //if 2 cities don't have the right connections, none of them can, since there are 8 cities and 7 needed to win.
-                if(checked >= 2){
-                    return;
+    public boolean hasConnectedAllCities(Player player){
+        int checked = 0;
+
+        for(City city : world.cities()){
+            //if 2 cities don't have the right connections, none of them can, since there are 8 cities and 7 needed to win.
+            if(checked >= 2){
+                return false;
+            }
+
+            if(city.size == CitySize.major){
+                if(countConnectedCities(player, world.tile(city)) >= winCityAmount){
+                    return true;
                 }
 
-                if(city.size == CitySize.major){
-                    if(countConnectedCities(player, world.tile(city)) >= winCityAmount){
-                        Events.fire(new WinEvent(player));
-                        hasWinner = true;
-                        return;
-                    }
-
-                    checked ++;
-                }
+                checked ++;
             }
         }
+
+        return false;
     }
 
     public boolean canLoadUnload(Player player, Tile tile){

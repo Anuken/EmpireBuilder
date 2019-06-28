@@ -176,7 +176,7 @@ public class Astar{
     }
 
     float costScale(int base){
-        return base * 16f;
+        return base * 6f;
     }
 
     boolean hasTrack(Tile from, Tile to){

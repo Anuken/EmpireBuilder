@@ -18,7 +18,7 @@ public class NextAI extends AI{
     private static final int upgradeAfterMoney = 60;
     /** Demand cost scale: how many units to reduce a score by, per ECU.
      * If this value is, for example, 10, this AI will move 10 extra spaces to gain 1 ECU. */
-    private static final float demandCostScale = 20;
+    private static final float demandCostScale = 8;
 
     /** List of planned actions.*/
     private Plan plan = new Plan(new Array<>());
@@ -26,8 +26,6 @@ public class NextAI extends AI{
     private Astar astar;
     /** Plans skipped due to branch and bound.*/
     private int skipped = 0;
-
-    private int lastTurn = 0;
 
     public NextAI(Player player, State state){
         super(player, state);
@@ -167,9 +165,10 @@ public class NextAI extends AI{
                 City atCity = state.world.getCity(player.position);
 
                 //the player can already have this cargo; if the city doesn't have this good, just ignore this load request
+                //ALSO ignore the path!
                 if(player.cargo.contains(good) && (atCity == null || !atCity.goods.contains(good))){
                     plan.actions.pop();
-                    moved = true;
+                    return false;
                 }else if(atCity == l.city && atCity.goods.contains(good)){
                     //attempt to load up cargo if possible
                     if(state.canLoadUnload(player, player.position)){
@@ -414,10 +413,10 @@ public class NextAI extends AI{
         //this is done by computing a 'connection cost' of a city to a group of tiles, then ordering cities by that cost
         ObjectFloatMap<City> costs = new ObjectFloatMap<>();
         ObjectMap<City, City> linkages = new ObjectMap<>();
-        connectedCities.each(city -> {
+        unconnectedCities.each(city -> {
             float minCost = Float.POSITIVE_INFINITY;
             City minCity = null;
-            for(City other : unconnectedCities){
+            for(City other : connectedCities){
                 float dst = astar.astar(state.world.tile(city), state.world.tile(other), connected::contains);
                 if(dst < minCost){
                     minCity = other;
@@ -470,6 +469,7 @@ public class NextAI extends AI{
             float total = 0f;
             int money = player.money;
             int neededCargoUsed = 0;
+            boolean linked = state.hasConnectedAllCities(player);
 
             float totalProfit = actions.sum(a -> a instanceof UnloadAction ?
                     player.allDemands().find(d -> d.good.equals(((UnloadAction) a).good)
@@ -515,8 +515,8 @@ public class NextAI extends AI{
 
                     //get money earned
                     int earned = player.allDemands().find(d -> d.good.equals(u.good) && d.city == u.city).cost;
-
                     position = state.world.tile(u.city);
+
                     //after checking money, add unloaded cost by finding the correct demand
                     money += earned;
                 }
