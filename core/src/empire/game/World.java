@@ -160,7 +160,7 @@ public class World{
         City city = getMajorCity(tile);
 
         adjacentsOf(tile, other -> {
-            if(city != null && getMajorCity(other) == city){
+            if(sameCity(tile, other)){
                 adjacent.accept(other);
                 //case 2: tracks between these two points
             }else if(player.hasTrack(tile, other)){

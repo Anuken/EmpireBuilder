@@ -512,7 +512,7 @@ public class State{
                 if(!closedSet.contains(child)
                         //make sure player isn't blocked by event cards!
                         && player.isAllowed(e -> e.canMove(player, tile, child))
-                        && (moveOther || player.hasTrack(tile, child))){
+                        && (moveOther || player.hasTrack(tile, child) || world.sameCity(tile, child) || world.samePort(tile, child))){
                     parents.put(child, tile);
                     queue.addFirst(child);
                     closedSet.add(child);
