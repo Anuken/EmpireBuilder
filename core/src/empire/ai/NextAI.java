@@ -18,7 +18,7 @@ public class NextAI extends AI{
     private static final int upgradeAfterMoney = 60;
     /** Demand cost scale: how many units to reduce a score by, per ECU.
      * If this value is, for example, 10, this AI will move 10 extra spaces to gain 1 ECU. */
-    private static final float demandCostScale = 8;
+    private static final float demandCostScale = 6;
 
     /** List of planned actions.*/
     private Plan plan = new Plan(new Array<>());
@@ -26,6 +26,8 @@ public class NextAI extends AI{
     private Astar astar;
     /** Plans skipped due to branch and bound.*/
     private int skipped = 0;
+    /** Worst plan accepted.*/
+    private float worstPlan;
 
     public NextAI(Player player, State state){
         super(player, state);
@@ -48,7 +50,12 @@ public class NextAI extends AI{
 
         //wait until plan is ready to be executed; if it is, execute it; then end the turn if it's over
         if(waitAsync()){
-            if(executePlan()){
+            if(plan.bad){
+                //discard cards and end turn
+                new DiscardCards().act();
+                //also clear actions to cause a recalculation next turn
+                plan.actions.clear();
+            }else if(executePlan()){
                 end();
             }
         }
@@ -92,6 +99,11 @@ public class NextAI extends AI{
                         plan.actions.toString("\n", n -> n.getClass().getSimpleName() + n.toString())));
             });
         });
+    }
+
+    /** @return whether the current cards are terrible and should be discarded. */
+    boolean cardsAreTerrible(Plan plan){
+        return false;//state.turn > 10 && plan.cost(0f) > -100;
     }
 
     /** Attempts to execute the plan.
@@ -290,7 +302,7 @@ public class NextAI extends AI{
         }
 
         //upgrade if the player can do it now; only happens after a money threshold
-        if(state.player() == player && player.money > upgradeAfterMoney && player.loco != Loco.fastFreight){
+        if(state.player() == player && player.money > upgradeAfterMoney && player.loco != Loco.superFreight){
             new UpgradeLoco(){{
                 type = 0;
             }}.act();
@@ -334,6 +346,16 @@ public class NextAI extends AI{
             plan = bestPlan;
             //reverse to act on it layer
             plan.actions.reverse();
+
+            worstPlan = Math.max(worstPlan, bestCost);
+            Log.info("Current worst plan: {0}", worstPlan);
+            Log.info("Plan cost: {0}", bestCost);
+
+            //mark the plan as bad if it's terrible; cards will be discarded
+            if(cardsAreTerrible(plan)){
+                Log.info("| | Terrible plan, discarding cards!");
+                plan.bad = true;
+            }
 
             //player can win if they place track and connect cities, try doing that
             if(player.money > State.winMoneyAmount/2){
@@ -457,6 +479,7 @@ public class NextAI extends AI{
 
     class Plan{
         Array<NextAction> actions;
+        boolean bad;
 
         Plan(Array<NextAction> actions){
             this.actions = actions;
@@ -531,7 +554,8 @@ public class NextAI extends AI{
 
             astar.end();
 
-            return total - totalProfit;
+            //TODO check if this actually helps
+            return linked && money >= State.winMoneyAmount ? total - 10000f : total - totalProfit;
         }
     }
 
