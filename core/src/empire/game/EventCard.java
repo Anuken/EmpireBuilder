@@ -328,7 +328,7 @@ public abstract class EventCard extends Card{
 
         @Override
         public boolean isHalfRate(Player player, Tile tile){
-            return tile.distanceTo(city.x, city.y) > dst;
+            return tile.distanceTo(city.x, city.y) <= dst;
         }
     }
 
