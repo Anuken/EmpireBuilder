@@ -12,8 +12,8 @@ task run(dependsOn: classes, type: JavaExec) {
     standardInput = System.in
     workingDir = project.assetsDir
     ignoreExitValue = true
-    //args(["-ai", "-debug", "-seeded", "-snapshots"])
-    args(["-debug", "-seeded", "-snapshotview"])
+    args(["-ai", "-debug", "-seeded", "-snapshots"])
+    //args(["-debug", "-seeded", "-snapshotview"])
 
     if (System.getProperty("os.name").toLowerCase().contains("mac")) {
         jvmArgs "-XstartOnFirstThread"
