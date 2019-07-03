@@ -20,6 +20,8 @@ public class NextAI extends AI{
      * If this value is, for example, 10, this AI will move 10 extra spaces to gain 1 ECU. */
     private static final float demandCostScale = 6;
 
+    /** Listener to visualizer events.*/
+    private AIListener listener = new AIListener(){};
     /** List of planned actions.*/
     private Plan plan = new Plan(new Array<>());
     /** Object for handling pathfinding.*/
@@ -63,6 +65,11 @@ public class NextAI extends AI{
         state.checkIfWon(player);
     }
 
+    /** Sets a listener to handle planning events.*/
+    public void setListener(AIListener listener){
+        this.listener = listener;
+    }
+
     /** Test-only function. Used for whatever is necessary at the time.*/
     public void test(){
         float c1 = new Plan(Array.with(
@@ -103,7 +110,7 @@ public class NextAI extends AI{
 
     /** @return whether the current cards are terrible and should be discarded. */
     boolean cardsAreTerrible(Plan plan){
-        return false;//state.turn > 10 && plan.cost(0f) > -100;
+        return false;//state.turn > 10 && plan.cost(0f) > -90;
     }
 
     /** Attempts to execute the plan.
@@ -313,6 +320,8 @@ public class NextAI extends AI{
 
     /** Update the plan, find the best one. */
     void updatePlan(){
+        Core.app.post(listener::planningBegin);
+
         Plan bestPlan = null;
         float bestCost = Float.POSITIVE_INFINITY; //min cost
         int considered = 0;
@@ -327,6 +336,7 @@ public class NextAI extends AI{
                     for(int[] combination : PlanCombinations.all){
                         Plan plan = makePlan(new Demand[]{first, second, third}, combination);
                         float cost = plan.cost(bestCost);
+                        Core.app.post(() -> listener.planConsidered(plan.copy(), cost));
                         considered ++;
                         if(cost < bestCost){
                             bestPlan = plan;
@@ -361,6 +371,8 @@ public class NextAI extends AI{
             if(player.money > State.winMoneyAmount/2){
                 plan.actions.addAll(planLinkCities());
             }
+
+            Core.app.post(() -> listener.planChosen(plan.copy()));
         }else{
             Log.err("No good plan found.");
         }
@@ -477,12 +489,16 @@ public class NextAI extends AI{
         });
     }
 
-    class Plan{
-        Array<NextAction> actions;
+    public class Plan{
+        public Array<NextAction> actions;
         boolean bad;
 
         Plan(Array<NextAction> actions){
             this.actions = actions;
+        }
+
+        Plan copy(){
+            return new Plan(new Array<>(actions));
         }
 
         /** Calculates a cost for this plan of actions. Disregards city linking actions.
@@ -554,15 +570,15 @@ public class NextAI extends AI{
 
             astar.end();
 
-            //TODO check if this actually helps
+            //note that when the player is about to win, only total amount of moves win matters
             return linked && money >= State.winMoneyAmount ? total - 10000f : total - totalProfit;
         }
     }
 
-    //action classes
+    //action classes; should be self explanatory on what they represent
 
-    class LinkCitiesAction extends NextAction{
-        final City from, to;
+    public class LinkCitiesAction extends NextAction{
+        public final City from, to;
 
         public LinkCitiesAction(City from, City to){
             this.from = from;
@@ -574,9 +590,9 @@ public class NextAI extends AI{
         }
     }
 
-    class LoadAction extends NextAction{
-        final City city;
-        final String good;
+    public class LoadAction extends NextAction{
+        public final City city;
+        public final String good;
 
         public LoadAction(City city, String good){
             this.good = good;
@@ -588,10 +604,9 @@ public class NextAI extends AI{
         }
     }
 
-    class UnloadAction extends NextAction{
-        final City city;
-        final String good;
-
+    public class UnloadAction extends NextAction{
+        public final City city;
+        public final String good;
 
         public UnloadAction(City city, String good){
             this.good = good;
@@ -603,8 +618,13 @@ public class NextAI extends AI{
         }
     }
 
+    public interface AIListener{
+        default void planningBegin(){}
+        default void planConsidered(Plan plan, float cost){}
+        default void planChosen(Plan plan){}
+    }
 
-    abstract class NextAction{
+    public abstract class NextAction{
 
     }
 }

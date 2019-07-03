@@ -1,5 +1,6 @@
 package empire.gfx;
 
+import empire.ai.NextAI;
 import empire.game.*;
 import empire.game.DemandCard.Demand;
 import empire.game.EventCard.*;
@@ -18,12 +19,13 @@ import io.anuke.arc.util.*;
 
 import static empire.gfx.EmpireCore.*;
 
-/** Renders the game world, handles user input interactions if needed. */
+/** Renders the game world and input on the board.*/
 public class Renderer implements ApplicationListener{
     private float zoom = 4f;
     private Color clearColor = Color.valueOf("5d81e1");
     private Texture worldTexture;
     private FrameBuffer buffer;
+    private AIVisualizer visualizer = new AIVisualizer();
 
     public boolean doLerp = true;
 
@@ -46,6 +48,10 @@ public class Renderer implements ApplicationListener{
     @Override
     public void init(){
         worldTexture = MapImageRenderer.createMapTexture(state.world);
+
+        if(state.player().ai != null){
+            ((NextAI)state.player().ai).setListener(visualizer);
+        }
     }
 
     @Override
@@ -109,6 +115,7 @@ public class Renderer implements ApplicationListener{
         drawPlayers();
         drawControl();
         drawOver();
+        visualizer.draw();
     }
 
     void doMovement(){

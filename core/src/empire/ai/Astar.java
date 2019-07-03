@@ -20,7 +20,6 @@ public class Astar{
     protected Player player;
     protected IntSet usedOtherTrack = new IntSet();
 
-
     public Astar(Player player){
         this.player = player;
     }

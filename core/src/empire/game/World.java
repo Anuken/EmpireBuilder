@@ -240,6 +240,7 @@ public class World{
             return y % 2 == 0 ? adjacencyEven : adjacencyOdd;
         }
 
+        /** Distance to a specific point in tile coordinates.*/
         public int distanceTo(int ox, int oy){
             Vector2 v1 = EmpireCore.control.toWorld(this);
             float vx = v1.x, vy = v1.y;
@@ -249,6 +250,16 @@ public class World{
 
         public int distanceTo(Tile other){
             return distanceTo(other.x, other.y);
+        }
+
+        /** Returns the X position in world coordinates.*/
+        public float worldx(){
+            return EmpireCore.control.toWorld(this).x;
+        }
+
+        /** Returns the Y position in world coordinates.*/
+        public float worldy(){
+            return EmpireCore.control.toWorld(this).y;
         }
 
         /** Returns the direction needed to travel from this tile to the other.
