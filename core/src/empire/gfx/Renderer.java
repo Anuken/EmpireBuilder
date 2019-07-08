@@ -7,6 +7,7 @@ import empire.game.EventCard.*;
 import empire.game.GameEvents.EndTurnEvent;
 import empire.game.World.*;
 import empire.gfx.gen.MapImageRenderer;
+import empire.gfx.shaders.Bloom;
 import io.anuke.arc.*;
 import io.anuke.arc.graphics.*;
 import io.anuke.arc.graphics.Texture.TextureFilter;
@@ -25,6 +26,7 @@ public class Renderer implements ApplicationListener{
     private Color clearColor = Color.valueOf("5d81e1");
     private Texture worldTexture;
     private FrameBuffer buffer;
+    private Bloom bloom;
     private AIVisualizer visualizer = new AIVisualizer();
 
     public boolean doLerp = true;
@@ -43,6 +45,17 @@ public class Renderer implements ApplicationListener{
         Events.on(EndTurnEvent.class, event -> {
             doLerp = true;
         });
+
+        makeBloom();
+    }
+
+    private void makeBloom(){
+        if(bloom != null){
+            bloom.dispose();
+        }
+        bloom = new Bloom(Core.graphics.getWidth() / 4, Core.graphics.getHeight() / 4,
+                false, true, true);
+        bloom.setClearColor(0f, 0f, 0f, 0f);
     }
 
     @Override
@@ -90,8 +103,19 @@ public class Renderer implements ApplicationListener{
         Draw.rect(Draw.wrap(buffer.getTexture()), rwidth/2f, rheight/2f, rwidth, -rheight);
         Draw.blend();
 
+        Draw.flush();
+        bloom.capture();
+        visualizer.draw();
+        Draw.flush();
+        bloom.render();
+
         //Core.camera.width = pw;
         //Core.camera.height = ph;
+    }
+
+    @Override
+    public void resize(int width, int height){
+        makeBloom();
     }
 
     public void takeWorldScreenshot(){
@@ -115,7 +139,6 @@ public class Renderer implements ApplicationListener{
         drawPlayers();
         drawControl();
         drawOver();
-        visualizer.draw();
     }
 
     void doMovement(){
