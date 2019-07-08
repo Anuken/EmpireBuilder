@@ -13,7 +13,7 @@ import static empire.gfx.EmpireCore.state;
 
 public class AIVisualizer implements AIListener{
     private Array<VisPlan> plans = new Array<>();
-    private float displayed = 10000;
+    private float displayed = 100;
 
     public AIVisualizer(){
 
@@ -47,9 +47,9 @@ public class AIVisualizer implements AIListener{
         int index = 0;
 
         for(NextAction action : plan.plan.actions){
-            float f = index++ / (float)plan.plan.actions.size;
+            float f = index++ / (float)(plan.plan.actions.size - 1);
             if(first){
-                Draw.color(Color.RED, Color.YELLOW, f);
+                Draw.color(Color.SCARLET, Color.YELLOW, f);
             }
 
             if(action instanceof LoadAction){
