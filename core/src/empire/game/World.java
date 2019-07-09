@@ -210,7 +210,7 @@ public class World{
     }
 
     /** A single tile on the board.*/
-    public static class Tile{
+    public static class Tile implements Position{
         public final Terrain type;
         public final int x, y;
         /** The city on this tile. May be null.*/
@@ -250,6 +250,16 @@ public class World{
 
         public int distanceTo(Tile other){
             return distanceTo(other.x, other.y);
+        }
+
+        @Override
+        public float getX(){
+            return worldx();
+        }
+
+        @Override
+        public float getY(){
+            return worldy();
         }
 
         /** Returns the X position in world coordinates.*/

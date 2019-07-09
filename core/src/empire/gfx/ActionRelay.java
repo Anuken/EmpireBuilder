@@ -5,6 +5,7 @@ import empire.game.*;
 import empire.game.World.Tile;
 import empire.io.CardIO;
 import empire.net.Net.NetListener;
+import io.anuke.arc.Events;
 import io.anuke.arc.collection.IntMap;
 import io.anuke.arc.collection.ObjectMap;
 import io.anuke.arc.function.Consumer;
@@ -122,14 +123,19 @@ public class ActionRelay implements NetListener{
         if(net.active()){
             //apply action locally; happens for server by default, but also for special local actions
             if(net.server() || action instanceof LocalAction){
-                action.apply(state);
+                applyAction(action);
             }
             //apply effect and send
             net.send(write(action));
         }else{
             //no net? just apply it
-            action.apply(state);
+            applyAction(action);
         }
+    }
+
+    public void applyAction(Action action){
+        Events.fire(action.getClass().isAnonymousClass() ? action.getClass().getSuperclass() : action.getClass(), action);
+        action.apply(state);
     }
 
     public String writeString(Object object){
@@ -196,7 +202,7 @@ public class ActionRelay implements NetListener{
         }
 
         //apply it
-        action.apply(state);
+        applyAction(action);
     }
 
     @Override
@@ -273,7 +279,7 @@ public class ActionRelay implements NetListener{
 
             //apply action and send it out
             try{
-                action.apply(state);
+                applyAction(action);
                 net.send(write(action));
             }catch(Exception e){
                 e.printStackTrace();

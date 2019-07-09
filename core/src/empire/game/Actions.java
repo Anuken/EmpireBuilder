@@ -9,7 +9,7 @@ import io.anuke.arc.util.Strings;
 
 import static empire.gfx.EmpireCore.*;
 
-/** Just a class for storing a bunch of action classes.*/
+/** A class for storing a bunch of action classes.*/
 public class Actions{
 
     public interface Action{
@@ -123,6 +123,7 @@ public class Actions{
         @Override
         public void apply(State state){
             player.position = location;
+            player.visualpos.set(player.position);
             player.chosenLocation = true;
             renderer.doLerp = true;
         }

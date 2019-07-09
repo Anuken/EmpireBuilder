@@ -55,6 +55,7 @@ project(":core"){
     dependencies{
         compile arcModule("arc-core")
         compile arcModule("extensions:freetype")
+        compile arcModule("extensions:recorder")
         compile "org.java-websocket:Java-WebSocket:1.4.0"
     }
 }

@@ -7,6 +7,7 @@ import empire.gfx.EmpireCore;
 import io.anuke.arc.collection.*;
 import io.anuke.arc.function.*;
 import io.anuke.arc.graphics.Color;
+import io.anuke.arc.math.geom.Vector2;
 import io.anuke.arc.util.Structs;
 
 /** The state of a single player in the game. */
@@ -49,12 +50,18 @@ public class Player{
     /** Whether this player has chosen a starting location.*/
     public boolean chosenLocation = false;
 
+    /** Visual position of the player on the board, used for rendering.*/
+    public Vector2 visualpos = new Vector2();
+    /** Visual player rotation.*/
+    public float visualrot = 0f;
+
     /** Creates a player at a position.*/
     public Player(String name, Tile position, Color color, DemandCard[] cards){
         this.name = name;
         this.position = position;
         this.color = color;
         this.demandCards = cards;
+        this.visualpos.set(position);
     }
 
     /** Serialization use only. */

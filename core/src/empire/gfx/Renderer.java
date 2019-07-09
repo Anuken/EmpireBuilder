@@ -1,14 +1,18 @@
 package empire.gfx;
 
 import empire.ai.NextAI;
+import empire.game.Actions.*;
 import empire.game.*;
 import empire.game.DemandCard.Demand;
 import empire.game.EventCard.*;
 import empire.game.GameEvents.EndTurnEvent;
 import empire.game.World.*;
+import empire.gfx.fx.ActionFx;
+import empire.gfx.fx.ActionFx.*;
 import empire.gfx.gen.MapImageRenderer;
 import empire.gfx.shaders.Bloom;
 import io.anuke.arc.*;
+import io.anuke.arc.collection.*;
 import io.anuke.arc.graphics.*;
 import io.anuke.arc.graphics.Texture.TextureFilter;
 import io.anuke.arc.graphics.g2d.*;
@@ -28,6 +32,7 @@ public class Renderer implements ApplicationListener{
     private FrameBuffer buffer;
     private Bloom bloom;
     private AIVisualizer visualizer = new AIVisualizer();
+    private Queue<ActionFx> fx = new Queue<>();
 
     public boolean doLerp = true;
 
@@ -47,6 +52,12 @@ public class Renderer implements ApplicationListener{
         });
 
         makeBloom();
+        registerEffects();
+    }
+
+    private void registerEffects(){
+        Events.on(Move.class, f -> fx.addLast(new MoveFx(f.player, f.player.position, f.to)));
+        Events.on(PlaceTrack.class, f -> fx.addLast(new TrackFx(f.player, f.player.position, f.to)));
     }
 
     private void makeBloom(){
@@ -103,6 +114,8 @@ public class Renderer implements ApplicationListener{
         Draw.rect(Draw.wrap(buffer.getTexture()), rwidth/2f, rheight/2f, rwidth, -rheight);
         Draw.blend();
 
+        ScreenRecorder.record();
+
         Draw.flush();
         bloom.capture();
         visualizer.draw();
@@ -143,7 +156,7 @@ public class Renderer implements ApplicationListener{
 
     void doMovement(){
         //update zoom based on input
-        zoom += Core.input.axis(KeyCode.SCROLL)* 0.03f;
+        zoom += Core.input.axis(KeyCode.SCROLL) * 0.03f;
         zoom = Mathf.clamp(zoom, 0.2f, 20f);
 
         float speed = 15f * Time.delta();
@@ -159,7 +172,7 @@ public class Renderer implements ApplicationListener{
             doLerp = false;
         }
 
-        Vector2 v = control.toWorld(state.player().position);
+        Vector2 v = state.player().visualpos;
         if(doLerp && state.player().chosenLocation && !scheduler.isThinking()){
             Core.camera.position.lerpDelta(v, 0.06f);
         }
@@ -171,7 +184,7 @@ public class Renderer implements ApplicationListener{
         font.getData().setScale(1f);
         for(Player player : state.players){
             if(!player.chosenLocation) continue;
-            Vector2 v = control.toWorld(player.position);
+            Vector2 v = player.visualpos;
 
             font.setColor(player.color);
             font.draw(player.name, v.x, v.y + tilesize, Align.center);
@@ -208,7 +221,6 @@ public class Renderer implements ApplicationListener{
             //draw stuff selected
             if(control.placeLoc != null && other != null){
                 Tile last = control.placeLoc;
-                int cost = 0;
                 for(Tile tile : control.selectedTiles()){
                     if(tile != last
                             && !state.world.samePort(tile, last)
@@ -219,7 +231,6 @@ public class Renderer implements ApplicationListener{
                         control.toWorld(tile);
 
                         if(state.isPassable(state.player(), tile)){
-                            cost += state.getTrackCost(last, tile);
                             Draw.color(1f, 1f, 1f, 0.5f);
                         }else{
                             Draw.color(1f, 1f, 1f, 0.5f);
@@ -258,13 +269,23 @@ public class Renderer implements ApplicationListener{
     /** Draws all player icons on the board.*/
     void drawPlayers(){
         for(Player player : state.players){
+            player.visualrot = Mathf.slerp(player.visualrot, player.direction.angle(), 0.2f * Time.delta());
+
             if(!player.chosenLocation) continue;
-            Vector2 world = control.toWorld(player.position.x, player.position.y);
+            Vector2 world = player.visualpos;
 
             Draw.colorMul(player.color, 0.5f);
-            Draw.rect("icon-arrow-right", world.x, world.y - 1, player.direction.angle());
+            Draw.rect("icon-arrow-right", world.x, world.y - 1, player.visualrot);
             Draw.colorMul(player.color, 1.1f);
-            Draw.rect("icon-arrow-right", world.x, world.y, player.direction.angle());
+            Draw.rect("icon-arrow-right", world.x, world.y, player.visualrot);
+        }
+
+        if(!fx.isEmpty()){
+            ActionFx f = fx.first();
+            f.update();
+            if(f.time >= 1f){
+                fx.removeFirst();
+            }
         }
     }
 
@@ -298,7 +319,7 @@ public class Renderer implements ApplicationListener{
         }
     }
 
-    void drawTrack(float fromX, float fromY, float toX, float toY){
+    public void drawTrack(float fromX, float fromY, float toX, float toY){
         Lines.stroke(Core.atlas.find("track").getHeight() * tilesize/16f);
         Lines.line(Core.atlas.find("track"), fromX, fromY, toX, toY, CapStyle.none, 0f);
     }
