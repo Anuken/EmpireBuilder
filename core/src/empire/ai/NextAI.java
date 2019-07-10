@@ -13,7 +13,7 @@ import io.anuke.arc.util.*;
 public class NextAI extends AI{
     private static final String defaultStartingCity = "ruhr";
     /** Whether to choose a location.*/
-    private static final boolean chooseLocation = false;
+    private static final boolean chooseLocation = true;
     /** Money after which the AI will consider upgrading their loco.*/
     private static final int upgradeAfterMoney = 60;
     /** Demand cost scale: how many units to reduce a score by, per ECU.
@@ -484,13 +484,28 @@ public class NextAI extends AI{
                 player.position = state.world.tile(state.world.getCity(defaultStartingCity));
                 player.chosenLocation = true;
             }else{
-                throw new IllegalArgumentException("NYI");
+                int i = 0;
+                City best = null;
+                float bestCost = Float.POSITIVE_INFINITY;
+                for(City city : Array.with(state.world.cities()).select(c -> c.size == CitySize.major)){
+                    player.position = state.world.tile(city);
+                    Log.info("Check city {0}/8", i++);
+                    updatePlan();
+
+                    if(plan.lastCost < bestCost){
+                        best = city;
+                        bestCost = plan.lastCost;
+                    }
+                }
+                Log.info("Chose city {0}", best.name);
+                player.position = state.world.tile(best);
             }
         });
     }
 
     public class Plan{
         public Array<NextAction> actions;
+        public float lastCost;
         boolean bad;
 
         Plan(Array<NextAction> actions){
@@ -571,7 +586,9 @@ public class NextAI extends AI{
             astar.end();
 
             //note that when the player is about to win, only total amount of moves win matters
-            return linked && money >= State.winMoneyAmount ? total - 10000f : total - totalProfit;
+            lastCost = linked && money >= State.winMoneyAmount ? total - 10000f : total - totalProfit;
+
+            return lastCost;
         }
     }
 

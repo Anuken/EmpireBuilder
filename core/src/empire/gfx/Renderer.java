@@ -114,13 +114,15 @@ public class Renderer implements ApplicationListener{
         Draw.rect(Draw.wrap(buffer.getTexture()), rwidth/2f, rheight/2f, rwidth, -rheight);
         Draw.blend();
 
-        ScreenRecorder.record();
+
 
         Draw.flush();
         bloom.capture();
         visualizer.draw();
         Draw.flush();
         bloom.render();
+
+        ScreenRecorder.record();
 
         //Core.camera.width = pw;
         //Core.camera.height = ph;
