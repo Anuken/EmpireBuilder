@@ -18,9 +18,9 @@ enables debug mode.
 |Option|Description|
 | --- | --- |
 |-Pai|Activates AI control.|
-|-Pdebug|Activates some debug features, as well as hosting the game on startup.|
-|-Pseeded|Runs the game on the same seed (card order).|
-|-Psnapshots|Enables snapshot controls. Snapshots are saved in the `assets` folder|
+|-Pdebug|Activates some debug features, as well as hosting the game on startup. Recommended for any sort of testing.|
+|-Pseeded|Runs the game on the same seed (*card order*) each time.|
+|-Psnapshots|Enables snapshot controls. Snapshots are saved in the `assets` folder each AI run, and can be loaded with this mode enabled. Enter the snapshot folder name into the textbox to use it.|
 
 # Building
 
