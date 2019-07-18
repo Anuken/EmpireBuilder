@@ -16,6 +16,7 @@ To enable an option, add it after the run command. For example, running
 enables debug mode.
 
 |Option|Description|
+| --- | --- |
 |-Pai|Activates AI control.|
 |-Pdebug|Activates some debug features, as well as hosting the game on startup.|
 |-Pseeded|Runs the game on the same seed (card order).|
