@@ -12,6 +12,15 @@ task run(dependsOn: classes, type: JavaExec) {
     standardInput = System.in
     workingDir = project.assetsDir
     ignoreExitValue = true
+    def dargs = []
+
+    if(project.hasProperty("ai")) dargs += "-ai"
+    if(project.hasProperty("debug")) dargs += "-debug"
+    if(project.hasProperty("seeded")) dargs += "-seeded"
+    if(project.hasProperty("snapshots")) dargs += "-snapshots"
+    
+    args(dargs)
+    
     //args(["-ai", "-debug", "-seeded", "-snapshots"])
     //args(["-debug", "-seeded"])
 

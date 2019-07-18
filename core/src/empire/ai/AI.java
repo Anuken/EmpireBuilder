@@ -8,7 +8,6 @@ import io.anuke.arc.util.async.*;
 /** Handles the AI for a specific player.*/
 public abstract class AI{
     protected static final AsyncExecutor executor = new AsyncExecutor(4);
-    protected static final boolean checkHistory = true;
 
     /** The player this AI controls.*/
     public final Player player;
@@ -25,6 +24,7 @@ public abstract class AI{
     /** Performs actions on this AI's turn.*/
     public abstract void act();
 
+    /** Returns whether or not there is currently an async task that is executing. */
     public boolean waitAsync(){
         return waiting == null || waiting.isDone();
     }

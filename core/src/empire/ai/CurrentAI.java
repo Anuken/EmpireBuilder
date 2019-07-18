@@ -26,7 +26,7 @@ public class CurrentAI extends AI{
     private Plan plan = new Plan(new Array<>());
     /** Object for handling pathfinding.*/
     private Astar astar;
-    /** Plans skipped due to branch and bound.*/
+    /** Plans skipped due to branch and bound. Currently unused.*/
     private int skipped = 0;
     /** Worst plan accepted.*/
     private float worstPlan;
@@ -36,6 +36,7 @@ public class CurrentAI extends AI{
         astar = new Astar(player);
     }
 
+    /** This runs every frame. */
     @Override
     public void act(){
 
@@ -70,32 +71,7 @@ public class CurrentAI extends AI{
         this.listener = listener;
     }
 
-    /** Test-only function. Used for whatever is necessary at the time.*/
-    public void test(){
-        float c1 = new Plan(Array.with(
-            new LoadAction(state.world.getCity("beograd"), "oil"),
-            new UnloadAction(state.world.getCity("zurich"), "oil"),
-            new LoadAction(state.world.getCity("beograd"), "oil"),
-            new LoadAction(state.world.getCity("ruhr"), "steel"),
-            new UnloadAction(state.world.getCity("valencia"), "steel"),
-            new UnloadAction(state.world.getCity("madrid"), "oil")
-        )).cost(0);
-
-        Log.info("Awful plan cost: " + c1);
-
-        float c2 = new Plan(Array.with(
-            new LoadAction(state.world.getCity("beograd"), "oil"),
-            new LoadAction(state.world.getCity("beograd"), "oil"),
-            new UnloadAction(state.world.getCity("zurich"), "oil"),
-            new LoadAction(state.world.getCity("ruhr"), "steel"),
-            new UnloadAction(state.world.getCity("valencia"), "steel"),
-            new UnloadAction(state.world.getCity("madrid"), "oil")
-        )).cost(0);
-
-        Log.info( "Cool and reasonable plan cost: " + c2);
-    }
-
-    /** Asynchronously calculates a plan and returns a preview of the result. Debugging only.*/
+    /** Asynchronously calculates a plan and returns a preview of the result. Debugging only!*/
     public void previewPlan(Consumer<String> result){
         executor.submit(() -> {
             updatePlan();
@@ -246,9 +222,11 @@ public class CurrentAI extends AI{
             }
 
 
+            //attempt to load up random cargo at the player's city if there's space
             if(state.world.getCity(player.position) != null && state.canLoadUnload(player, player.position) &&
                     player.cargo.size < player.loco.loads){
                 City city = state.world.getCity(player.position);
+                //make sure the city has something to load up
                 if(!city.goods.isEmpty()){
                     LoadCargo load = new LoadCargo();
                     load.cargo = city.goods.max(good -> {
@@ -315,6 +293,7 @@ public class CurrentAI extends AI{
             }}.act();
         }
 
+        //acted, so end the turn
         return true;
     }
 
@@ -387,6 +366,7 @@ public class CurrentAI extends AI{
         return out;
     }
 
+    /** Makes a plan from a specific order of demands and the combination of actions specified. */
     Plan makePlan(Demand[] demands, int[] combination){
         Array<NextAction> actions = new Array<>();
 
@@ -507,6 +487,7 @@ public class CurrentAI extends AI{
     public class Plan{
         public Array<NextAction> actions;
         public float lastCost;
+        /** Whether this plan is bad enough to warrant discarding hands. Currently unused!*/
         boolean bad;
 
         Plan(Array<NextAction> actions){
@@ -520,12 +501,16 @@ public class CurrentAI extends AI{
         /** Calculates a cost for this plan of actions. Disregards city linking actions.
          * Returns plan cost in moves.*/
         float cost(float bestSoFar){
+            //note that bestSoFar is currently not used, but may be in the future
+
             Tile position = player.position;
             float total = 0f;
             int money = player.money;
             int neededCargoUsed = 0;
+            //whether the player will win if they collect 250 ECU
             boolean linked = state.hasConnectedAllCities(player);
 
+            //total profit in ECU for this entire plan
             float totalProfit = actions.sum(a -> a instanceof UnloadAction ?
                     player.allDemands().find(d -> d.good.equals(((UnloadAction) a).good)
                             && d.city == ((UnloadAction) a).city).cost : 0f) * demandCostScale;
@@ -578,6 +563,7 @@ public class CurrentAI extends AI{
 
                 //branch and bound step: total is only going to get higher from here, if it's already over the best
                 //drop out
+                //-- currently does not function correctly!
                 //if(total - totalProfit > bestSoFar){
                     //skipped ++;
                     //return Float.POSITIVE_INFINITY;
