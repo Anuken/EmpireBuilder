@@ -14,9 +14,7 @@ import static empire.gfx.EmpireCore.*;
 
 /** Handles user input.*/
 public class Control implements ApplicationListener{
-    private Array<Tile> outArray = new Array<>();
     private Astar astar = new Astar(null);
-
     private Array<Tile[]> placement = new Array<>();
     private Tracks placementTracks = new Tracks();
     private Array<Tile> selectTiles = new Array<>();
@@ -36,10 +34,6 @@ public class Control implements ApplicationListener{
 
         if(debug && Core.input.keyTap(KeyCode.P)){
             ((EventCard)state.cards.select(c -> c instanceof DerailmentEvent).random()).apply(state, state.player());
-        }
-
-        if(debug && Core.input.keyTap(KeyCode.GRAVE)){
-            new CurrentAI(state.player(), state).test();
         }
 
         if(debug && Core.input.keyTap(KeyCode.Y)){

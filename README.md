@@ -22,6 +22,9 @@ enables debug mode.
 |-Pseeded|Runs the game on the same seed (*card order*) each time.|
 |-Psnapshots|Enables snapshot controls. Snapshots are saved in the `assets` folder each AI run, and can be loaded with this mode enabled. Enter the snapshot folder name into the textbox to use it.|
 
+Note that these options also exist when running the built `jar` file, but without the `P` prefix.
+To enable debug mode, for example, you could run `java -jar desktop-release.jar -debug`.
+
 # Building
 
 To build an output jar file in `build/libs/desktop-1.0.jar`:
