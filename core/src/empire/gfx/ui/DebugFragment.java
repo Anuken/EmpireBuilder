@@ -53,7 +53,7 @@ public class DebugFragment{
                 }).size(50f);
                 t.row();
                 t.addButton("Make Plan", () -> {
-                    NextAI ai = new NextAI(state.player(), state);
+                    CurrentAI ai = new CurrentAI(state.player(), state);
                     calculating = true;
                     ai.previewPlan(str -> {
                         calculating = false;

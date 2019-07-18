@@ -39,7 +39,11 @@ public class Control implements ApplicationListener{
         }
 
         if(debug && Core.input.keyTap(KeyCode.GRAVE)){
-            new NextAI(state.player(), state).test();
+            new CurrentAI(state.player(), state).test();
+        }
+
+        if(debug && Core.input.keyTap(KeyCode.Y)){
+            renderer.takeWorldScreenshot();
         }
 
         if(cursor != null){

@@ -4,15 +4,19 @@ import empire.game.Player;
 import empire.game.World.Tile;
 import io.anuke.arc.util.*;
 
+/** Defines a type of movement effect which affects a player's visual position on the board.
+ * Does not influence any logic outside of rendering.*/
 public abstract class ActionFx{
     public float lifetime = 10f, time;
 
+    /** Updates an effect.*/
     public void update(){
         time += 1f / lifetime * Time.delta();
 
         draw();
     }
 
+    /** Does any necessary drawing or updating of the effect, internally. */
     public abstract void draw();
 
     public static class MoveFx extends ActionFx{

@@ -9,8 +9,8 @@ import io.anuke.arc.collection.*;
 import io.anuke.arc.function.Consumer;
 import io.anuke.arc.util.*;
 
-/** Next iteration of this AI.*/
-public class NextAI extends AI{
+/** The best (and currently only) iteration of the empire builder AI.*/
+public class CurrentAI extends AI{
     private static final String defaultStartingCity = "ruhr";
     /** Whether to choose a location.*/
     private static final boolean chooseLocation = true;
@@ -31,7 +31,7 @@ public class NextAI extends AI{
     /** Worst plan accepted.*/
     private float worstPlan;
 
-    public NextAI(Player player, State state){
+    public CurrentAI(Player player, State state){
         super(player, state);
         astar = new Astar(player);
     }
@@ -499,6 +499,7 @@ public class NextAI extends AI{
                 }
                 Log.info("Chose city {0}", best.name);
                 player.position = state.world.tile(best);
+                player.chosenLocation = true;
             }
         });
     }

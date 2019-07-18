@@ -1,6 +1,6 @@
 package empire.gfx;
 
-import empire.ai.NextAI.*;
+import empire.ai.CurrentAI.*;
 import empire.game.Player;
 import empire.game.World.Tile;
 import io.anuke.arc.collection.Array;

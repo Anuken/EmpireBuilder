@@ -22,7 +22,7 @@ public class EmpireCore extends ApplicationCore{
     public static final int tilesize = 16;
     public static boolean debug = false, isAI = false, netDebug = false,
                                 seeded, snapshots, snapshotView;
-    public static final BiFunction<Player, State, AI> aiType = NextAI::new;
+    public static final BiFunction<Player, State, AI> aiType = CurrentAI::new;
     public static FileHandle snapshotDirectory;
 
     public static Control control;
@@ -54,7 +54,7 @@ public class EmpireCore extends ApplicationCore{
     void createPlayer(){
         if(isAI){
             if(seeded){
-                Mathf.random.setSeed(1);
+                Mathf.random.setSeed(2);
             }
             City startCity = state.world.getCity("bern");
             Player player;

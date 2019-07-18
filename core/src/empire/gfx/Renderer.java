@@ -1,6 +1,6 @@
 package empire.gfx;
 
-import empire.ai.NextAI;
+import empire.ai.CurrentAI;
 import empire.game.Actions.*;
 import empire.game.*;
 import empire.game.DemandCard.Demand;
@@ -74,7 +74,7 @@ public class Renderer implements ApplicationListener{
         worldTexture = MapImageRenderer.createMapTexture(state.world);
 
         if(state.player().ai != null){
-            ((NextAI)state.player().ai).setListener(visualizer);
+            ((CurrentAI)state.player().ai).setListener(visualizer);
         }
     }
 
@@ -141,7 +141,7 @@ public class Renderer implements ApplicationListener{
         Draw.proj().setOrtho(0, 0, buffer.getWidth(), buffer.getHeight());
         renderer.drawBuffered();
         Draw.flush();
-        ScreenUtils.saveScreenshot(Core.files.local("screenshot_" + state.player().ai.getClass().getSimpleName() + ".png"),
+        ScreenUtils.saveScreenshot(Core.files.local("screenshot_" + Time.millis() + ".png"),
                 0, 0, buffer.getWidth(), buffer.getHeight());
         buffer.end();
     }
