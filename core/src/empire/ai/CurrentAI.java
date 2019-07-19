@@ -36,7 +36,7 @@ public class CurrentAI extends AI{
         astar = new Astar(player);
     }
 
-    /** This runs every frame. */
+    /** This runs (almost) every frame. */
     @Override
     public void act(){
 

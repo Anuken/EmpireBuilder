@@ -71,3 +71,12 @@ While most of the code should already be documented, there are a few methods of 
     - Cost of placing track/spending money is `1 + (cost) * multiplier`, where `multiplier` is defined in `Astar#costScale()` - currently 6.
 - To get the final cost of a plan, the total profit multiplied by the profit multiplier is subtracted from the A* path cost.
     - The plan of least cost is picked.
+
+# Action Handling
+
+//TODO
+
+# Multiplayer
+
+This project uses websockets for multiplayer. A server is hosted on the port specified in `net/Net::port` when you press "host."
+To connect, simply enter the IP of the host machine and press 'connect.'
