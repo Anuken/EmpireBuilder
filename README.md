@@ -74,7 +74,16 @@ While most of the code should already be documented, there are a few methods of 
 
 # Action Handling
 
-//TODO
+Each actions the player can do is represented as a class. These classes are located in `game/Actions`.
+Each action must implement the `apply` method, which executes the action. Do not use this method directly. This is designed for easy use in multiplayer.
+`PlayerAction` is an abstract class for actions that are specific to a single player, e.g. moving or placing track.
+
+To execute an action, simply do:
+```java
+new TypeOfAction(){{ //replace TypeOfAction with whatever action you want to perform
+    //set up parameters here, e.g. track placed, tile moved to
+}}.act(); //calling act() executes it
+```
 
 # Multiplayer
 
